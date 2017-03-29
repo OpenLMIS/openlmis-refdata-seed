@@ -37,6 +37,12 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.5</version>
         </dependency>
+        <!-- CSV -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>3.8</version>
+        </dependency>
         <!-- other -->
         <dependency>
             <groupId>com.beust</groupId>

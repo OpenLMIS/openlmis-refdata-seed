@@ -15,13 +15,15 @@ public class AppConfiguration {
    * Here the application starts with spring context.
    */
   @Bean
-  public CommandLineRunner commandLineRunner() {
+  public CommandLineRunner commandLineRunner(DataSeeder seeder) {
     return args -> {
-      startUp();
+      startUp(seeder);
     };
   }
 
-  private void startUp() {
+  private void startUp(DataSeeder seeder) {
     LOGGER.info("RUNNING");
+    seeder.seedData();
+
   }
 }
