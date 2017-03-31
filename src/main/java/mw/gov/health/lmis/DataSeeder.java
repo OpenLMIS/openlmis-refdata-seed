@@ -5,10 +5,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import mw.gov.health.lmis.csv.ProgramCsv;
+import mw.gov.health.lmis.converter.Converter;
+import mw.gov.health.lmis.converter.Mapping;
+import mw.gov.health.lmis.converter.MappingConverter;
 import mw.gov.health.lmis.reader.ProgramReader;
+import mw.gov.health.lmis.utils.FileNames;
 
+import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class DataSeeder {
@@ -18,8 +23,24 @@ public class DataSeeder {
   @Autowired
   private ProgramReader programReader;
 
+  @Autowired
+  private Converter converter;
+
+  @Autowired
+  private MappingConverter mappingConverter;
+
+  /**
+   * Seeds data into OLMIS.
+   */
   public void seedData() {
     LOGGER.info("Seeding Programs");
-    List<ProgramCsv> programCsvs = programReader.readFromFile();
+    List<Map<String, String>> programCsvs = programReader.readFromFile();
+    List<Mapping> mappings = mappingConverter.getMappingForFile(new File(FileNames
+        .PROGRAMS_MAPPING_CSV));
+
+    for (Map<String, String> csv : programCsvs) {
+      String json = converter.convert(csv, mappings);
+      LOGGER.info(json);
+    }
   }
 }

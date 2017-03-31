@@ -1,8 +1,9 @@
 package mw.gov.health.lmis.reader;
 
 import java.util.List;
+import java.util.Map;
 
-public interface Reader<CsvT> {
+public interface Reader {
 
-  List<CsvT> readFromFile();
+  List<Map<String, String>> readFromFile();
 }
