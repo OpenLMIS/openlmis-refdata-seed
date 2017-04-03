@@ -9,6 +9,8 @@ import mw.gov.health.lmis.converter.Converter;
 import mw.gov.health.lmis.converter.Mapping;
 import mw.gov.health.lmis.converter.MappingConverter;
 import mw.gov.health.lmis.reader.ProgramReader;
+import mw.gov.health.lmis.upload.AuthService;
+import mw.gov.health.lmis.upload.ProgramService;
 import mw.gov.health.lmis.utils.FileNames;
 
 import java.io.File;
@@ -24,10 +26,16 @@ public class DataSeeder {
   private ProgramReader programReader;
 
   @Autowired
+  private ProgramService programService;
+
+  @Autowired
   private Converter converter;
 
   @Autowired
   private MappingConverter mappingConverter;
+
+  @Autowired
+  private AuthService authService;
 
   /**
    * Seeds data into OLMIS.
@@ -41,6 +49,7 @@ public class DataSeeder {
     for (Map<String, String> csv : programCsvs) {
       String json = converter.convert(csv, mappings);
       LOGGER.info(json);
+      programService.createResource(json);
     }
   }
 }

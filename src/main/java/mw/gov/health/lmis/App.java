@@ -1,12 +1,14 @@
 package mw.gov.health.lmis;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
+
+import mw.gov.health.lmis.utils.FileNames;
+
+import java.io.FileReader;
+import java.io.IOException;
 
 public class App {
 
@@ -17,27 +19,22 @@ public class App {
    * @param args command line arguments
    */
   public static void main(String[] args) {
-    Arguments arguments = new Arguments();
-
-    JCommander commander = new JCommander();
-    commander.setProgramName("Malawi Reference Data Seed");
-    commander.addObject(arguments);
-
+    SpringApplication application = new SpringApplication(AppConfiguration.class);
+    application.setBannerMode(Banner.Mode.LOG);
+    Configuration configuration = new Configuration();
     try {
-      commander.parse(args);
+      configuration.load(new FileReader(FileNames.CONFIG));
 
-      SpringApplication application = new SpringApplication(AppConfiguration.class);
-      application.setBannerMode(Banner.Mode.LOG);
       application.addInitializers(
           cxt -> cxt
               .getBeanFactory()
-              .registerSingleton(Arguments.class.getCanonicalName(), arguments)
+              .registerSingleton(Configuration.class.getCanonicalName(), configuration)
       );
 
       application.run();
-    } catch (ParameterException exp) {
-      LOGGER.error(exp.getMessage());
-      commander.usage();
+    } catch (IOException ex) {
+      LOGGER.error("Configuration file " + FileNames.CONFIG + " not found, but required to run "
+          + "the application.");
     }
   }
 }

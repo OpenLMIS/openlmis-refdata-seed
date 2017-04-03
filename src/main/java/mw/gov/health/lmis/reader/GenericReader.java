@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import mw.gov.health.lmis.Arguments;
+import mw.gov.health.lmis.Configuration;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +22,7 @@ public abstract class GenericReader implements Reader {
   private static final Logger LOGGER = LoggerFactory.getLogger(GenericReader.class);
 
   @Autowired
-  private Arguments arguments;
+  private Configuration configuration;
 
   @Override
   public List<Map<String, String>> readFromFile() {
