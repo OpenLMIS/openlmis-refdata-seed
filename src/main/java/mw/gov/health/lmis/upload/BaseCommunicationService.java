@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
@@ -16,10 +17,18 @@ import org.springframework.web.client.RestTemplate;
 
 import mw.gov.health.lmis.Configuration;
 
+import java.io.StringReader;
 import java.util.Map;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonString;
 
 public abstract class BaseCommunicationService {
   private static final String ACCESS_TOKEN = "access_token";
+  protected static final String CODE = "code";
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -33,6 +42,25 @@ public abstract class BaseCommunicationService {
 
   protected abstract String getUrl();
 
+
+  /**
+   * Finds the JSON representation of the resource by its code.
+   *
+   * @param code the code of the resource to find
+   * @return JsonObject by its code
+   */
+  public JsonObject findByCode(String code) {
+    JsonArray array = findAll();
+    for (int i = 0; i < array.size(); i++) {
+      JsonObject object = array.getJsonObject(i);
+      JsonString readCode = object.getJsonString(CODE);
+      if (code.equals(readCode.getString())) {
+        return object;
+      }
+    }
+    return null;
+  }
+
   /**
    * Return one object from service.
    *
@@ -40,7 +68,7 @@ public abstract class BaseCommunicationService {
    * @param parameters  Map of query parameters.
    * @return one reference data T objects.
    */
-  public Map findOne(String resourceUrl, RequestParameters parameters) {
+  public JsonObject findOne(String resourceUrl, RequestParameters parameters) {
     String url = configuration.getHost() + getUrl() + resourceUrl;
 
     RequestParameters params = RequestParameters
@@ -49,9 +77,8 @@ public abstract class BaseCommunicationService {
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     try {
-      return restTemplate
-          .getForEntity(createUri(url, params), Map.class)
-          .getBody();
+      String json = restTemplate.getForEntity(createUri(url, params), String.class).getBody();
+      return convertToJsonObject(json);
     } catch (HttpStatusCodeException ex) {
       // rest template will handle 404 as an exception, instead of returning null
       if (HttpStatus.NOT_FOUND == ex.getStatusCode()) {
@@ -63,6 +90,39 @@ public abstract class BaseCommunicationService {
         return null;
       }
 
+      throw buildDataRetrievalException(ex);
+    }
+  }
+
+  /**
+   * Finds all resources.
+   *
+   * @return resources
+   */
+  public JsonArray findAll() {
+    return findAll("", RequestParameters.init());
+  }
+
+  /**
+   * Finds all resources using specified query parameters and URL.
+   *
+   * @param resourceUrl the relative URL to use for retrieval
+   * @param parameters the URL params
+   * @return resources
+   */
+  public JsonArray findAll(String resourceUrl, RequestParameters parameters) {
+    String url = configuration.getHost() + getUrl() + resourceUrl;
+
+    RequestParameters params = RequestParameters
+        .init()
+        .setAll(parameters)
+        .set(ACCESS_TOKEN, authService.obtainAccessToken());
+
+    try {
+      ResponseEntity<String> response = restTemplate.getForEntity(createUri(url, params),
+          String.class);
+      return convertToJsonArray(response.getBody());
+    } catch (HttpStatusCodeException ex) {
       throw buildDataRetrievalException(ex);
     }
   }
@@ -97,5 +157,17 @@ public abstract class BaseCommunicationService {
     return new DataRetrievalException(Map.class.getSimpleName(),
         ex.getStatusCode(),
         ex.getResponseBodyAsString());
+  }
+
+  private JsonArray convertToJsonArray(String body) {
+    try (JsonReader reader = Json.createReader(new StringReader(body))) {
+      return reader.readArray();
+    }
+  }
+
+  private JsonObject convertToJsonObject(String body) {
+    try (JsonReader reader = Json.createReader(new StringReader(body))) {
+      return reader.readObject();
+    }
   }
 }

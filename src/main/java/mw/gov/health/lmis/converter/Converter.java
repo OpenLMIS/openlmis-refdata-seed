@@ -1,11 +1,18 @@
 package mw.gov.health.lmis.converter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import mw.gov.health.lmis.upload.BaseCommunicationService;
+import mw.gov.health.lmis.upload.Services;
 
 import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 /**
@@ -13,6 +20,11 @@ import javax.json.JsonObjectBuilder;
  */
 @Component
 public class Converter {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(Converter.class);
+
+  @Autowired
+  private Services services;
 
   /**
    * Converts CSV map representation into JSON strings.
@@ -31,6 +43,15 @@ public class Converter {
         default:
           jsonBuilder.add(mapping.getTo(), value);
           break;
+        case "TO_OBJECT_BY_CODE":
+          BaseCommunicationService service = services.getServiceByName(mapping.getEntityName());
+          JsonObject jsonRepresentation = service.findByCode(value);
+          if (jsonRepresentation != null) {
+            jsonBuilder.add(mapping.getTo(), jsonRepresentation);
+          } else {
+            LOGGER.warn("The CSV file contained reference to entity " + mapping.getEntityName()
+                + " with code " + value + " but such reference does not exist.");
+          }
       }
     }
 

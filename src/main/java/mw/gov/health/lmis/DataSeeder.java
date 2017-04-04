@@ -8,9 +8,13 @@ import org.springframework.stereotype.Component;
 import mw.gov.health.lmis.converter.Converter;
 import mw.gov.health.lmis.converter.Mapping;
 import mw.gov.health.lmis.converter.MappingConverter;
+import mw.gov.health.lmis.reader.GeographicLevelReader;
 import mw.gov.health.lmis.reader.ProgramReader;
+import mw.gov.health.lmis.reader.StockAdjustmentReasonReader;
 import mw.gov.health.lmis.upload.AuthService;
+import mw.gov.health.lmis.upload.GeographicLevelService;
 import mw.gov.health.lmis.upload.ProgramService;
+import mw.gov.health.lmis.upload.StockAdjustmentReasonService;
 import mw.gov.health.lmis.utils.FileNames;
 
 import java.io.File;
@@ -29,6 +33,18 @@ public class DataSeeder {
   private ProgramService programService;
 
   @Autowired
+  private StockAdjustmentReasonReader stockAdjustmentReasonReader;
+
+  @Autowired
+  private StockAdjustmentReasonService stockAdjustmentReasonService;
+
+  @Autowired
+  private GeographicLevelReader geographicLevelReader;
+
+  @Autowired
+  private GeographicLevelService geographicLevelService;
+
+  @Autowired
   private Converter converter;
 
   @Autowired
@@ -42,14 +58,36 @@ public class DataSeeder {
    */
   public void seedData() {
     LOGGER.info("Seeding Programs");
-    List<Map<String, String>> programCsvs = programReader.readFromFile();
+    List<Map<String, String>> csvs = programReader.readFromFile();
     List<Mapping> mappings = mappingConverter.getMappingForFile(new File(FileNames
         .PROGRAMS_MAPPING_CSV));
 
-    for (Map<String, String> csv : programCsvs) {
+    for (Map<String, String> csv : csvs) {
       String json = converter.convert(csv, mappings);
       LOGGER.info(json);
       programService.createResource(json);
+    }
+
+    LOGGER.info("Seeding GeographicLevels");
+    csvs = geographicLevelReader.readFromFile();
+    mappings = mappingConverter.getMappingForFile(new File(FileNames
+        .GEOGRAPHIC_LEVELS_MAPPING_CSV));
+
+    for (Map<String, String> csv : csvs) {
+      String json = converter.convert(csv, mappings);
+      LOGGER.info(json);
+      geographicLevelService.createResource(json);
+    }
+
+    LOGGER.info("Seeding StockAdjustmentReasons");
+    csvs = stockAdjustmentReasonReader.readFromFile();
+    mappings = mappingConverter.getMappingForFile(new File(FileNames
+        .STOCK_ADJUSTMENT_REASONS_MAPPING_CSV));
+
+    for (Map<String, String> csv : csvs) {
+      String json = converter.convert(csv, mappings);
+      LOGGER.info(json);
+      stockAdjustmentReasonService.createResource(json);
     }
   }
 }
