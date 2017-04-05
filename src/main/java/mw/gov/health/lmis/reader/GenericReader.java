@@ -1,5 +1,7 @@
 package mw.gov.health.lmis.reader;
 
+import static mw.gov.health.lmis.utils.FileNames.getFullFileName;
+
 import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
@@ -22,12 +24,12 @@ public abstract class GenericReader implements Reader {
   private static final Logger LOGGER = LoggerFactory.getLogger(GenericReader.class);
 
   @Autowired
-  private Configuration configuration;
+  protected Configuration configuration;
 
   @Override
   public List<Map<String, String>> readFromFile() {
     try {
-      File file = new File(getFileName());
+      File file = new File(getFullFileName(configuration.getDirectory(), getEntityName()));
       List<Map<String, String>> response = new LinkedList<>();
       CsvMapper mapper = new CsvMapper();
       CsvSchema schema = CsvSchema.emptySchema().withHeader();
@@ -39,11 +41,12 @@ public abstract class GenericReader implements Reader {
       }
       return response;
     } catch (IOException ex) {
-      LOGGER.warn("The file with name " + getFileName() + " does not exist.");
+      LOGGER.warn("The file with name " + getEntityName() + " does not exist in "
+          + configuration.getDirectory());
     }
 
     return Lists.newArrayList();
   }
 
-  public abstract String getFileName();
+  public abstract String getEntityName();
 }

@@ -1,5 +1,8 @@
 package mw.gov.health.lmis.converter;
 
+import com.google.common.collect.Lists;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
@@ -22,6 +26,9 @@ import javax.json.JsonObjectBuilder;
 public class Converter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(Converter.class);
+
+  private static final String CODE = "code";
+  private static final String NAME = "name";
 
   @Autowired
   private Services services;
@@ -44,17 +51,40 @@ public class Converter {
           jsonBuilder.add(mapping.getTo(), value);
           break;
         case "TO_OBJECT_BY_CODE":
-          BaseCommunicationService service = services.getServiceByName(mapping.getEntityName());
-          JsonObject jsonRepresentation = service.findByCode(value);
-          if (jsonRepresentation != null) {
-            jsonBuilder.add(mapping.getTo(), jsonRepresentation);
-          } else {
-            LOGGER.warn("The CSV file contained reference to entity " + mapping.getEntityName()
-                + " with code " + value + " but such reference does not exist.");
-          }
+          convertToObjectByCode(jsonBuilder, mapping, value);
+          break;
+        case "TO_ARRAY_BY_NAME":
+          convertToArrayByName(jsonBuilder, mapping, value);
+          break;
       }
     }
 
     return jsonBuilder.build().toString();
+  }
+
+  private void convertToArrayByName(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
+    BaseCommunicationService service = services.getServiceByName(mapping.getEntityName());
+    List<String> values = getArrayValues(value);
+    JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+    for (String v : values) {
+      arrayBuilder.add(service.findBy(NAME, v));
+    }
+    jsonBuilder.add(mapping.getTo(), arrayBuilder);
+  }
+
+  private void convertToObjectByCode(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
+    BaseCommunicationService service = services.getServiceByName(mapping.getEntityName());
+    JsonObject jsonRepresentation = service.findBy(CODE, value);
+    if (jsonRepresentation != null) {
+      jsonBuilder.add(mapping.getTo(), jsonRepresentation);
+    } else {
+      LOGGER.warn("The CSV file contained reference to entity " + mapping.getEntityName()
+          + " with code " + value + " but such reference does not exist.");
+    }
+  }
+
+  private List<String> getArrayValues(String value) {
+    String rawValues = StringUtils.substringBetween(value, "[", "]");
+    return Lists.newArrayList(StringUtils.split(rawValues, ','));
   }
 }

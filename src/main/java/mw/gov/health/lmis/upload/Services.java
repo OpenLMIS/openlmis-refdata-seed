@@ -12,6 +12,18 @@ public class Services {
   @Autowired
   private StockAdjustmentReasonService stockAdjustmentReasonService;
 
+  @Autowired
+  private GeographicLevelService geographicLevelService;
+
+  @Autowired
+  private GeographicZoneService geographicZoneService;
+
+  @Autowired
+  private RoleService roleService;
+
+  @Autowired
+  private RightService rightService;
+
   /**
    * Retrieves service by the human readable name.
    *
@@ -28,6 +40,22 @@ public class Services {
       case "stockadjustmentreason":
       case "stock adjustment reason":
         return stockAdjustmentReasonService;
+      case "Geographic Zone":
+      case "GeographicZone":
+      case "geographic zone":
+      case "geographiczone":
+        return geographicZoneService;
+      case "Geographic Level":
+      case "GeographicLevel":
+      case "geographic level":
+      case "geographiclevel":
+        return geographicLevelService;
+      case "role":
+      case "Role":
+        return roleService;
+      case "right":
+      case "Right":
+        return rightService;
       default:
         return null;
     }

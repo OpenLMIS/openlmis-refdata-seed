@@ -25,10 +25,11 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
+import javax.json.JsonStructure;
+import javax.json.JsonValue;
 
 public abstract class BaseCommunicationService {
   private static final String ACCESS_TOKEN = "access_token";
-  protected static final String CODE = "code";
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -44,17 +45,18 @@ public abstract class BaseCommunicationService {
 
 
   /**
-   * Finds the JSON representation of the resource by its code.
+   * Finds the JSON representation of the resource by its field.
    *
-   * @param code the code of the resource to find
-   * @return JsonObject by its code
+   * @param value the value of the field to find
+   * @param by the field to look by
+   * @return JsonObject by its field value
    */
-  public JsonObject findByCode(String code) {
+  public JsonObject findBy(String by, String value) {
     JsonArray array = findAll();
     for (int i = 0; i < array.size(); i++) {
       JsonObject object = array.getJsonObject(i);
-      JsonString readCode = object.getJsonString(CODE);
-      if (code.equals(readCode.getString())) {
+      JsonString read = object.getJsonString(by);
+      if (value.equals(read.getString())) {
         return object;
       }
     }
@@ -121,7 +123,13 @@ public abstract class BaseCommunicationService {
     try {
       ResponseEntity<String> response = restTemplate.getForEntity(createUri(url, params),
           String.class);
-      return convertToJsonArray(response.getBody());
+      JsonStructure structure = convertToJsonStructure(response.getBody());
+      if (structure.getValueType() == JsonValue.ValueType.ARRAY) {
+        return convertToJsonArray(response.getBody());
+      } else {
+        JsonObject object = convertToJsonObject(response.getBody());
+        return object.getJsonArray("content");
+      }
     } catch (HttpStatusCodeException ex) {
       throw buildDataRetrievalException(ex);
     }
@@ -157,6 +165,12 @@ public abstract class BaseCommunicationService {
     return new DataRetrievalException(Map.class.getSimpleName(),
         ex.getStatusCode(),
         ex.getResponseBodyAsString());
+  }
+
+  private JsonStructure convertToJsonStructure(String body) {
+    try (JsonReader reader = Json.createReader(new StringReader(body))) {
+      return reader.read();
+    }
   }
 
   private JsonArray convertToJsonArray(String body) {

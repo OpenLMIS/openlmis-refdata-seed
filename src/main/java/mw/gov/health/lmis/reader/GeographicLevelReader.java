@@ -7,7 +7,7 @@ import mw.gov.health.lmis.utils.FileNames;
 @Component
 public class GeographicLevelReader extends GenericReader {
   @Override
-  public String getFileName() {
-    return FileNames.GEOGRAPHIC_LEVELS_CSV;
+  public String getEntityName() {
+    return FileNames.GEOGRAPHIC_LEVELS;
   }
 }

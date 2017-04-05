@@ -8,7 +8,7 @@ import mw.gov.health.lmis.utils.FileNames;
 public class ProgramReader extends GenericReader {
 
   @Override
-  public String getFileName() {
-    return FileNames.PROGRAMS_CSV;
+  public String getEntityName() {
+    return FileNames.PROGRAMS;
   }
 }
