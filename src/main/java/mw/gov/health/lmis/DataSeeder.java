@@ -1,10 +1,13 @@
 package mw.gov.health.lmis;
 
+import static mw.gov.health.lmis.utils.FileNames.FACILITY_OPERATORS;
+import static mw.gov.health.lmis.utils.FileNames.FACILITY_TYPES;
 import static mw.gov.health.lmis.utils.FileNames.GEOGRAPHIC_LEVELS;
 import static mw.gov.health.lmis.utils.FileNames.GEOGRAPHIC_ZONES;
 import static mw.gov.health.lmis.utils.FileNames.PROGRAMS;
 import static mw.gov.health.lmis.utils.FileNames.ROLES;
 import static mw.gov.health.lmis.utils.FileNames.STOCK_ADJUSTMENT_REASONS;
+import static mw.gov.health.lmis.utils.FileNames.getFullFileName;
 import static mw.gov.health.lmis.utils.FileNames.getFullMappingFileName;
 
 import org.slf4j.Logger;
@@ -17,6 +20,9 @@ import mw.gov.health.lmis.converter.Mapping;
 import mw.gov.health.lmis.converter.MappingConverter;
 import mw.gov.health.lmis.reader.GenericReader;
 import mw.gov.health.lmis.upload.AuthService;
+import mw.gov.health.lmis.upload.BaseCommunicationService;
+import mw.gov.health.lmis.upload.FacilityOperatorService;
+import mw.gov.health.lmis.upload.FacilityTypeService;
 import mw.gov.health.lmis.upload.GeographicLevelService;
 import mw.gov.health.lmis.upload.GeographicZoneService;
 import mw.gov.health.lmis.upload.ProgramService;
@@ -51,6 +57,12 @@ public class DataSeeder {
   private RoleService roleService;
 
   @Autowired
+  private FacilityTypeService facilityTypeService;
+
+  @Autowired
+  private FacilityOperatorService facilityOperatorService;
+
+  @Autowired
   private GenericReader reader;
 
   @Autowired
@@ -66,54 +78,29 @@ public class DataSeeder {
    * Seeds data into OLMIS.
    */
   public void seedData() {
-    LOGGER.info("Seeding Programs");
-    List<Map<String, String>> csvs = reader.readFromFile(PROGRAMS);
-    List<Mapping> mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
-        configuration.getDirectory(), PROGRAMS)));
-    for (Map<String, String> csv : csvs) {
-      String json = converter.convert(csv, mappings);
-      LOGGER.info(json);
-      programService.createResource(json);
-    }
+    seedFor(programService, PROGRAMS);
+    seedFor(facilityOperatorService, FACILITY_OPERATORS);
+    seedFor(facilityTypeService, FACILITY_TYPES);
+    seedFor(geographicLevelService, GEOGRAPHIC_LEVELS);
+    seedFor(geographicZoneService, GEOGRAPHIC_ZONES);
+    seedFor(stockAdjustmentReasonService, STOCK_ADJUSTMENT_REASONS);
+    seedFor(roleService, ROLES);
+  }
 
-    LOGGER.info("Seeding GeographicLevels");
-    csvs = reader.readFromFile(GEOGRAPHIC_LEVELS);
-    mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
-        configuration.getDirectory(), GEOGRAPHIC_LEVELS)));
-    for (Map<String, String> csv : csvs) {
-      String json = converter.convert(csv, mappings);
-      LOGGER.info(json);
-      geographicLevelService.createResource(json);
-    }
+  private void seedFor(BaseCommunicationService service, String entityName) {
+    String inputFileName = getFullFileName(configuration.getDirectory(), entityName);
+    String mappingFileName = getFullMappingFileName(configuration.getDirectory(), entityName);
 
-    LOGGER.info("Seeding GeographicZones");
-    csvs = reader.readFromFile(GEOGRAPHIC_ZONES);
-    mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
-        configuration.getDirectory(), GEOGRAPHIC_ZONES)));
-    for (Map<String, String> csv : csvs) {
-      String json = converter.convert(csv, mappings);
-      LOGGER.info(json);
-      geographicZoneService.createResource(json);
-    }
+    LOGGER.info(" == Seeding " + entityName + " == ");
+    LOGGER.info("Using input file: " + inputFileName);
+    LOGGER.info("Using mapping file: " + mappingFileName);
 
-    LOGGER.info("Seeding StockAdjustmentReasons");
-    csvs = reader.readFromFile(STOCK_ADJUSTMENT_REASONS);
-    mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
-        configuration.getDirectory(), STOCK_ADJUSTMENT_REASONS)));
+    List<Map<String, String>> csvs = reader.readFromFile(entityName);
+    List<Mapping> mappings = mappingConverter.getMappingForFile(new File(mappingFileName));
     for (Map<String, String> csv : csvs) {
       String json = converter.convert(csv, mappings);
       LOGGER.info(json);
-      stockAdjustmentReasonService.createResource(json);
-    }
-
-    LOGGER.info("Seeding Roles");
-    csvs = reader.readFromFile(ROLES);
-    mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
-        configuration.getDirectory(), ROLES)));
-    for (Map<String, String> csv : csvs) {
-      String json = converter.convert(csv, mappings);
-      LOGGER.info(json);
-      roleService.createResource(json);
+      service.createResource(json);
     }
   }
 }
