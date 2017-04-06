@@ -15,11 +15,7 @@ import org.springframework.stereotype.Component;
 import mw.gov.health.lmis.converter.Converter;
 import mw.gov.health.lmis.converter.Mapping;
 import mw.gov.health.lmis.converter.MappingConverter;
-import mw.gov.health.lmis.reader.GeographicLevelReader;
-import mw.gov.health.lmis.reader.GeographicZoneReader;
-import mw.gov.health.lmis.reader.ProgramReader;
-import mw.gov.health.lmis.reader.RoleReader;
-import mw.gov.health.lmis.reader.StockAdjustmentReasonReader;
+import mw.gov.health.lmis.reader.GenericReader;
 import mw.gov.health.lmis.upload.AuthService;
 import mw.gov.health.lmis.upload.GeographicLevelService;
 import mw.gov.health.lmis.upload.GeographicZoneService;
@@ -40,34 +36,22 @@ public class DataSeeder {
   private Configuration configuration;
 
   @Autowired
-  private ProgramReader programReader;
-
-  @Autowired
   private ProgramService programService;
-
-  @Autowired
-  private StockAdjustmentReasonReader stockAdjustmentReasonReader;
 
   @Autowired
   private StockAdjustmentReasonService stockAdjustmentReasonService;
 
   @Autowired
-  private GeographicLevelReader geographicLevelReader;
-
-  @Autowired
   private GeographicLevelService geographicLevelService;
-
-  @Autowired
-  private GeographicZoneReader geographicZoneReader;
 
   @Autowired
   private GeographicZoneService geographicZoneService;
 
   @Autowired
-  private RoleReader roleReader;
+  private RoleService roleService;
 
   @Autowired
-  private RoleService roleService;
+  private GenericReader reader;
 
   @Autowired
   private Converter converter;
@@ -83,7 +67,7 @@ public class DataSeeder {
    */
   public void seedData() {
     LOGGER.info("Seeding Programs");
-    List<Map<String, String>> csvs = programReader.readFromFile();
+    List<Map<String, String>> csvs = reader.readFromFile(PROGRAMS);
     List<Mapping> mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
         configuration.getDirectory(), PROGRAMS)));
     for (Map<String, String> csv : csvs) {
@@ -93,7 +77,7 @@ public class DataSeeder {
     }
 
     LOGGER.info("Seeding GeographicLevels");
-    csvs = geographicLevelReader.readFromFile();
+    csvs = reader.readFromFile(GEOGRAPHIC_LEVELS);
     mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
         configuration.getDirectory(), GEOGRAPHIC_LEVELS)));
     for (Map<String, String> csv : csvs) {
@@ -103,7 +87,7 @@ public class DataSeeder {
     }
 
     LOGGER.info("Seeding GeographicZones");
-    csvs = geographicZoneReader.readFromFile();
+    csvs = reader.readFromFile(GEOGRAPHIC_ZONES);
     mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
         configuration.getDirectory(), GEOGRAPHIC_ZONES)));
     for (Map<String, String> csv : csvs) {
@@ -113,7 +97,7 @@ public class DataSeeder {
     }
 
     LOGGER.info("Seeding StockAdjustmentReasons");
-    csvs = stockAdjustmentReasonReader.readFromFile();
+    csvs = reader.readFromFile(STOCK_ADJUSTMENT_REASONS);
     mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
         configuration.getDirectory(), STOCK_ADJUSTMENT_REASONS)));
     for (Map<String, String> csv : csvs) {
@@ -123,7 +107,7 @@ public class DataSeeder {
     }
 
     LOGGER.info("Seeding Roles");
-    csvs = roleReader.readFromFile();
+    csvs = reader.readFromFile(ROLES);
     mappings = mappingConverter.getMappingForFile(new File(getFullMappingFileName(
         configuration.getDirectory(), ROLES)));
     for (Map<String, String> csv : csvs) {

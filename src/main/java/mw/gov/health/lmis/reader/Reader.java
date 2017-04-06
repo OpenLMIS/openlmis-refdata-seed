@@ -5,5 +5,5 @@ import java.util.Map;
 
 public interface Reader {
 
-  List<Map<String, String>> readFromFile();
+  List<Map<String, String>> readFromFile(String entityName);
 }
