@@ -47,8 +47,7 @@ public class GenericReader implements Reader {
       return iterator.readAll(Lists.newArrayList());
     } catch (IOException ex) {
       LOGGER.warn("The file with name " + fileName + " does not exist", ex);
+      return Lists.newArrayList();
     }
-
-    return Lists.newArrayList();
   }
 }
