@@ -36,6 +36,9 @@ public class Services {
   @Autowired
   private ProcessingPeriodService processingPeriodService;
 
+  @Autowired
+  private SupervisoryNodeService supervisoryNodeService;
+
   /**
    * Retrieves service by the human readable name.
    *
@@ -70,6 +73,9 @@ public class Services {
         return processingScheduleService;
       case "Processing Period":
       case "ProcessingPeriod":
+        return processingPeriodService;
+      case "Supervisory Node":
+      case "SupervisoryNode":
         return processingPeriodService;
       default:
         return null;

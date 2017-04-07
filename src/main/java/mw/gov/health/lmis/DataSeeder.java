@@ -9,6 +9,7 @@ import static mw.gov.health.lmis.utils.FileNames.PROCESSING_SCHEDULE;
 import static mw.gov.health.lmis.utils.FileNames.PROGRAMS;
 import static mw.gov.health.lmis.utils.FileNames.ROLES;
 import static mw.gov.health.lmis.utils.FileNames.STOCK_ADJUSTMENT_REASONS;
+import static mw.gov.health.lmis.utils.FileNames.SUPERVISORY_NODES;
 import static mw.gov.health.lmis.utils.FileNames.getFullFileName;
 import static mw.gov.health.lmis.utils.FileNames.getFullMappingFileName;
 
@@ -32,6 +33,7 @@ import mw.gov.health.lmis.upload.ProcessingScheduleService;
 import mw.gov.health.lmis.upload.ProgramService;
 import mw.gov.health.lmis.upload.RoleService;
 import mw.gov.health.lmis.upload.StockAdjustmentReasonService;
+import mw.gov.health.lmis.upload.SupervisoryNodeService;
 
 import java.io.File;
 import java.util.List;
@@ -84,6 +86,9 @@ public class DataSeeder {
   @Autowired
   private ProcessingPeriodService processingPeriodService;
 
+  @Autowired
+  private SupervisoryNodeService supervisoryNodeService;
+
   /**
    * Seeds data into OLMIS.
    */
@@ -97,6 +102,7 @@ public class DataSeeder {
     seedFor(roleService, ROLES);
     seedFor(processingScheduleService, PROCESSING_SCHEDULE);
     seedFor(processingPeriodService, PROCESSING_PERIOD);
+    seedFor(supervisoryNodeService, SUPERVISORY_NODES);
   }
 
   private void seedFor(BaseCommunicationService service, String entityName) {

@@ -36,7 +36,7 @@ public class Converter {
   /**
    * Converts CSV map representation into JSON strings.
    *
-   * @param input the CSV input as a map
+   * @param input    the CSV input as a map
    * @param mappings the mapping specifiations
    * @return JSON string to insert into OLMIS
    */
@@ -54,7 +54,10 @@ public class Converter {
           convertToObjectByCode(jsonBuilder, mapping, value);
           break;
         case "TO_ARRAY_BY_NAME":
-          convertToArrayByName(jsonBuilder, mapping, value);
+          convertToArrayBy(jsonBuilder, mapping, value, NAME);
+          break;
+        case "TO_ARRAY_BY_CODE":
+          convertToArrayBy(jsonBuilder, mapping, value, CODE);
           break;
       }
     }
@@ -62,12 +65,13 @@ public class Converter {
     return jsonBuilder.build().toString();
   }
 
-  private void convertToArrayByName(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
+  private void convertToArrayBy(JsonObjectBuilder jsonBuilder, Mapping mapping, String value,
+                                String by) {
     BaseCommunicationService service = services.getServiceByName(mapping.getEntityName());
     List<String> values = getArrayValues(value);
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
     for (String v : values) {
-      arrayBuilder.add(service.findBy(NAME, v));
+      arrayBuilder.add(service.findBy(by, v));
     }
     jsonBuilder.add(mapping.getTo(), arrayBuilder);
   }
