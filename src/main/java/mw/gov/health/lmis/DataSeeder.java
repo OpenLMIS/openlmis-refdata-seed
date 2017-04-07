@@ -4,6 +4,8 @@ import static mw.gov.health.lmis.utils.FileNames.FACILITY_OPERATORS;
 import static mw.gov.health.lmis.utils.FileNames.FACILITY_TYPES;
 import static mw.gov.health.lmis.utils.FileNames.GEOGRAPHIC_LEVELS;
 import static mw.gov.health.lmis.utils.FileNames.GEOGRAPHIC_ZONES;
+import static mw.gov.health.lmis.utils.FileNames.PROCESSING_PERIOD;
+import static mw.gov.health.lmis.utils.FileNames.PROCESSING_SCHEDULE;
 import static mw.gov.health.lmis.utils.FileNames.PROGRAMS;
 import static mw.gov.health.lmis.utils.FileNames.ROLES;
 import static mw.gov.health.lmis.utils.FileNames.STOCK_ADJUSTMENT_REASONS;
@@ -25,6 +27,8 @@ import mw.gov.health.lmis.upload.FacilityOperatorService;
 import mw.gov.health.lmis.upload.FacilityTypeService;
 import mw.gov.health.lmis.upload.GeographicLevelService;
 import mw.gov.health.lmis.upload.GeographicZoneService;
+import mw.gov.health.lmis.upload.ProcessingPeriodService;
+import mw.gov.health.lmis.upload.ProcessingScheduleService;
 import mw.gov.health.lmis.upload.ProgramService;
 import mw.gov.health.lmis.upload.RoleService;
 import mw.gov.health.lmis.upload.StockAdjustmentReasonService;
@@ -74,6 +78,12 @@ public class DataSeeder {
   @Autowired
   private AuthService authService;
 
+  @Autowired
+  private ProcessingScheduleService processingScheduleService;
+
+  @Autowired
+  private ProcessingPeriodService processingPeriodService;
+
   /**
    * Seeds data into OLMIS.
    */
@@ -85,6 +95,8 @@ public class DataSeeder {
     seedFor(geographicZoneService, GEOGRAPHIC_ZONES);
     seedFor(stockAdjustmentReasonService, STOCK_ADJUSTMENT_REASONS);
     seedFor(roleService, ROLES);
+    seedFor(processingScheduleService, PROCESSING_SCHEDULE);
+    seedFor(processingPeriodService, PROCESSING_PERIOD);
   }
 
   private void seedFor(BaseCommunicationService service, String entityName) {

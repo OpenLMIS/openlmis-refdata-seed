@@ -30,6 +30,12 @@ public class Services {
   @Autowired
   private FacilityTypeService facilityTypeService;
 
+  @Autowired
+  private ProcessingScheduleService processingScheduleService;
+
+  @Autowired
+  private ProcessingPeriodService processingPeriodService;
+
   /**
    * Retrieves service by the human readable name.
    *
@@ -59,6 +65,12 @@ public class Services {
         return roleService;
       case "Right":
         return rightService;
+      case "Processing Schedule":
+      case "ProcessingSchedule":
+        return processingScheduleService;
+      case "Processing Period":
+      case "ProcessingPeriod":
+        return processingPeriodService;
       default:
         return null;
     }

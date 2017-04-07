@@ -16,6 +16,8 @@ public final class FileNames {
   public static final String ROLES = "Roles";
   public static final String FACILITY_TYPES = "FacilityTypes";
   public static final String FACILITY_OPERATORS = "FacilityOperators";
+  public static final String PROCESSING_SCHEDULE = "ProcessingSchedules";
+  public static final String PROCESSING_PERIOD = "ProcessingPeriods";
 
   public static final String getFullFileName(String dir, String entity) {
     return Paths.get(dir, entity) + CSV;
