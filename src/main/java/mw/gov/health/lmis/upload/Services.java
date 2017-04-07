@@ -33,9 +33,6 @@ public class Services {
    * @return the corresponding service
    */
   public BaseCommunicationService getService(SourceFile source) {
-    int nameLength = source.getName().length();
-    // remove plural
-    String safeName = source.getName().substring(0, nameLength - 1);
-    return getService(safeName);
+    return getService(source.getSingularName());
   }
 }

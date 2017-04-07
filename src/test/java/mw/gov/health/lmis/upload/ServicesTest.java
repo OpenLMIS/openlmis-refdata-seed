@@ -1,5 +1,6 @@
 package mw.gov.health.lmis.upload;
 
+import static mw.gov.health.lmis.utils.SourceFile.FACILITIES;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITY_OPERATORS;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITY_TYPES;
 import static mw.gov.health.lmis.utils.SourceFile.GEOGRAPHIC_LEVELS;
@@ -52,6 +53,7 @@ public class ServicesTest {
         .put(PROCESSING_SCHEDULE, ProcessingScheduleService.class)
         .put(PROCESSING_PERIOD, ProcessingPeriodService.class)
         .put(SUPERVISORY_NODES, SupervisoryNodeService.class)
+        .put(FACILITIES, FacilityService.class)
         .build();
   }
 

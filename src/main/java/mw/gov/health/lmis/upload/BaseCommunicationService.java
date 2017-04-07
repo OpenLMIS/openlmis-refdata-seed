@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
@@ -154,8 +155,11 @@ public abstract class BaseCommunicationService {
 
     try {
       restTemplate.postForEntity(createUri(url, parameters), body, Object.class);
+    } catch (RestClientResponseException ex) {
+      logger.error("Can not create resource: {}", ex.getResponseBodyAsString());
+      return false;
     } catch (RestClientException ex) {
-      logger.error("Can not create resource ", ex);
+      logger.error("Can not create resource: {}", ex.getMessage());
       return false;
     }
     return true;

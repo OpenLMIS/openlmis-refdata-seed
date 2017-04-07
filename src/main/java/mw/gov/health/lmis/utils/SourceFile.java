@@ -14,17 +14,25 @@ public enum SourceFile {
   FACILITY_OPERATORS("FacilityOperators"),
   PROCESSING_SCHEDULE("ProcessingSchedules"),
   PROCESSING_PERIOD("ProcessingPeriods"),
-  SUPERVISORY_NODES("SupervisoryNodes");
+  SUPERVISORY_NODES("SupervisoryNodes"),
+  FACILITIES("Facility", "Facilities");
 
   @Getter
   private final String name;
+  @Getter
+  private final String singularName;
   private final String fileName;
   private final String mappingFileName;
 
+  SourceFile(String entitySingular, String entityPlurar) {
+    name = entityPlurar;
+    singularName = entitySingular;
+    fileName = entityPlurar + ".csv";
+    mappingFileName = entityPlurar + "_mapping.csv";
+  }
+
   SourceFile(String entity) {
-    name = entity;
-    fileName = entity + ".csv";
-    mappingFileName = entity + "_mapping.csv";
+    this(entity.substring(0, entity.length() - 1), entity);
   }
 
   public String getFullFileName(String dir) {
