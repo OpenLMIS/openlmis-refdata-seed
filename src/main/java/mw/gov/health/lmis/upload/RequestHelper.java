@@ -1,6 +1,7 @@
 package mw.gov.health.lmis.upload;
 
-import org.apache.commons.codec.Charsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -26,9 +27,9 @@ public final class RequestHelper {
     parameters.forEach(e -> {
       try {
         builder.queryParam(e.getKey(),
-            UriUtils.encodeQueryParam(String.valueOf(e.getValue()), Charsets.UTF_8.name()));
+            UriUtils.encodeQueryParam(String.valueOf(e.getValue()), UTF_8.name()));
       } catch (UnsupportedEncodingException ex) {
-        LOGGER.error("UTF-8 encoding not supported.");
+        LOGGER.error("UTF-8 encoding not supported.", ex);
       }
     });
 

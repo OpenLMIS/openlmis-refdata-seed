@@ -1,5 +1,7 @@
 package mw.gov.health.lmis.converter;
 
+import com.google.common.collect.Lists;
+
 import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.HeaderColumnNameMappingStrategy;
@@ -20,23 +22,19 @@ public class MappingConverter {
 
   /**
    * Gets the mapping specification fro mthe given file.
-   * @param file file containing mappings
+   * @param mappingFileName file containing mappings
    * @return mapping spec
    */
-  public List<Mapping> getMappingForFile(File file) {
-    try (CSVReader reader = new CSVReader(new FileReader(file))) {
-
-      HeaderColumnNameMappingStrategy<Mapping> strategy =
-          new HeaderColumnNameMappingStrategy<>();
+  public List<Mapping> getMappingForFile(String mappingFileName) {
+    try (CSVReader reader = new CSVReader(new FileReader(new File(mappingFileName)))) {
+      HeaderColumnNameMappingStrategy<Mapping> strategy = new HeaderColumnNameMappingStrategy<>();
       strategy.setType(Mapping.class);
 
       CsvToBean<Mapping> csvToBean = new CsvToBean<>();
-      List<Mapping> beanList = csvToBean.parse(strategy, reader);
-
-      return beanList;
+      return csvToBean.parse(strategy, reader);
     } catch (IOException ex) {
-      LOGGER.warn("The mapping file " + file.getAbsolutePath() + " does not exist.");
-      return null;
+      LOGGER.warn("The mapping file " + mappingFileName + " does not exist.", ex);
+      return Lists.newArrayList();
     }
   }
 }

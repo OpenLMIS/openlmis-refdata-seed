@@ -18,9 +18,7 @@ public class AppConfiguration {
    */
   @Bean
   public CommandLineRunner commandLineRunner(DataSeeder seeder, ApplicationContext context) {
-    return args -> {
-      startUp(seeder, context);
-    };
+    return args -> startUp(seeder, context);
   }
 
   private void startUp(DataSeeder seeder, ApplicationContext context) {

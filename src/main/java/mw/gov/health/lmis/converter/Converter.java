@@ -46,10 +46,6 @@ public class Converter {
       String value = input.get(mapping.getFrom());
 
       switch (mapping.getType()) {
-        case "DIRECT":
-        default:
-          jsonBuilder.add(mapping.getTo(), value);
-          break;
         case "TO_OBJECT_BY_CODE":
           convertToObjectByCode(jsonBuilder, mapping, value);
           break;
@@ -59,6 +55,10 @@ public class Converter {
         case "TO_ARRAY_BY_CODE":
           convertToArrayBy(jsonBuilder, mapping, value, CODE);
           break;
+        case "DIRECT":
+        default:
+          jsonBuilder.add(mapping.getTo(), value);
+          break;
       }
     }
 
@@ -67,7 +67,7 @@ public class Converter {
 
   private void convertToArrayBy(JsonObjectBuilder jsonBuilder, Mapping mapping, String value,
                                 String by) {
-    BaseCommunicationService service = services.getServiceByName(mapping.getEntityName());
+    BaseCommunicationService service = services.getService(mapping.getEntityName());
     List<String> values = getArrayValues(value);
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
     for (String v : values) {
@@ -77,7 +77,7 @@ public class Converter {
   }
 
   private void convertToObjectByCode(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
-    BaseCommunicationService service = services.getServiceByName(mapping.getEntityName());
+    BaseCommunicationService service = services.getService(mapping.getEntityName());
     JsonObject jsonRepresentation = service.findBy(CODE, value);
     if (jsonRepresentation != null) {
       jsonBuilder.add(mapping.getTo(), jsonRepresentation);
