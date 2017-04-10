@@ -12,6 +12,7 @@ import mw.gov.health.lmis.reader.Reader;
 import mw.gov.health.lmis.upload.BaseCommunicationService;
 import mw.gov.health.lmis.upload.Services;
 
+import java.io.File;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
@@ -125,13 +126,14 @@ public class Converter {
                                             String value) {
     List<String> codes = getArrayValues(value);
 
-    List<Map<String, String>> csvs = reader.readFromFile(mapping.getEntityName());
+    String inputFileName = new File(mapping.getEntityName()).getAbsolutePath();
+    List<Map<String, String>> csvs = reader.readFromFile(inputFileName);
     csvs.removeIf(map -> !codes.contains(map.get(CODE)));
 
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
     if (!csvs.isEmpty()) {
-      String mappingFileName = mapping.getEntityName().replace(".csv", "_mapping.csv");
+      String mappingFileName = inputFileName.replace(".csv", "_mapping.csv");
       List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
 
       for (Map<String, String> csv : csvs) {
