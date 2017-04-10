@@ -34,6 +34,7 @@ import javax.json.JsonReader;
 @RunWith(MockitoJUnitRunner.class)
 public class ConverterTest {
   private static final String ARRAY = "array";
+  private static final String OBJECT = "object";
   private static final String PROGRAM = "program";
 
   @Mock
@@ -47,6 +48,25 @@ public class ConverterTest {
 
   @InjectMocks
   private Converter converter;
+
+  @Test
+  public void shouldHandleToObjectMappingWithSeveralEntries() throws Exception {
+    Map<String, String> input = ImmutableMap.of(OBJECT, "key1:value1,key2:value2,key3:value3");
+    List<Mapping> mappings = Lists.newArrayList(
+        new Mapping(OBJECT, OBJECT, "TO_OBJECT", "", "")
+    );
+
+    String json = converter.convert(input, mappings);
+
+    try(JsonReader jsonReader = Json.createReader(new StringReader(json))) {
+      JsonObject object = jsonReader.readObject().getJsonObject(OBJECT);
+
+      assertThat(object.size(), is(equalTo(3)));
+      assertThat(object.getJsonString("key1").getString(), is(equalTo("value1")));
+      assertThat(object.getJsonString("key2").getString(), is(equalTo("value2")));
+      assertThat(object.getJsonString("key3").getString(), is(equalTo("value3")));
+    }
+  }
 
   @Test
   public void shouldHandleArrayFromFileByCodeType() throws Exception {

@@ -97,17 +97,17 @@ public class Converter {
 
   private void convertToObject(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
     List<String> entries = Lists.newArrayList(StringUtils.split(value, ','));
+    JsonObjectBuilder builder = Json.createObjectBuilder();
     for (String entry : entries) {
       List<String> keyValue = Lists.newArrayList(StringUtils.split(entry, ':'));
       if (keyValue.size() == 2) {
-        JsonObject object =
-            Json.createObjectBuilder().add(keyValue.get(0), keyValue.get(1)).build();
-        jsonBuilder.add(mapping.getTo(), object);
+        builder.add(keyValue.get(0), keyValue.get(1));
       } else {
         LOGGER.warn("Invalid map entry representation: {}. Desired format is \"<key>:<value>\".",
             entry);
       }
     }
+    jsonBuilder.add(mapping.getTo(), builder.build());
   }
 
   private void convertToObjectByCode(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
