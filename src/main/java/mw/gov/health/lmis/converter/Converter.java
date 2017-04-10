@@ -8,9 +8,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.reader.Reader;
 import mw.gov.health.lmis.upload.BaseCommunicationService;
 import mw.gov.health.lmis.upload.Services;
 
+import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 
 /**
  * Converts Map representation of the CSV files into JSON files.
@@ -34,6 +37,12 @@ public class Converter {
   @Autowired
   private Services services;
 
+  @Autowired
+  private Reader reader;
+
+  @Autowired
+  private MappingConverter mappingConverter;
+
   /**
    * Converts CSV map representation into JSON strings.
    *
@@ -46,8 +55,10 @@ public class Converter {
     for (Mapping mapping : mappings) {
       String value = input.get(mapping.getFrom());
 
-
       switch (mapping.getType()) {
+        case "DIRECT":
+          jsonBuilder.add(mapping.getTo(), value);
+          break;
         case "TO_OBJECT":
           convertToObject(jsonBuilder, mapping, value);
           break;
@@ -60,10 +71,12 @@ public class Converter {
         case "TO_ARRAY_BY_CODE":
           convertToArrayBy(jsonBuilder, mapping, value, CODE);
           break;
-        case "DIRECT":
-        default:
-          jsonBuilder.add(mapping.getTo(), value);
+        case "TO_ARRAY_FROM_FILE_BY_CODE":
+          convertToArrayFromFileByCode(jsonBuilder, mapping, value);
           break;
+        case "SKIP":
+          // fall through
+        default:
       }
     }
 
@@ -108,12 +121,37 @@ public class Converter {
     }
   }
 
+  private void convertToArrayFromFileByCode(JsonObjectBuilder jsonBuilder, Mapping mapping,
+                                            String value) {
+    List<String> codes = getArrayValues(value);
+
+    List<Map<String, String>> csvs = reader.readFromFile(mapping.getEntityName());
+    csvs.removeIf(map -> !codes.contains(map.get(CODE)));
+
+    JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+
+    if (!csvs.isEmpty()) {
+      String mappingFileName = mapping.getEntityName().replace(".csv", "_mapping.csv");
+      List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
+
+      for (Map<String, String> csv : csvs) {
+        String json = convert(csv, mappings);
+
+        try (JsonReader jsonReader = Json.createReader(new StringReader(json))) {
+          arrayBuilder.add(jsonReader.readObject());
+        }
+      }
+    }
+
+    jsonBuilder.add(mapping.getTo(), arrayBuilder);
+  }
+
   private List<String> getArrayValues(String value) {
     String rawValues = StringUtils.substringBetween(value, "[", "]");
     if (StringUtils.isNotBlank(rawValues)) {
       return Lists.newArrayList(StringUtils.split(rawValues, ','));
     } else {
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     }
   }
 }

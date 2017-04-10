@@ -15,7 +15,9 @@ public enum SourceFile {
   PROCESSING_SCHEDULE("ProcessingSchedules"),
   PROCESSING_PERIOD("ProcessingPeriods"),
   SUPERVISORY_NODES("SupervisoryNodes"),
-  FACILITIES("Facility", "Facilities");
+  FACILITIES("Facility", "Facilities"),
+  REQUISITION_GROUP("RequisitionGroups"),
+  SUPPLY_LINE("SupplyLines");
 
   @Getter
   private final String name;

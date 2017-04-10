@@ -2,11 +2,15 @@ package mw.gov.health.lmis.converter;
 
 import com.opencsv.bean.CsvBindByName;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Mapping {
 
   @CsvBindByName
