@@ -61,11 +61,7 @@ public class Converter {
   public String convert(Map<String, String> input, List<Mapping> mappings) {
     JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
     for (Mapping mapping : mappings) {
-      String value = input.get(mapping.getFrom());
-
-      if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
-        value = value.toLowerCase(Locale.ENGLISH);
-      }
+      String value = getValue(input, mapping);
 
       switch (mapping.getType()) {
         case "DIRECT":
@@ -99,6 +95,16 @@ public class Converter {
     }
 
     return jsonBuilder.build().toString();
+  }
+
+  private String getValue(Map<String, String> input, Mapping mapping) {
+    String value = input.get(mapping.getFrom());
+
+    if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+      value = value.toLowerCase(Locale.ENGLISH);
+    }
+    
+    return value;
   }
 
   private void convertToIdByName(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
