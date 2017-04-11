@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.json.Json;
@@ -61,6 +62,10 @@ public class Converter {
     JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
     for (Mapping mapping : mappings) {
       String value = input.get(mapping.getFrom());
+
+      if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+        value = value.toLowerCase(Locale.ENGLISH);
+      }
 
       switch (mapping.getType()) {
         case "DIRECT":
