@@ -1,5 +1,6 @@
 package mw.gov.health.lmis.upload;
 
+import static mw.gov.health.lmis.utils.SourceFile.AUTH_USERS;
 import static mw.gov.health.lmis.utils.SourceFile.COMMODITY_TYPES;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITIES;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITY_OPERATORS;
@@ -64,6 +65,7 @@ public class ServicesTest {
         .put(SUPPLY_LINE, SupplyLineService.class)
         .put(ROLES, RoleService.class)
         .put(USERS, UserService.class)
+        .put(AUTH_USERS, AuthUserService.class)
         .build();
   }
 

@@ -20,7 +20,8 @@ public enum SourceFile {
   REQUISITION_GROUP("RequisitionGroups"),
   SUPPLY_LINE("SupplyLines"),
   ROLES("Roles"),
-  USERS("Users");
+  USERS("Users"),
+  AUTH_USERS("AuthUsers");
 
   @Getter
   private final String name;

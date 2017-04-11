@@ -37,6 +37,7 @@ public class Converter {
 
   private static final String CODE = "code";
   private static final String NAME = "name";
+  private static final String USERNAME = "username";
   private static final String ID = "id";
 
   @Autowired
@@ -58,6 +59,7 @@ public class Converter {
    * @param mappings the mapping specifiations
    * @return JSON string to insert into OLMIS
    */
+  @SuppressWarnings("PMD.CyclomaticComplexity")
   public String convert(Map<String, String> input, List<Mapping> mappings) {
     JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
     for (Mapping mapping : mappings) {
@@ -71,7 +73,10 @@ public class Converter {
           convertToObject(jsonBuilder, mapping, value);
           break;
         case "TO_ID_BY_NAME":
-          convertToIdByName(jsonBuilder, mapping, value);
+          convertToIdBy(jsonBuilder, mapping, value, NAME);
+          break;
+        case "TO_ID_BY_USERNAME":
+          convertToIdBy(jsonBuilder, mapping, value, USERNAME);
           break;
         case "TO_OBJECT_BY_CODE":
           convertToObjectByCode(jsonBuilder, mapping, value);
@@ -87,6 +92,9 @@ public class Converter {
           break;
         case "TO_UUID_BY_CODE":
           convertToIdByCode(jsonBuilder, mapping, value);
+          break;
+        case "USE_DEFAULT":
+          useDefaultValue(jsonBuilder, mapping);
           break;
         case "SKIP":
           // fall through
@@ -107,9 +115,14 @@ public class Converter {
     return value;
   }
 
-  private void convertToIdByName(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
+  private void useDefaultValue(JsonObjectBuilder jsonBuilder, Mapping mapping) {
+    jsonBuilder.add(mapping.getTo(), mapping.getDefaultValue());
+  }
+
+  private void convertToIdBy(JsonObjectBuilder jsonBuilder, Mapping mapping, String value,
+                             String by) {
     BaseCommunicationService service = services.getService(mapping.getEntityName());
-    JsonObject jsonRepresentation = service.findBy(NAME, value);
+    JsonObject jsonRepresentation = service.findBy(by, value);
     if (jsonRepresentation != null) {
       JsonString instanceId = jsonRepresentation.getJsonString(ID);
       jsonBuilder.add(mapping.getTo(), instanceId);
