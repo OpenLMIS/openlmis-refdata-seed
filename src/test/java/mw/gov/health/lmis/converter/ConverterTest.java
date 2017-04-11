@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.doReturn;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -17,6 +18,7 @@ import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.util.ResourceUtils;
 
+import mw.gov.health.lmis.Configuration;
 import mw.gov.health.lmis.reader.GenericReader;
 import mw.gov.health.lmis.reader.Reader;
 import mw.gov.health.lmis.upload.Services;
@@ -39,6 +41,9 @@ public class ConverterTest {
 
   @Mock
   private Services services;
+
+  @Mock
+  private Configuration configuration;
 
   @Spy
   private Reader reader = new GenericReader();
@@ -72,9 +77,13 @@ public class ConverterTest {
   public void shouldHandleArrayFromFileByCodeType() throws Exception {
     File file = ResourceUtils.getFile(getClass().getResource("/inner.csv"));
 
+    doReturn(file.getParent())
+        .when(configuration)
+        .getDirectory();
+
     Map<String, String> input = ImmutableMap.of(ARRAY, "[CODE1,CODE3,CODE5]");
     List<Mapping> mappings = Lists.newArrayList(
-        new Mapping(ARRAY, ARRAY, "TO_ARRAY_FROM_FILE_BY_CODE", file.getAbsolutePath(), "")
+        new Mapping(ARRAY, ARRAY, "TO_ARRAY_FROM_FILE_BY_CODE", file.getName(), "")
     );
 
     String json = converter.convert(input, mappings);

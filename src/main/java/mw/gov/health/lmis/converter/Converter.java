@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import mw.gov.health.lmis.Configuration;
 import mw.gov.health.lmis.reader.Reader;
 import mw.gov.health.lmis.upload.BaseCommunicationService;
 import mw.gov.health.lmis.upload.Services;
@@ -36,6 +37,9 @@ public class Converter {
   private static final String CODE = "code";
   private static final String NAME = "name";
   private static final String ID = "id";
+
+  @Autowired
+  private Configuration configuration;
 
   @Autowired
   private Services services;
@@ -145,7 +149,8 @@ public class Converter {
                                             String value) {
     List<String> codes = getArrayValues(value);
 
-    String inputFileName = new File(mapping.getEntityName()).getAbsolutePath();
+    String inputFileName = new File(configuration.getDirectory(), mapping.getEntityName())
+        .getAbsolutePath();
     List<Map<String, String>> csvs = reader.readFromFile(inputFileName);
     csvs.removeIf(map -> !codes.contains(map.get(CODE)));
 
