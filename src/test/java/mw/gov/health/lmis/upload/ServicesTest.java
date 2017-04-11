@@ -5,6 +5,7 @@ import static mw.gov.health.lmis.utils.SourceFile.COMMODITY_TYPES;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITIES;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITY_OPERATORS;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITY_TYPES;
+import static mw.gov.health.lmis.utils.SourceFile.FACILITY_TYPE_APPROVED_PRODUCTS;
 import static mw.gov.health.lmis.utils.SourceFile.GEOGRAPHIC_LEVELS;
 import static mw.gov.health.lmis.utils.SourceFile.GEOGRAPHIC_ZONES;
 import static mw.gov.health.lmis.utils.SourceFile.ORDERABLE_DISPLAY_CATEGORIES;
@@ -54,6 +55,7 @@ public class ServicesTest {
         .put(ORDERABLE_DISPLAY_CATEGORIES, OrderableDisplayCategoryService.class)
         .put(FACILITY_TYPES, FacilityTypeService.class)
         .put(COMMODITY_TYPES, CommodityTypeService.class)
+        .put(FACILITY_TYPE_APPROVED_PRODUCTS, FacilityTypeApprovedProductService.class)
         .put(PROCESSING_SCHEDULE, ProcessingScheduleService.class)
         .put(PROCESSING_PERIOD, ProcessingPeriodService.class)
         .put(FACILITY_OPERATORS, FacilityOperatorService.class)
@@ -126,6 +128,8 @@ public class ServicesTest {
 
     assertServiceType("Supervisory Node", SupervisoryNodeService.class);
     assertServiceType("SupervisoryNode", SupervisoryNodeService.class);
+
+    assertServiceType("Orderable", OrderableService.class);
   }
 
   private void assertServiceType(String name, Class clazz) {

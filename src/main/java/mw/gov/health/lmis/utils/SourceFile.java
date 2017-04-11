@@ -10,6 +10,7 @@ public enum SourceFile {
   ORDERABLE_DISPLAY_CATEGORIES("OrderableDisplayCategory", "OrderableDisplayCategories"),
   FACILITY_TYPES("FacilityTypes"),
   COMMODITY_TYPES("CommodityTypes"),
+  FACILITY_TYPE_APPROVED_PRODUCTS("FacilityTypeApprovedProducts"),
   PROCESSING_SCHEDULE("ProcessingSchedules"),
   PROCESSING_PERIOD("ProcessingPeriods"),
   FACILITY_OPERATORS("FacilityOperators"),
