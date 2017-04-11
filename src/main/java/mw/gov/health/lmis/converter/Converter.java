@@ -36,8 +36,6 @@ public class Converter {
   private static final Logger LOGGER = LoggerFactory.getLogger(Converter.class);
 
   private static final String CODE = "code";
-  private static final String NAME = "name";
-  private static final String USERNAME = "username";
   private static final String ID = "id";
 
   @Autowired
@@ -62,7 +60,6 @@ public class Converter {
    * @param mappings the mapping specifiations
    * @return JSON string to insert into OLMIS
    */
-  @SuppressWarnings("PMD.CyclomaticComplexity")
   public String convert(Map<String, String> input, List<Mapping> mappings) {
     JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
     for (Mapping mapping : mappings) {
@@ -75,26 +72,23 @@ public class Converter {
         case "TO_OBJECT":
           convertToObject(jsonBuilder, mapping, value);
           break;
-        case "TO_ID_BY_NAME":
-          convertToIdBy(jsonBuilder, mapping, value, NAME);
-          break;
-        case "TO_ID_BY_USERNAME":
-          convertToIdBy(jsonBuilder, mapping, value, USERNAME);
-          break;
         case "TO_OBJECT_BY_CODE":
           convertToObjectByCode(jsonBuilder, mapping, value);
           break;
-        case "TO_ARRAY_BY_NAME":
-          convertToArrayBy(jsonBuilder, mapping, value, NAME);
+        case "TO_ID_BY_USERNAME":
+          // fall through
+        case "TO_ID_BY_NAME":
+          // fall through
+        case "TO_ID_BY_CODE":
+          convertToIdBy(jsonBuilder, mapping, value, getField(mapping.getType()));
           break;
+        case "TO_ARRAY_BY_NAME":
+          // fall through
         case "TO_ARRAY_BY_CODE":
-          convertToArrayBy(jsonBuilder, mapping, value, CODE);
+          convertToArrayBy(jsonBuilder, mapping, value, getField(mapping.getType()));
           break;
         case "TO_ARRAY_FROM_FILE_BY_CODE":
           convertToArrayFromFileByCode(jsonBuilder, mapping, value);
-          break;
-        case "TO_UUID_BY_CODE":
-          convertToIdByCode(jsonBuilder, mapping, value);
           break;
         case "USE_DEFAULT":
           useDefaultValue(jsonBuilder, mapping);
@@ -103,8 +97,10 @@ public class Converter {
           findProgramOrderable(jsonBuilder, mapping, value);
           break;
         case "SKIP":
-          // fall through
+          // nothing to do
+          break;
         default:
+          throw new UnsupportedOperationException(mapping.getType());
       }
     }
 
@@ -123,6 +119,10 @@ public class Converter {
 
   private void useDefaultValue(JsonObjectBuilder jsonBuilder, Mapping mapping) {
     jsonBuilder.add(mapping.getTo(), mapping.getDefaultValue());
+  }
+
+  private String getField(String type) {
+    return type.substring(type.lastIndexOf('_') + 1).toLowerCase(Locale.ENGLISH);
   }
 
   private void convertToIdBy(JsonObjectBuilder jsonBuilder, Mapping mapping, String value,
@@ -200,17 +200,6 @@ public class Converter {
     }
 
     jsonBuilder.add(mapping.getTo(), arrayBuilder);
-  }
-
-  private void convertToIdByCode(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
-    BaseCommunicationService service = services.getService(mapping.getEntityName());
-    JsonObject jsonRepresentation = service.findBy(CODE, value);
-    if (jsonRepresentation != null) {
-      jsonBuilder.add(mapping.getTo(), jsonRepresentation.getString("id"));
-    } else {
-      LOGGER.warn("The CSV file contained reference to entity " + mapping.getEntityName()
-          + " with code " + value + " but such reference does not exist.");
-    }
   }
 
   private void findProgramOrderable(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
