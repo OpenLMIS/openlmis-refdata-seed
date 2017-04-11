@@ -80,6 +80,9 @@ public class Converter {
         case "TO_ARRAY_FROM_FILE_BY_CODE":
           convertToArrayFromFileByCode(jsonBuilder, mapping, value);
           break;
+        case "TO_UUID_BY_CODE":
+          convertToIdByCode(jsonBuilder, mapping, value);
+          break;
         case "SKIP":
           // fall through
         default:
@@ -164,7 +167,23 @@ public class Converter {
     jsonBuilder.add(mapping.getTo(), arrayBuilder);
   }
 
+  private void convertToIdByCode(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
+    BaseCommunicationService service = services.getService(mapping.getEntityName());
+    JsonObject jsonRepresentation = service.findBy(CODE, value);
+    if (jsonRepresentation != null) {
+      jsonBuilder.add(mapping.getTo(), jsonRepresentation.getString("id"));
+    } else {
+      LOGGER.warn("The CSV file contained reference to entity " + mapping.getEntityName()
+          + " with code " + value + " but such reference does not exist.");
+    }
+  }
+
   private List<String> getArrayValues(String value) {
+    // single value
+    if (!(value.startsWith("[") && value.endsWith("]"))) {
+      return Lists.newArrayList(value);
+    }
+
     String rawValues = StringUtils.substringBetween(value, "[", "]");
     if (StringUtils.isNotBlank(rawValues)) {
       return Lists.newArrayList(StringUtils.split(rawValues, ','));

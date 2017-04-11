@@ -31,7 +31,7 @@ import javax.json.JsonStructure;
 import javax.json.JsonValue;
 
 public abstract class BaseCommunicationService {
-  private static final String ACCESS_TOKEN = "access_token";
+  static final String ACCESS_TOKEN = "access_token";
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
 

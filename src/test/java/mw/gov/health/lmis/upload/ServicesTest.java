@@ -1,10 +1,12 @@
 package mw.gov.health.lmis.upload;
 
+import static mw.gov.health.lmis.utils.SourceFile.COMMODITY_TYPES;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITIES;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITY_OPERATORS;
 import static mw.gov.health.lmis.utils.SourceFile.FACILITY_TYPES;
 import static mw.gov.health.lmis.utils.SourceFile.GEOGRAPHIC_LEVELS;
 import static mw.gov.health.lmis.utils.SourceFile.GEOGRAPHIC_ZONES;
+import static mw.gov.health.lmis.utils.SourceFile.ORDERABLE_DISPLAY_CATEGORIES;
 import static mw.gov.health.lmis.utils.SourceFile.PROCESSING_PERIOD;
 import static mw.gov.health.lmis.utils.SourceFile.PROCESSING_SCHEDULE;
 import static mw.gov.health.lmis.utils.SourceFile.PROGRAMS;
@@ -48,17 +50,19 @@ public class ServicesTest {
         .<SourceFile, Class>builder()
         .put(PROGRAMS, ProgramService.class)
         .put(STOCK_ADJUSTMENT_REASONS, StockAdjustmentReasonService.class)
-        .put(GEOGRAPHIC_LEVELS, GeographicLevelService.class)
-        .put(GEOGRAPHIC_ZONES, GeographicZoneService.class)
-        .put(ROLES, RoleService.class)
+        .put(ORDERABLE_DISPLAY_CATEGORIES, OrderableDisplayCategoryService.class)
         .put(FACILITY_TYPES, FacilityTypeService.class)
-        .put(FACILITY_OPERATORS, FacilityOperatorService.class)
+        .put(COMMODITY_TYPES, CommodityTypeService.class)
         .put(PROCESSING_SCHEDULE, ProcessingScheduleService.class)
         .put(PROCESSING_PERIOD, ProcessingPeriodService.class)
-        .put(SUPERVISORY_NODES, SupervisoryNodeService.class)
+        .put(FACILITY_OPERATORS, FacilityOperatorService.class)
+        .put(GEOGRAPHIC_LEVELS, GeographicLevelService.class)
+        .put(GEOGRAPHIC_ZONES, GeographicZoneService.class)
         .put(FACILITIES, FacilityService.class)
+        .put(SUPERVISORY_NODES, SupervisoryNodeService.class)
         .put(REQUISITION_GROUP, RequisitionGroupService.class)
         .put(SUPPLY_LINE, SupplyLineService.class)
+        .put(ROLES, RoleService.class)
         .put(USERS, UserService.class)
         .build();
   }
