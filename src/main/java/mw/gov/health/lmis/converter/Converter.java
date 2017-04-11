@@ -52,6 +52,9 @@ public class Converter {
   @Autowired
   private MappingConverter mappingConverter;
 
+  @Autowired
+  private ProgramOrderableFinder programOrderableFinder;
+
   /**
    * Converts CSV map representation into JSON strings.
    *
@@ -96,6 +99,9 @@ public class Converter {
         case "USE_DEFAULT":
           useDefaultValue(jsonBuilder, mapping);
           break;
+        case "FIND_PROGRAM_ORDERABLE":
+          findProgramOrderable(jsonBuilder, mapping, value);
+          break;
         case "SKIP":
           // fall through
         default:
@@ -111,7 +117,7 @@ public class Converter {
     if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
       value = value.toLowerCase(Locale.ENGLISH);
     }
-    
+
     return value;
   }
 
@@ -205,6 +211,13 @@ public class Converter {
       LOGGER.warn("The CSV file contained reference to entity " + mapping.getEntityName()
           + " with code " + value + " but such reference does not exist.");
     }
+  }
+
+  private void findProgramOrderable(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
+    List<String> array = getArrayValues(value);
+    programOrderableFinder
+        .find(array.get(0), array.get(1))
+        .ifPresent(json -> jsonBuilder.add(mapping.getTo(), json));
   }
 
   private List<String> getArrayValues(String value) {
