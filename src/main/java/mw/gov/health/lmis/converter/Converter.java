@@ -23,6 +23,7 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
+import javax.json.JsonString;
 
 /**
  * Converts Map representation of the CSV files into JSON files.
@@ -34,6 +35,7 @@ public class Converter {
 
   private static final String CODE = "code";
   private static final String NAME = "name";
+  private static final String ID = "id";
 
   @Autowired
   private Services services;
@@ -63,6 +65,9 @@ public class Converter {
         case "TO_OBJECT":
           convertToObject(jsonBuilder, mapping, value);
           break;
+        case "TO_ID_BY_NAME":
+          convertToIdByName(jsonBuilder, mapping, value);
+          break;
         case "TO_OBJECT_BY_CODE":
           convertToObjectByCode(jsonBuilder, mapping, value);
           break;
@@ -84,6 +89,17 @@ public class Converter {
     return jsonBuilder.build().toString();
   }
 
+  private void convertToIdByName(JsonObjectBuilder jsonBuilder, Mapping mapping, String value) {
+    BaseCommunicationService service = services.getService(mapping.getEntityName());
+    JsonObject jsonRepresentation = service.findBy(NAME, value);
+    if (jsonRepresentation != null) {
+      JsonString instanceId = jsonRepresentation.getJsonString(ID);
+      jsonBuilder.add(mapping.getTo(), instanceId);
+    } else {
+      LOGGER.warn("The CSV file contained reference to entity " + mapping.getEntityName()
+          + " with name " + value + " but such reference does not exist.");
+    }
+  }
 
   private void convertToArrayBy(JsonObjectBuilder jsonBuilder, Mapping mapping, String value,
                                 String by) {

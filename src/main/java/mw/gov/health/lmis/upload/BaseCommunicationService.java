@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -154,7 +155,15 @@ public abstract class BaseCommunicationService {
     HttpEntity<String> body = new HttpEntity<>(json, headers);
 
     try {
-      restTemplate.postForEntity(createUri(url, parameters), body, Object.class);
+      switch (getCreateMethod()) {
+        case POST:
+          restTemplate.postForEntity(createUri(url, parameters), body, Object.class);
+          break;
+        case PUT:
+          restTemplate.put(createUri(url, parameters), body);
+          break;
+        default:
+      }
     } catch (RestClientResponseException ex) {
       logger.error("Can not create resource: {}", ex.getResponseBodyAsString());
       return false;
@@ -163,6 +172,15 @@ public abstract class BaseCommunicationService {
       return false;
     }
     return true;
+  }
+
+  /**
+   * HTTP method that is used to create the resource.
+   * Specific services can override to whatever is appropriate.
+   * @return HTTP method.
+   */
+  public HttpMethod getCreateMethod() {
+    return HttpMethod.POST;
   }
 
   private DataRetrievalException buildDataRetrievalException(HttpStatusCodeException ex) {

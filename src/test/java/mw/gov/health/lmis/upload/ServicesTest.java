@@ -13,6 +13,7 @@ import static mw.gov.health.lmis.utils.SourceFile.ROLES;
 import static mw.gov.health.lmis.utils.SourceFile.STOCK_ADJUSTMENT_REASONS;
 import static mw.gov.health.lmis.utils.SourceFile.SUPERVISORY_NODES;
 import static mw.gov.health.lmis.utils.SourceFile.SUPPLY_LINE;
+import static mw.gov.health.lmis.utils.SourceFile.USERS;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -58,6 +59,7 @@ public class ServicesTest {
         .put(FACILITIES, FacilityService.class)
         .put(REQUISITION_GROUP, RequisitionGroupService.class)
         .put(SUPPLY_LINE, SupplyLineService.class)
+        .put(USERS, UserService.class)
         .build();
   }
 

@@ -9,7 +9,6 @@ public enum SourceFile {
   STOCK_ADJUSTMENT_REASONS("StockAdjustmentReasons"),
   GEOGRAPHIC_LEVELS("GeographicLevels"),
   GEOGRAPHIC_ZONES("GeographicZones"),
-  ROLES("Roles"),
   FACILITY_TYPES("FacilityTypes"),
   FACILITY_OPERATORS("FacilityOperators"),
   PROCESSING_SCHEDULE("ProcessingSchedules"),
@@ -17,7 +16,9 @@ public enum SourceFile {
   SUPERVISORY_NODES("SupervisoryNodes"),
   FACILITIES("Facility", "Facilities"),
   REQUISITION_GROUP("RequisitionGroups"),
-  SUPPLY_LINE("SupplyLines");
+  SUPPLY_LINE("SupplyLines"),
+  ROLES("Roles"),
+  USERS("Users");
 
   @Getter
   private final String name;
@@ -26,11 +27,11 @@ public enum SourceFile {
   private final String fileName;
   private final String mappingFileName;
 
-  SourceFile(String entitySingular, String entityPlurar) {
-    name = entityPlurar;
+  SourceFile(String entitySingular, String entityPlural) {
+    name = entityPlural;
     singularName = entitySingular;
-    fileName = entityPlurar + ".csv";
-    mappingFileName = entityPlurar + "_mapping.csv";
+    fileName = entityPlural + ".csv";
+    mappingFileName = entityPlural + "_mapping.csv";
   }
 
   SourceFile(String entity) {
