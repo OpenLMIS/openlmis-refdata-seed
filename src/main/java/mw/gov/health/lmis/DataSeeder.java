@@ -57,9 +57,11 @@ public class DataSeeder {
 
     List<Map<String, String>> csvs = reader.readFromFile(inputFileName);
     List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
-    for (Map<String, String> csv : csvs) {
+    for (int i = 0, size = csvs.size(); i < size; ++i) {
+      Map<String, String> csv = csvs.get(i);
       String json = converter.convert(csv, mappings);
-      LOGGER.info(json);
+
+      LOGGER.info("{}/{}: {}", i + 1, size, json);
       service.createResource(json);
     }
   }
