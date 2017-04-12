@@ -14,7 +14,11 @@ class DirectTypeConverter extends BaseTypeConverter {
 
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
-    builder.add(mapping.getTo(), value);
+    if (null == value) {
+      logger.warn("Null value for field: {}", mapping.getTo());
+    } else {
+      builder.add(mapping.getTo(), value);
+    }
   }
 
 }
