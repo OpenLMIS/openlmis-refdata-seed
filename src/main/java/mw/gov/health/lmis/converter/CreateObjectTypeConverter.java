@@ -3,10 +3,7 @@ package mw.gov.health.lmis.converter;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import mw.gov.health.lmis.upload.Services;
 
 import java.util.List;
 
@@ -15,9 +12,6 @@ import javax.json.JsonObjectBuilder;
 
 @Component
 public class CreateObjectTypeConverter extends BaseTypeConverter {
-
-  @Autowired
-  private Services services;
 
   @Override
   public boolean supports(String type) {
