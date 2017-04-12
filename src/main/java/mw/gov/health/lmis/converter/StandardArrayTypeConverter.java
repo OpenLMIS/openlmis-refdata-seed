@@ -39,8 +39,11 @@ class StandardArrayTypeConverter extends BaseTypeConverter {
       JsonObject object = service.findBy(by, v);
 
       if (null == object) {
-        logger.warn("The CSV file contained reference to entity " + mapping.getEntityName()
-            + " with code " + value + " but such reference does not exist.");
+        logger.warn(
+            "The CSV file contained reference to entity {} "
+                + "with {} {} but such reference does not exist.",
+            mapping.getEntityName(), by, value
+        );
       } else {
         arrayBuilder.add(object);
       }

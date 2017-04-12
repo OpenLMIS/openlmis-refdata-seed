@@ -30,11 +30,14 @@ class IdTypeConverter extends BaseTypeConverter {
 
     JsonObject jsonRepresentation = service.findBy(by, value);
 
-    if (jsonRepresentation != null) {
-      builder.add(mapping.getTo(), jsonRepresentation.getJsonString(ID));
+    if (null == jsonRepresentation) {
+      logger.warn(
+          "The CSV file contained reference to entity {} "
+              + "with {} {} but such reference does not exist.",
+          mapping.getEntityName(), by, value
+      );
     } else {
-      logger.warn("The CSV file contained reference to entity " + mapping.getEntityName()
-          + " with name " + value + " but such reference does not exist.");
+      builder.add(mapping.getTo(), jsonRepresentation.getString(ID));
     }
   }
 

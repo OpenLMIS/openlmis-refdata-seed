@@ -32,8 +32,11 @@ public class FindObjectTypeConverter extends BaseTypeConverter {
     if (jsonRepresentation != null) {
       builder.add(mapping.getTo(), jsonRepresentation);
     } else {
-      logger.warn("The CSV file contained reference to entity " + mapping.getEntityName()
-          + " with code " + value + " but such reference does not exist.");
+      logger.warn(
+          "The CSV file contained reference to entity {} "
+              + "with {} {} but such reference does not exist.",
+          mapping.getEntityName(), by, value
+      );
     }
   }
 

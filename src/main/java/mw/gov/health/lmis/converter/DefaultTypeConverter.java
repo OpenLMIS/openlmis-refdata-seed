@@ -14,7 +14,13 @@ class DefaultTypeConverter extends BaseTypeConverter {
 
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
-    builder.add(mapping.getTo(), mapping.getDefaultValue());
+    String defaultValue = mapping.getDefaultValue();
+
+    if (null == defaultValue) {
+      logger.warn("Null value for field: {}", mapping.getTo());
+    } else {
+      builder.add(mapping.getTo(), defaultValue);
+    }
   }
 
 }

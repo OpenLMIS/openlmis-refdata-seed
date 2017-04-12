@@ -1,5 +1,10 @@
 package mw.gov.health.lmis.converter;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.remove;
+import static org.apache.commons.lang3.text.WordUtils.capitalizeFully;
+
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.StringUtils;
@@ -8,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 abstract class BaseTypeConverter implements TypeConverter {
   final Logger logger = LoggerFactory.getLogger(getClass());
@@ -22,23 +26,28 @@ abstract class BaseTypeConverter implements TypeConverter {
       return null;
     }
 
-    return type
-        .substring(type.lastIndexOf("BY_") + 3)
-        .toLowerCase(Locale.ENGLISH);
+    String by = type.substring(type.lastIndexOf("BY_") + 3);
+    by = capitalizeFully(by, '_');
+    by = remove(by, "_");
+
+    return Character.toLowerCase(by.charAt(0)) + by.substring(1);
   }
 
   List<String> getArrayValues(String value) {
+    if (isBlank(value)) {
+      return Collections.emptyList();
+    }
+
     // single value
     if (!(value.startsWith("[") && value.endsWith("]"))) {
       return Lists.newArrayList(value);
     }
 
     String rawValues = StringUtils.substringBetween(value, "[", "]");
-    if (StringUtils.isNotBlank(rawValues)) {
-      return Lists.newArrayList(StringUtils.split(rawValues, ','));
-    } else {
-      return Collections.emptyList();
-    }
+
+    return isNotBlank(rawValues)
+        ? Lists.newArrayList(StringUtils.split(rawValues, ','))
+        : Collections.emptyList();
   }
 
 }

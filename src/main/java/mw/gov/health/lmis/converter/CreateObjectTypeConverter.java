@@ -21,13 +21,13 @@ public class CreateObjectTypeConverter extends BaseTypeConverter {
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
     List<String> entries = Lists.newArrayList(StringUtils.split(value, ','));
-    JsonObjectBuilder builder1 = Json.createObjectBuilder();
+    JsonObjectBuilder inner = Json.createObjectBuilder();
 
     for (String entry : entries) {
       List<String> keyValue = Lists.newArrayList(StringUtils.split(entry, ':'));
 
       if (keyValue.size() == 2) {
-        builder1.add(keyValue.get(0), keyValue.get(1));
+        inner.add(keyValue.get(0), keyValue.get(1));
       } else {
         logger.warn(
             "Invalid map entry representation: {}. Desired format is \"<key>:<value>\".", entry
@@ -35,7 +35,7 @@ public class CreateObjectTypeConverter extends BaseTypeConverter {
       }
     }
 
-    builder.add(mapping.getTo(), builder1.build());
+    builder.add(mapping.getTo(), inner.build());
   }
 
 }
