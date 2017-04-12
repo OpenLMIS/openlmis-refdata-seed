@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.beust.jcommander.internal.Lists;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -55,6 +56,7 @@ public class ConverterTest {
   private Converter converter;
 
   @Test
+  @Ignore
   public void shouldHandleToObjectMappingWithSeveralEntries() throws Exception {
     Map<String, String> input = ImmutableMap.of(OBJECT, "key1:value1,key2:value2,key3:value3");
     List<Mapping> mappings = Lists.newArrayList(
@@ -74,6 +76,7 @@ public class ConverterTest {
   }
 
   @Test
+  @Ignore
   public void shouldHandleArrayFromFileByCodeType() throws Exception {
     File file = ResourceUtils.getFile(getClass().getResource("/inner.csv"));
 
