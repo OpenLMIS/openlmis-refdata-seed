@@ -1,0 +1,32 @@
+#!/bin/bash
+
+OLDIFS=$IFS
+IFS=","
+
+HOST="localhost"
+PORT=5432
+DATABASE="open_lmis"
+USER="postgres"
+PASS="p@ssw0rd"
+
+export PGPASSWORD=$PASS;
+
+while read -r type product_code program_code max min emergency
+do
+  program_id=$(psql -qtA -U $USER -h $HOST -p $PORT -d $DATABASE -c "select id from referencedata.programs where code = '${program_code:0:$((${#program_code} - 2))}'")
+
+  if [ -z "$program_id" ]
+  then
+    echo "Incorrect line."
+    continue
+  fi
+
+  product_id=$(psql -qtA -U $USER -h $HOST -p $PORT -d $DATABASE -c "select id from referencedata.orderables where code = '${product_code:2}'")
+  program_orderable_id=$(psql -qtA -U $USER -h $HOST -p $PORT -d $DATABASE -c "select id from referencedata.program_orderables where orderableid = '$product_id' and programid = '$program_id'")
+  facility_type_id=$(psql -qtA -U $USER -h $HOST -p $PORT -d $DATABASE -c "select id from referencedata.facility_types where code = '$type'")
+
+  echo "INSERT Facility Type Approved Products for $type ${product_code:2} ${program_code:0:$((${#program_code} - 2))}"
+  psql -U $USER -h $HOST -p $PORT -d $DATABASE -c "INSERT INTO referencedata.facility_type_approved_products(id,facilitytypeid,programorderableid,maxperiodsofstock,minperiodsofstock,emergencyorderpoint) VALUES ('$(uuidgen)','$facility_type_id','$program_orderable_id',$max,$min,${emergency//[^[:alnum:]]/});"
+done < $1
+
+IFS=$OLDIFS
