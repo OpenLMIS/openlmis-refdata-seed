@@ -45,6 +45,8 @@ public abstract class BaseCommunicationService {
 
   protected abstract String getUrl();
 
+  private JsonArray allResources;
+
 
   /**
    * Finds the JSON representation of the resource by its field.
@@ -115,6 +117,11 @@ public abstract class BaseCommunicationService {
    * @return resources
    */
   public JsonArray findAll(String resourceUrl, RequestParameters parameters) {
+    if (allResources != null) {
+      // Use cached version if available
+      return allResources;
+    }
+
     String url = configuration.getHost() + getUrl() + resourceUrl;
 
     RequestParameters params = RequestParameters
@@ -127,11 +134,12 @@ public abstract class BaseCommunicationService {
           String.class);
       JsonStructure structure = convertToJsonStructure(response.getBody());
       if (structure.getValueType() == JsonValue.ValueType.ARRAY) {
-        return convertToJsonArray(response.getBody());
+        allResources = convertToJsonArray(response.getBody());
       } else {
         JsonObject object = convertToJsonObject(response.getBody());
-        return object.getJsonArray("content");
+        allResources = object.getJsonArray("content");
       }
+      return allResources;
     } catch (HttpStatusCodeException ex) {
       throw buildDataRetrievalException(ex);
     }
@@ -171,6 +179,8 @@ public abstract class BaseCommunicationService {
       logger.error("Can not create resource: {}", ex.getMessage());
       return false;
     }
+
+    invalidateCache();
     return true;
   }
 
@@ -205,5 +215,9 @@ public abstract class BaseCommunicationService {
     try (JsonReader reader = Json.createReader(new StringReader(body))) {
       return reader.readObject();
     }
+  }
+
+  private void invalidateCache() {
+    allResources = null;
   }
 }

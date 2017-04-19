@@ -12,15 +12,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
 import mw.gov.health.lmis.Configuration;
+import mw.gov.health.lmis.utils.AuthorizationException;
 
 import java.util.Map;
 
 @Service
 public class AuthService {
+
   public static final String ACCESS_TOKEN = "access_token";
 
   @Autowired
@@ -52,16 +55,19 @@ public class AuthService {
         .init()
         .set("grant_type", "password");
 
-    ResponseEntity<?> response = restTemplate.exchange(
-        createUri(configuration.getHost() + "/api/oauth/token", params), HttpMethod.POST, request,
-        Object.class
-    );
-
-    return ((Map<String, String>) response.getBody()).get(ACCESS_TOKEN);
+    try {
+      ResponseEntity<?> response = restTemplate.exchange(
+          createUri(configuration.getHost() + "/api/oauth/token", params), HttpMethod.POST, request,
+          Object.class
+      );
+      return ((Map<String, String>) response.getBody()).get(ACCESS_TOKEN);
+    } catch (RestClientException ex) {
+      throw new AuthorizationException("Cannot obtain access token using the provided credentials. "
+          + "Please verify they are correct.", ex);
+    }
   }
 
   void setRestTemplate(RestOperations restTemplate) {
     this.restTemplate = restTemplate;
   }
-  
 }
