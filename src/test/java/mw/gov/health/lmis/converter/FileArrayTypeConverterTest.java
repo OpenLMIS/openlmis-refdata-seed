@@ -75,7 +75,7 @@ public class FileArrayTypeConverterTest {
           invocation.getArgumentAt(0, Map.class).get(mapping.getFrom()).toString()
       );
 
-      return inner.build().toString();
+      return inner.build();
     }).when(converter).convert(anyMap(), anyList());
   }
 

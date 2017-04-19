@@ -2,6 +2,8 @@ package mw.gov.health.lmis.upload;
 
 import org.springframework.stereotype.Service;
 
+import javax.json.JsonObject;
+
 @Service
 public class OrderableDisplayCategoryService extends BaseCommunicationService {
 
@@ -10,4 +12,8 @@ public class OrderableDisplayCategoryService extends BaseCommunicationService {
     return "/api/orderableDisplayCategories";
   }
 
+  @Override
+  public JsonObject findUnique(JsonObject object) {
+    return findByCode(object.getString(CODE));
+  }
 }

@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 /**
@@ -23,13 +24,13 @@ public class Converter {
   }
 
   /**
-   * Converts CSV map representation into JSON strings.
+   * Converts CSV map representation into JSON object representation.
    *
    * @param input    the CSV input as a map
    * @param mappings the mapping specifiations
-   * @return JSON string to insert into OLMIS
+   * @return JSON object representation to insert into OLMIS
    */
-  public String convert(Map<String, String> input, List<Mapping> mappings) {
+  public JsonObject convert(Map<String, String> input, List<Mapping> mappings) {
     JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
 
     for (Mapping mapping : mappings) {
@@ -49,7 +50,7 @@ public class Converter {
       }
     }
 
-    return jsonBuilder.build().toString();
+    return jsonBuilder.build();
   }
 
   private String getValue(Map<String, String> input, Mapping mapping) {

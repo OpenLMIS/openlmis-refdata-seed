@@ -55,7 +55,7 @@ class FileArrayTypeConverter extends BaseTypeConverter {
       List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
 
       for (Map<String, String> csv : csvs) {
-        String json = converter.convert(csv, mappings);
+        String json = converter.convert(csv, mappings).toString();
 
         try (JsonReader jsonReader = Json.createReader(new StringReader(json))) {
           arrayBuilder.add(jsonReader.readObject());

@@ -30,4 +30,8 @@ public class Configuration extends Properties {
   public String getDirectory() {
     return getProperty("directory");
   }
+
+  public String getUpdateAllowed() {
+    return getProperty("updateAllowed");
+  }
 }

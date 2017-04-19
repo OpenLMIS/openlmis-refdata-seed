@@ -17,6 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.json.JsonObject;
+
 @Component
 public class DataSeeder {
 
@@ -51,6 +53,7 @@ public class DataSeeder {
     BaseCommunicationService service = services.getService(source);
     String inputFileName = source.getFullFileName(configuration.getDirectory());
     String mappingFileName = source.getFullMappingFileName(configuration.getDirectory());
+    boolean updateAllowed = !"false".equalsIgnoreCase(configuration.getUpdateAllowed());
 
     LOGGER.info(" == Seeding {} == ", source.getName());
     LOGGER.info("Using input file: {}", inputFileName);
@@ -58,12 +61,23 @@ public class DataSeeder {
 
     List<Map<String, String>> csvs = reader.readFromFile(inputFileName);
     List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
+
     for (int i = 0, size = csvs.size(); i < size; ++i) {
       Map<String, String> csv = csvs.get(i);
-      String json = converter.convert(csv, mappings);
+      JsonObject jsonObject = converter.convert(csv, mappings);
+      JsonObject existing = service.findUnique(jsonObject);
 
-      LOGGER.info("{}/{}: {}", i + 1, size, json);
-      service.createResource(json);
+      LOGGER.info("{}/{}", i + 1, size);
+      if (updateAllowed && existing != null) {
+        LOGGER.info("Resource exists. Attempting to update.");
+        service.updateResource(jsonObject, existing.getString("id"));
+        continue;
+      } else if (existing == null) {
+        LOGGER.info("Creating new resource.");
+        service.createResource(jsonObject.toString());
+      } else {
+        LOGGER.info("Resource exists but update has been disabled. Skipping.");
+      }
     }
   }
 }
