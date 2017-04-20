@@ -66,10 +66,10 @@ public abstract class BaseCommunicationService {
   }
 
   /**
-   * Finds the JSON representation of the resource by its code.
+   * Finds the JSON representation of the resource by its name.
    *
    * @param name the value of the field to find
-   * @return JsonObject by the code
+   * @return JsonObject by the name
    */
   public JsonObject findByName(String name) {
     return findBy(NAME, name);
@@ -227,18 +227,16 @@ public abstract class BaseCommunicationService {
     URI uri = createUri(url, parameters);
 
     try {
-      switch (getCreateMethod()) {
-        case POST:
-          logger.info("POST {}", uri);
-          logger.info(body.getBody());
-          restTemplate.postForEntity(uri, body, Object.class);
-          break;
-        case PUT:
-          logger.info("PUT {}", uri);
-          logger.info(body.getBody());
-          restTemplate.put(uri, body);
-          break;
-        default:
+      if (getCreateMethod() == HttpMethod.POST) {
+        logger.info("POST {}", uri);
+        logger.info(body.getBody());
+        restTemplate.postForEntity(uri, body, Object.class);
+      } else if (getCreateMethod() == HttpMethod.PUT) {
+        logger.info("PUT {}", uri);
+        logger.info(body.getBody());
+        restTemplate.put(uri, body);
+      } else {
+        logger.error("Unsupported HTTP method provided: {}", getCreateMethod().name());
       }
     } catch (RestClientResponseException ex) {
       logger.error("Can not create resource: {}", ex.getResponseBodyAsString());
