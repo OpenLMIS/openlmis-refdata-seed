@@ -45,7 +45,6 @@ public class DataSeeder {
   public void seedData() {
     Arrays
         .stream(SourceFile.values())
-        .filter(source -> source != SourceFile.FACILITY_TYPE_APPROVED_PRODUCTS)
         .forEach(this::seedFor);
   }
 
