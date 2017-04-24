@@ -24,7 +24,7 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
     for (int i = 0; i < array.size(); i++) {
       JsonObject next = array.getJsonObject(i);
       JsonString foundFacilityTypeCode = next.getJsonObject("facilityType").getJsonString(CODE);
-      JsonString foundProgramCode = next.getJsonObject("program").getJsonSqtring(CODE);
+      JsonString foundProgramCode = next.getJsonObject("program").getJsonString(CODE);
       JsonString foundProductCode = next.getJsonObject("orderable").getJsonString("productCode");
 
       if (searchedFacilityTypeCode.equals(foundFacilityTypeCode)
