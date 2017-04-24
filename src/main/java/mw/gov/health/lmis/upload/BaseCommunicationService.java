@@ -298,7 +298,7 @@ public abstract class BaseCommunicationService {
     }
   }
 
-  private void invalidateCache() {
+  public void invalidateCache() {
     allResources = null;
   }
 }
