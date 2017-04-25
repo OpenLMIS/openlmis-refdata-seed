@@ -49,7 +49,6 @@ public class DataSeeder {
   }
 
   private void seedFor(SourceFile source) {
-    BaseCommunicationService service = services.getService(source);
     String inputFileName = source.getFullFileName(configuration.getDirectory());
     String mappingFileName = source.getFullMappingFileName(configuration.getDirectory());
     boolean updateAllowed = !"false".equalsIgnoreCase(configuration.getUpdateAllowed());
@@ -60,6 +59,9 @@ public class DataSeeder {
 
     List<Map<String, String>> csvs = reader.readFromFile(inputFileName);
     List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
+
+    BaseCommunicationService service = services.getService(source);
+    service.before();
 
     for (int i = 0, size = csvs.size(); i < size; ++i) {
       Map<String, String> csv = csvs.get(i);

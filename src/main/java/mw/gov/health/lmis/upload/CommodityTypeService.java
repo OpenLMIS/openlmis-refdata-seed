@@ -31,16 +31,4 @@ public class CommodityTypeService extends BaseCommunicationService {
   public JsonObject findUnique(JsonObject object) {
     return orderableService.findUnique(object);
   }
-
-  @Override
-  public boolean createResource(String json) {
-    orderableService.invalidateCache();
-    return super.createResource(json);
-  }
-
-  @Override
-  public boolean updateResource(JsonObject jsonObject, String id) {
-    orderableService.invalidateCache();
-    return super.updateResource(jsonObject, id);
-  }
 }

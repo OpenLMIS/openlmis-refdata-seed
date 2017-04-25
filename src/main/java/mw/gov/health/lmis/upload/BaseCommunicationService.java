@@ -56,6 +56,14 @@ public abstract class BaseCommunicationService {
   private JsonArray allResources;
 
   /**
+   * A method that is invoked before the seeding of the resources starts.
+   * By default it does nothing.
+   */
+  public void before() {
+    // Nothing by default
+  }
+
+  /**
    * Finds the JSON representation of the resource by its code.
    *
    * @param code the value of the field to find
