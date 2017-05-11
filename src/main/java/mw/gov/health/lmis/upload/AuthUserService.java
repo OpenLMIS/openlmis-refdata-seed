@@ -14,6 +14,6 @@ public class AuthUserService extends BaseCommunicationService {
 
   @Override
   public JsonObject findUnique(JsonObject object) {
-    return findByName(object.getString("username"));
+    return findBy("username", object.getString("username"));
   }
 }
