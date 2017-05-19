@@ -30,6 +30,7 @@ public class App {
               .registerSingleton(Configuration.class.getCanonicalName(), configuration)
       );
 
+      application.setWebEnvironment(false);
       application.run();
     } catch (IOException ex) {
       LOGGER.error("Configuration file " + CONFIG + " not found, but required to run "
