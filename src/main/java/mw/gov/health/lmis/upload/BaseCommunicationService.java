@@ -201,8 +201,8 @@ public abstract class BaseCommunicationService {
     URI uri = createUri(url, parameters);
 
     try {
-      logger.info("PUT {}", uri);
-      logger.info(body.getBody());
+      logger.debug("PUT {}", uri);
+      logger.debug(body.getBody());
       restTemplate.put(uri, body);
     } catch (RestClientResponseException ex) {
       logger.error("Can not update resource: {}", ex.getResponseBodyAsString());
@@ -236,12 +236,12 @@ public abstract class BaseCommunicationService {
 
     try {
       if (getCreateMethod() == HttpMethod.POST) {
-        logger.info("POST {}", uri);
-        logger.info(body.getBody());
+        logger.debug("POST {}", uri);
+        logger.debug(body.getBody());
         restTemplate.postForEntity(uri, body, Object.class);
       } else if (getCreateMethod() == HttpMethod.PUT) {
-        logger.info("PUT {}", uri);
-        logger.info(body.getBody());
+        logger.debug("PUT {}", uri);
+        logger.debug(body.getBody());
         restTemplate.put(uri, body);
       } else {
         logger.error("Unsupported HTTP method provided: {}", getCreateMethod().name());
