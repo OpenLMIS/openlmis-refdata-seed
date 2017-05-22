@@ -11,7 +11,7 @@ CSV input and mapping files into the JSON files that can be consumed by the Open
 1. Fork/clone this repository from GitHub.
 
 ```shell
-git clone https://github.com/OpenLMIS/mw-refdata-seed.git
+git clone https://github.com/OpenLMIS/openlmis-refdata-seed.git
 ```
 2. Build the application by using maven. After the build steps finish, you should see 'BUILD SUCCESS'.
 
