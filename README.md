@@ -1,6 +1,7 @@
-# Malawi Reference Data seed tool
+# OpenLMIS Reference Data seed tool
 
-This repository contains the code of the Malawi Reference Data seeding tool. The tool converts CSV input and mapping files into the JSON files that can be consumed by the OpenLMIS web API and inserts them into the running OpenLMIS instance.
+This repository contains the code of the OpenLMIS Reference Data seeding tool. The tool converts
+CSV input and mapping files into the JSON files that can be consumed by the OpenLMIS web API and inserts them into the running OpenLMIS instance.
 
 ## Prerequisites
 * Java 8
