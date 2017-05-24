@@ -22,7 +22,7 @@ docker-compose -f docker-compose.builder.yml run builder
 3. Execute the generated jar file from the build/libs directory.
 
 ```shell
-java -jar build/libs/mrefdata.seed-1.0.0-SNAPSHOT.jar
+java -jar build/libs/openlmis-refdata-seed-1.0.0-SNAPSHOT.jar
 ```
 
 ## Configuration file
