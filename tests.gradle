@@ -1,0 +1,23 @@
+tasks.withType(Test) {
+    reports.html.destination = file("${reporting.baseDir}/${name}")
+    reports.junitXml.destination = file("${testResultsDir}/${name}")
+}
+
+test {
+    testLogging {
+        events 'started', 'passed'
+        exceptionFormat = 'full'
+    }
+}
+
+jacocoTestReport {
+    group = "reporting"
+    description = "Generate Jacoco coverage reports after running tests."
+    reports {
+        xml.enabled false
+        html.enabled true
+        csv.enabled false
+    }
+
+    additionalSourceDirs = files(sourceSets.main.allJava.srcDirs)
+}

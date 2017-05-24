@@ -1,0 +1,45 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:1.5.1.RELEASE"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'jacoco'
+
+apply from: "dependency.gradle"
+apply from: "codeAnalysis.gradle"
+apply from: "tests.gradle"
+
+group = serviceGroup
+version = serviceVersion
+archivesBaseName = rootProject.name
+project.ext.buildTime = java.time.Instant.now().toString() // for versioning
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+idea {
+    project {
+        vcs = 'Git'
+        ipr.withXml { xmlFile ->
+            // enable 'Annotation Processors', source: https://gist.github.com/stephanos/8645809
+            xmlFile.asNode().component
+                    .find { it.@name == 'CompilerConfiguration' }['annotationProcessing'][0]
+                    .replaceNode {
+                annotationProcessing {
+                    profile(default: true, name: 'Default', useClasspath: 'true', enabled: true)
+                }
+            }
+        }
+    }
+}
+
+build {
+    dependsOn jacocoTestReport
+    dependsOn check
+}
