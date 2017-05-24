@@ -35,7 +35,8 @@ import javax.json.JsonObjectBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FindObjectTypeConverterTest {
-
+  private static final String DESCRIPTION = "description";
+  
   @Mock
   private Services services;
 
@@ -75,7 +76,7 @@ public class FindObjectTypeConverterTest {
   @Test
   public void shouldConvert() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("description", "description", "TO_OBJECT_BY_CODE", "Entity", "");
+    Mapping mapping = new Mapping(DESCRIPTION, DESCRIPTION, "TO_OBJECT_BY_CODE", "Entity", "");
     String value = "CODE01";
 
     converter.convert(builder, mapping, value);
@@ -87,7 +88,7 @@ public class FindObjectTypeConverterTest {
   @Test
   public void shouldHandleNullObject() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("description", "description", "TO_OBJECT_BY_CODE", "Entity", "");
+    Mapping mapping = new Mapping(DESCRIPTION, DESCRIPTION, "TO_OBJECT_BY_CODE", "Entity", "");
     String value = "CODE02";
 
     converter.convert(builder, mapping, value);

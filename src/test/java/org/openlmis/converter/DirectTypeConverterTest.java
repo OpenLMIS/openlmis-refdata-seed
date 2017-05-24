@@ -26,6 +26,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 public class DirectTypeConverterTest {
+  private static final String DESCRIPTION = "description";
   private DirectTypeConverter converter = new DirectTypeConverter();
 
   @Test
@@ -43,7 +44,7 @@ public class DirectTypeConverterTest {
   @Test
   public void shouldConvert() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("description", "description", "DIRECT", "", "");
+    Mapping mapping = new Mapping(DESCRIPTION, DESCRIPTION, "DIRECT", "", "");
     String value = "short description";
 
     converter.convert(builder, mapping, value);
@@ -55,7 +56,7 @@ public class DirectTypeConverterTest {
   @Test
   public void shouldSkipNullValue() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("description", "description", "DIRECT", "", "");
+    Mapping mapping = new Mapping(DESCRIPTION, DESCRIPTION, "DIRECT", "", "");
 
     converter.convert(builder, mapping, null);
 

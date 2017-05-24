@@ -37,7 +37,8 @@ import javax.json.JsonObjectBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class StandardArrayTypeConverterTest {
-
+  private static final String CODE = "code";
+  
   @Mock
   private Services services;
 
@@ -58,9 +59,9 @@ public class StandardArrayTypeConverterTest {
 
   @Before
   public void setUp() throws Exception {
-    doReturn(mockJson1).when(service).findBy("code", "CODE01");
-    doReturn(mockJson2).when(service).findBy("code", "CODE02");
-    doReturn(mockJson3).when(service).findBy("code", "CODE03");
+    doReturn(mockJson1).when(service).findBy(CODE, "CODE01");
+    doReturn(mockJson2).when(service).findBy(CODE, "CODE02");
+    doReturn(mockJson3).when(service).findBy(CODE, "CODE03");
 
     doReturn(service).when(services).getService("EntityName");
   }
@@ -92,7 +93,7 @@ public class StandardArrayTypeConverterTest {
   @Test
   public void shouldConvert() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "TO_ARRAY_BY_CODE", "EntityName", "");
+    Mapping mapping = new Mapping(CODE, CODE, "TO_ARRAY_BY_CODE", "EntityName", "");
     String value = "[CODE01,CODE03]";
 
     converter.convert(builder, mapping, value);
@@ -109,7 +110,7 @@ public class StandardArrayTypeConverterTest {
   @Test
   public void shouldHandleNullObject() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "TO_ARRAY_BY_CODE", "EntityName", "");
+    Mapping mapping = new Mapping(CODE, CODE, "TO_ARRAY_BY_CODE", "EntityName", "");
     String value = "[CODE02,CODE03,CODE05]";
 
     converter.convert(builder, mapping, value);

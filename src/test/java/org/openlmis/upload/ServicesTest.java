@@ -68,7 +68,8 @@ public class ServicesTest {
   }
 
   @Configuration
-  @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = CommandLineRunner.class))
+  @ComponentScan(excludeFilters = @ComponentScan.Filter(
+      type = FilterType.ASSIGNABLE_TYPE, value = CommandLineRunner.class))
   @EnableAutoConfiguration
   static class Config {
 

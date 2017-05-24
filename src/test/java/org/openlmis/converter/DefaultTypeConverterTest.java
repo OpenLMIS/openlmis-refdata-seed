@@ -26,6 +26,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 public class DefaultTypeConverterTest {
+  private static final String CODE = "code";
   private DefaultTypeConverter converter = new DefaultTypeConverter();
 
   @Test
@@ -43,7 +44,7 @@ public class DefaultTypeConverterTest {
   @Test
   public void shouldConvert() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "USE_DEFAULT", "", "11235813");
+    Mapping mapping = new Mapping(CODE, CODE, "USE_DEFAULT", "", "11235813");
 
     converter.convert(builder, mapping, null);
 
@@ -54,7 +55,7 @@ public class DefaultTypeConverterTest {
   @Test
   public void shouldSkipNullValue() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "USE_DEFAULT", "", null);
+    Mapping mapping = new Mapping(CODE, CODE, "USE_DEFAULT", "", null);
 
     converter.convert(builder, mapping, null);
 

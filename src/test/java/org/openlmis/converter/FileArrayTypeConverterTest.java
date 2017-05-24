@@ -49,7 +49,8 @@ import javax.json.JsonObjectBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FileArrayTypeConverterTest {
-
+  private static final String CODE = "code";
+  
   @Mock
   private Configuration configuration;
 
@@ -68,15 +69,15 @@ public class FileArrayTypeConverterTest {
   @Before
   public void setUp() throws Exception {
     List<Map<String, String>> innerData = Lists.newArrayList(
-        ImmutableMap.of("code", "one"),
-        ImmutableMap.of("code", "two"),
-        ImmutableMap.of("code", "three"),
-        ImmutableMap.of("code", "four"),
-        ImmutableMap.of("code", "five")
+        ImmutableMap.of(CODE, "one"),
+        ImmutableMap.of(CODE, "two"),
+        ImmutableMap.of(CODE, "three"),
+        ImmutableMap.of(CODE, "four"),
+        ImmutableMap.of(CODE, "five")
     );
 
     List<Mapping> innerMapping = Lists.newArrayList(
-        new Mapping("code", "code", "DIRECT", "", "")
+        new Mapping(CODE, CODE, "DIRECT", "", "")
     );
 
     doReturn("").when(configuration).getDirectory();
@@ -112,7 +113,7 @@ public class FileArrayTypeConverterTest {
   @Test
   public void shouldConvert() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "TO_ARRAY_FROM_FILE_BY_CODE", "inner.csv", "");
+    Mapping mapping = new Mapping(CODE, CODE, "TO_ARRAY_FROM_FILE_BY_CODE", "inner.csv", "");
     String value = "[one,five]";
 
     typeConverter.convert(builder, mapping, value);
@@ -123,14 +124,14 @@ public class FileArrayTypeConverterTest {
     JsonArray array = object.getJsonArray(mapping.getTo());
 
     assertThat(array, hasSize(2));
-    assertThat(array.getJsonObject(0).getString("code"), is(equalTo("one")));
-    assertThat(array.getJsonObject(1).getString("code"), is(equalTo("five")));
+    assertThat(array.getJsonObject(0).getString(CODE), is(equalTo("one")));
+    assertThat(array.getJsonObject(1).getString(CODE), is(equalTo("five")));
   }
 
   @Test
   public void shouldCreateEmptyListIfThereIsNoMatchingItems() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "TO_ARRAY_FROM_FILE_BY_CODE", "inner.csv", "");
+    Mapping mapping = new Mapping(CODE, CODE, "TO_ARRAY_FROM_FILE_BY_CODE", "inner.csv", "");
     String value = "[six]";
 
     typeConverter.convert(builder, mapping, value);

@@ -25,6 +25,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 public class CreateObjectTypeConverterTest {
+  private static final String CODE = "code";
   private CreateObjectTypeConverter converter = new CreateObjectTypeConverter();
 
   @Test
@@ -41,7 +42,7 @@ public class CreateObjectTypeConverterTest {
   @Test
   public void shouldConvert() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "TO_OBJECT", "", "");
+    Mapping mapping = new Mapping(CODE, CODE, "TO_OBJECT", "", "");
     String value = "key:1,key2:2,type:R";
 
     converter.convert(builder, mapping, value);
@@ -59,7 +60,7 @@ public class CreateObjectTypeConverterTest {
   @Test
   public void shouldSkipIncorrectValues() throws Exception {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("code", "code", "TO_OBJECT", "", "");
+    Mapping mapping = new Mapping(CODE, CODE, "TO_OBJECT", "", "");
     String value = "key:1,key2,type:R";
 
     converter.convert(builder, mapping, value);

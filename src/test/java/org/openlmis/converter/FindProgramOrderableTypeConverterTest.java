@@ -37,6 +37,11 @@ import javax.json.JsonObjectBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FindProgramOrderableTypeConverterTest {
+  private static final String FIND_PROGRAM_ORDERABLE = "FIND_PROGRAM_ORDERABLE";
+  private static final String CODE = "code";
+  private static final String ONE = "one";
+  private static final String TWO = "two";
+  private static final String VALUE = "[PR012345,em]";
 
   @Mock
   private ProgramService programService;
@@ -76,7 +81,7 @@ public class FindProgramOrderableTypeConverterTest {
 
   @Test
   public void shouldSupportTypes() throws Exception {
-    assertThat(converter.supports("FIND_PROGRAM_ORDERABLE"), is(true));
+    assertThat(converter.supports(FIND_PROGRAM_ORDERABLE), is(true));
   }
 
   @Test
@@ -94,14 +99,13 @@ public class FindProgramOrderableTypeConverterTest {
 
   @Test
   public void shouldConvert() throws Exception {
-    doReturn(program).when(programService).findBy("code", "em");
+    doReturn(program).when(programService).findBy(CODE, "em");
     doReturn(product).when(orderableService).findBy("productCode", "PR012345");
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("one", "two", "FIND_PROGRAM_ORDERABLE", "", "");
-    String value = "[PR012345,em]";
+    Mapping mapping = new Mapping(ONE, TWO, FIND_PROGRAM_ORDERABLE, "", "");
 
-    converter.convert(builder, mapping, value);
+    converter.convert(builder, mapping, VALUE);
 
     JsonObject object = builder.build();
     assertThat(object.containsKey(mapping.getTo()), is(true));
@@ -110,15 +114,14 @@ public class FindProgramOrderableTypeConverterTest {
 
   @Test
   public void shouldNotSetValueIfProgramOrderableCannotbeFound() throws Exception {
-    doReturn(program).when(programService).findBy("code", "em");
+    doReturn(program).when(programService).findBy(CODE, "em");
     doReturn(product).when(orderableService).findBy("productCode", "PR012345");
     doReturn(0).when(programOrderables).size();
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("one", "two", "FIND_PROGRAM_ORDERABLE", "", "");
-    String value = "[PR012345,em]";
+    Mapping mapping = new Mapping(ONE, TWO, FIND_PROGRAM_ORDERABLE, "", "");
 
-    converter.convert(builder, mapping, value);
+    converter.convert(builder, mapping, VALUE);
 
     JsonObject object = builder.build();
     assertThat(object.containsKey(mapping.getTo()), is(false));
@@ -126,14 +129,13 @@ public class FindProgramOrderableTypeConverterTest {
 
   @Test
   public void shouldNotSetValueIfProductCannotbeFound() throws Exception {
-    doReturn(program).when(programService).findBy("code", "em");
+    doReturn(program).when(programService).findBy(CODE, "em");
     doReturn(null).when(orderableService).findBy("productCode", "PR012345");
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("one", "two", "FIND_PROGRAM_ORDERABLE", "", "");
-    String value = "[PR012345,em]";
+    Mapping mapping = new Mapping(ONE, TWO, FIND_PROGRAM_ORDERABLE, "", "");
 
-    converter.convert(builder, mapping, value);
+    converter.convert(builder, mapping, VALUE);
 
     JsonObject object = builder.build();
     assertThat(object.containsKey(mapping.getTo()), is(false));
@@ -141,13 +143,12 @@ public class FindProgramOrderableTypeConverterTest {
 
   @Test
   public void shouldNotSetValueIfProgramCannotbeFound() throws Exception {
-    doReturn(null).when(programService).findBy("code", "em");
+    doReturn(null).when(programService).findBy(CODE, "em");
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping("one", "two", "FIND_PROGRAM_ORDERABLE", "", "");
-    String value = "[PR012345,em]";
+    Mapping mapping = new Mapping(ONE, TWO, FIND_PROGRAM_ORDERABLE, "", "");
 
-    converter.convert(builder, mapping, value);
+    converter.convert(builder, mapping, VALUE);
 
     JsonObject object = builder.build();
     assertThat(object.containsKey(mapping.getTo()), is(false));
