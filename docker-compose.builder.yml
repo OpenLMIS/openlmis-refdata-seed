@@ -1,0 +1,13 @@
+version: "2"
+services:
+
+  builder:
+    image: openlmis/dev:2
+    volumes:
+      - '.:/app'
+    command:
+      - './build.sh'
+    environment:
+      GRADLE_OPTS: '-Dorg.gradle.daemon=false'
+      JAVA_OPTS: '-Dlogging.config=/logback.xml'
+

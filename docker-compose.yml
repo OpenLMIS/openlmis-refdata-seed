@@ -1,0 +1,15 @@
+version: "2"
+services:
+
+  refdata-seed:
+    image: openlmis/dev:2
+    ports:
+      - "5005:5005"
+      - "8080:8080"
+    volumes:
+      - '.:/app'
+      - 'gradlecache:/gradle'
+
+volumes:
+  gradlecache:
+    external: false
