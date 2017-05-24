@@ -11,3 +11,13 @@ services:
       GRADLE_OPTS: '-Dorg.gradle.daemon=false'
       JAVA_OPTS: '-Dlogging.config=/logback.xml'
 
+  runner:
+    image: openlmis/dev:2
+    volumes:
+      - '.:/app'
+    command:
+      - './run.sh'
+    environment:
+      GRADLE_OPTS: '-Dorg.gradle.daemon=false'
+      JAVA_OPTS: '-Dlogging.config=/logback.xml'
+    env_file: .env
