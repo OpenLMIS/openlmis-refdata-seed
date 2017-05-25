@@ -232,6 +232,38 @@ public abstract class BaseCommunicationService {
   }
 
   /**
+   * Attempts to delete a resource in OpenLMIS.
+   *
+   * @param id the UUID of the resource that will be deleted
+   * @return whether the attempt was successful
+   */
+  public boolean deleteResource(String id) {
+    String url = buildDeleteUrl(configuration.getHost() + getUrl(), id);
+
+    RequestParameters parameters = RequestParameters
+        .init()
+        .set(ACCESS_TOKEN, authService.obtainAccessToken());
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    URI uri = createUri(url, parameters);
+
+    try {
+      logger.debug("DELETE {}", uri);
+      restTemplate.delete(uri);
+    } catch (RestClientResponseException ex) {
+      logger.error("Can not delete resource: {}", ex.getResponseBodyAsString());
+      return false;
+    } catch (RestClientException ex) {
+      logger.error("Can not delete resource: {}", ex.getMessage());
+      return false;
+    }
+
+    invalidateCache();
+    return true;
+  }
+
+  /**
    * Attempts to create a new resource in OpenLMIS.
    *
    * @param json JSON representation of the resource to create
@@ -283,6 +315,10 @@ public abstract class BaseCommunicationService {
   }
 
   protected String buildUpdateUrl(String base, String id) {
+    return base + "/" + id;
+  }
+
+  protected String buildDeleteUrl(String base, String id) {
     return base + "/" + id;
   }
 

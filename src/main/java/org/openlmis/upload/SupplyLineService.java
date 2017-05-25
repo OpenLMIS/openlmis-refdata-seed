@@ -51,4 +51,14 @@ public class SupplyLineService extends BaseCommunicationService {
     return null;
   }
 
+  @Override
+  public void before() {
+    logger.info("Removing all SupplyLines and preparing to re-create.");
+    JsonArray supplyLines = findAll();
+    for (int i = 0; i < supplyLines.size(); ++i) {
+      JsonObject supplyLine = supplyLines.getJsonObject(i);
+      deleteResource(supplyLine.getString(ID));
+    }
+  }
+
 }
