@@ -43,14 +43,18 @@ public class GenericReader implements Reader {
    * Reads the CSV file and converts it to a collection of map entries. Each map in the
    * collection represents field values of a single CSV line.
    *
-   * @param fileName the name of file with data.
+   * @param file the file with input data.
    * @return List of map entries
    */
   @Override
-  public List<Map<String, String>> readFromFile(String fileName) {
+  public List<Map<String, String>> readFromFile(File file) {
+    if (!file.exists() || file.isDirectory()) {
+      LOGGER.warn("The input file {} does not exist. Entity won't be created or updated.",
+          file.getAbsolutePath());
+      return Lists.newArrayList();
+    }
+
     try {
-      File file = new File(fileName);
-      
       CsvMapper mapper = new CsvMapper();
       CsvSchema schema = CsvSchema.emptySchema().withHeader();
       MappingIterator<Map<String, String>> iterator = mapper
@@ -60,7 +64,7 @@ public class GenericReader implements Reader {
 
       return iterator.readAll(Lists.newArrayList());
     } catch (IOException ex) {
-      LOGGER.warn("The file with name " + fileName + " does not exist", ex);
+      LOGGER.error("The file with name " + file.getName() + " could not be open or read.", ex);
       return Lists.newArrayList();
     }
   }

@@ -35,9 +35,8 @@ public class MappingConverterTest {
   @Test
   public void shouldReadMappingFile() throws Exception {
     File file = ResourceUtils.getFile(getClass().getResource("/test_mapping.csv"));
-    String filePath = file.getAbsolutePath();
 
-    List<Mapping> mappings = converter.getMappingForFile(filePath);
+    List<Mapping> mappings = converter.getMappingForFile(file);
 
     assertThat(mappings, Matchers.hasSize(3));
 
@@ -66,6 +65,6 @@ public class MappingConverterTest {
 
   @Test
   public void shouldReturnEmptyListIfFileNotExist() throws Exception {
-    assertThat(converter.getMappingForFile("abc"), hasSize(0));
+    assertThat(converter.getMappingForFile(new File("abc")), hasSize(0));
   }
 }

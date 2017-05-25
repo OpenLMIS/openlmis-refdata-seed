@@ -15,10 +15,11 @@
 
 package org.openlmis.reader;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
 public interface Reader {
 
-  List<Map<String, String>> readFromFile(String entityName);
+  List<Map<String, String>> readFromFile(File file);
 }

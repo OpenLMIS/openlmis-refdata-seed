@@ -34,9 +34,8 @@ public class GenericReaderTest {
   @Test
   public void shouldReadFromFile() throws Exception {
     File file = ResourceUtils.getFile(getClass().getResource("/test.csv"));
-    String filePath = file.getAbsolutePath();
 
-    List<Map<String, String>> csvs = reader.readFromFile(filePath);
+    List<Map<String, String>> csvs = reader.readFromFile(file);
 
     assertThat(csvs, hasSize(3));
 
@@ -58,7 +57,7 @@ public class GenericReaderTest {
 
   @Test
   public void shouldReturnEmptyListIfFileNotExist() throws Exception {
-    assertThat(reader.readFromFile("abc"), hasSize(0));
+    assertThat(reader.readFromFile(new File("abc")), hasSize(0));
   }
 
 }

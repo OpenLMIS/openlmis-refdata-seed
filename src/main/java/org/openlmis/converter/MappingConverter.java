@@ -37,18 +37,24 @@ public class MappingConverter {
 
   /**
    * Gets the mapping specification fro mthe given file.
-   * @param mappingFileName file containing mappings
+   * @param mappingFile file containing mappings
    * @return mapping spec
    */
-  public List<Mapping> getMappingForFile(String mappingFileName) {
-    try (CSVReader reader = new CSVReader(new FileReader(new File(mappingFileName)))) {
+  public List<Mapping> getMappingForFile(File mappingFile) {
+    if (!mappingFile.exists() || mappingFile.isDirectory()) {
+      LOGGER.warn("The mapping file {} does not exist. Entity won't be created or updated",
+          mappingFile.getAbsolutePath());
+      return Lists.newArrayList();
+    }
+
+    try (CSVReader reader = new CSVReader(new FileReader(mappingFile))) {
       HeaderColumnNameMappingStrategy<Mapping> strategy = new HeaderColumnNameMappingStrategy<>();
       strategy.setType(Mapping.class);
 
       CsvToBean<Mapping> csvToBean = new CsvToBean<>();
       return csvToBean.parse(strategy, reader);
     } catch (IOException ex) {
-      LOGGER.warn("The mapping file " + mappingFileName + " does not exist.", ex);
+      LOGGER.error("The mapping file " + mappingFile.getName() + " could not be open or read.", ex);
       return Lists.newArrayList();
     }
   }

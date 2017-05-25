@@ -60,14 +60,14 @@ class FileArrayTypeConverter extends BaseTypeConverter {
 
     String parent = configuration.getDirectory();
     String inputFileName = new File(parent, mapping.getEntityName()).getAbsolutePath();
-    List<Map<String, String>> csvs = reader.readFromFile(inputFileName);
+    List<Map<String, String>> csvs = reader.readFromFile(new File(inputFileName));
     csvs.removeIf(map -> !codes.contains(map.get(by)));
 
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
     if (!csvs.isEmpty()) {
       String mappingFileName = inputFileName.replace(".csv", "_mapping.csv");
-      List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
+      List<Mapping> mappings = mappingConverter.getMappingForFile(new File(mappingFileName));
 
       for (Map<String, String> csv : csvs) {
         String json = converter.convert(csv, mappings).toString();

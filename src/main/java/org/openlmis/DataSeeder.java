@@ -15,19 +15,19 @@
 
 package org.openlmis;
 
+import org.openlmis.converter.Converter;
 import org.openlmis.converter.Mapping;
+import org.openlmis.converter.MappingConverter;
+import org.openlmis.reader.GenericReader;
 import org.openlmis.upload.BaseCommunicationService;
+import org.openlmis.upload.Services;
 import org.openlmis.utils.SourceFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import org.openlmis.converter.Converter;
-import org.openlmis.converter.MappingConverter;
-import org.openlmis.reader.GenericReader;
-import org.openlmis.upload.Services;
-
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -72,8 +72,17 @@ public class DataSeeder {
     LOGGER.info("Using input file: {}", inputFileName);
     LOGGER.info("Using mapping file: {}", mappingFileName);
 
-    List<Map<String, String>> csvs = reader.readFromFile(inputFileName);
-    List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFileName);
+    File inputFile = new File(inputFileName);
+    File mappingFile = new File(mappingFileName);
+
+    List<Map<String, String>> csvs = reader.readFromFile(inputFile);
+    List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFile);
+
+    if (!inputFile.exists() || inputFile.isDirectory() || !mappingFile.exists()
+        || mappingFile.isDirectory()) {
+      LOGGER.warn("{} will not be processed due to missing input/mapping files.", source.getName());
+      return;
+    }
 
     BaseCommunicationService service = services.getService(source);
     service.before();
