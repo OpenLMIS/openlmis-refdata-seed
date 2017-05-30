@@ -24,7 +24,7 @@ public enum SourceFile {
   STOCK_ADJUSTMENT_REASONS("StockAdjustmentReasons"),
   ORDERABLE_DISPLAY_CATEGORIES("OrderableDisplayCategory", "OrderableDisplayCategories"),
   FACILITY_TYPES("FacilityTypes"),
-  COMMODITY_TYPES("CommodityTypes"),
+  ORDERABLES("Orderables"),
   FACILITY_TYPE_APPROVED_PRODUCTS("FacilityTypeApprovedProducts"),
   PROCESSING_SCHEDULE("ProcessingSchedules"),
   PROCESSING_PERIOD("ProcessingPeriods"),

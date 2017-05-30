@@ -15,6 +15,7 @@
 
 package org.openlmis.upload;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import javax.json.JsonObject;
@@ -30,5 +31,15 @@ public class OrderableService extends BaseCommunicationService {
   @Override
   public JsonObject findUnique(JsonObject object) {
     return findBy("productCode", object.getString("productCode"));
+  }
+
+  @Override
+  public HttpMethod getCreateMethod() {
+    return HttpMethod.PUT;
+  }
+
+  @Override
+  public String buildUpdateUrl(String base, String id) {
+    return base;
   }
 }

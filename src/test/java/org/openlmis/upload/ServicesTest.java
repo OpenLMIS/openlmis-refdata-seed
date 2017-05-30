@@ -50,7 +50,7 @@ public class ServicesTest {
         .put(SourceFile.STOCK_ADJUSTMENT_REASONS, StockAdjustmentReasonService.class)
         .put(SourceFile.ORDERABLE_DISPLAY_CATEGORIES, OrderableDisplayCategoryService.class)
         .put(SourceFile.FACILITY_TYPES, FacilityTypeService.class)
-        .put(SourceFile.COMMODITY_TYPES, CommodityTypeService.class)
+        .put(SourceFile.ORDERABLES, OrderableService.class)
         .put(SourceFile.FACILITY_TYPE_APPROVED_PRODUCTS, FacilityTypeApprovedProductService.class)
         .put(SourceFile.PROCESSING_SCHEDULE, ProcessingScheduleService.class)
         .put(SourceFile.PROCESSING_PERIOD, ProcessingPeriodService.class)
