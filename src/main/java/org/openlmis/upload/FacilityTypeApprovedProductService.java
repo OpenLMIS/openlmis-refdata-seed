@@ -18,6 +18,10 @@ package org.openlmis.upload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 
 @Service
@@ -25,6 +29,9 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
 
   @Autowired
   private OrderableService orderableService;
+
+  @Autowired
+  private FacilityTypeService facilityTypeService;
 
   @Override
   protected String getUrl() {
@@ -34,6 +41,22 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
   @Override
   public void before() {
     orderableService.invalidateCache();
+
+    logger.info("Removing all FacilityTypeApprovedProducts and preparing to re-create.");
+    JsonArray types = facilityTypeService.findAll();
+    for (int i = 0; i < types.size(); i++) {
+      JsonObject type = types.getJsonObject(i);
+      String facilityTypeCode = type.getString(CODE);
+
+      Map<String, String> searchParams = new HashMap<>();
+      searchParams.put("facilityType", facilityTypeCode);
+      JsonArray ftaps = search(searchParams);
+
+      for (int j = 0; j < ftaps.size(); j++) {
+        JsonObject ftap = ftaps.getJsonObject(j);
+        deleteResource(ftap.getString(ID));
+      }
+    }
   }
 
   @Override

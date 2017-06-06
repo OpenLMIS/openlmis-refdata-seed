@@ -196,6 +196,36 @@ public abstract class BaseCommunicationService {
   }
 
   /**
+   * Searches the instances using the "/search" endpoint and POST HTTP method. It also supports
+   * query parameters.
+   *
+   * @param searchParameters a map of parameters to use while searching
+   * @return array of found instances
+   */
+  public JsonArray search(Map<String, String> searchParameters) {
+    String url = configuration.getHost() + getUrl() + "/search";
+
+    RequestParameters params = RequestParameters
+        .init()
+        .set(ACCESS_TOKEN, authService.obtainAccessToken());
+
+    try {
+      ResponseEntity<String> response = restTemplate.postForEntity(createUri(url, params),
+          searchParameters, String.class);
+      JsonStructure structure = convertToJsonStructure(response.getBody());
+      if (structure.getValueType() == JsonValue.ValueType.ARRAY) {
+        allResources = convertToJsonArray(response.getBody());
+      } else {
+        JsonObject object = convertToJsonObject(response.getBody());
+        allResources = object.getJsonArray("content");
+      }
+      return allResources;
+    } catch (HttpStatusCodeException ex) {
+      throw buildDataRetrievalException(ex);
+    }
+  }
+
+  /**
    * Attempts to update a resource in OpenLMIS.
    *
    * @param jsonObject JSON object representation of the resource to update
