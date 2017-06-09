@@ -57,7 +57,7 @@ class StandardArrayTypeConverter extends BaseTypeConverter {
         logger.warn(
             "The CSV file contained reference to entity {} "
                 + "with {} {} but such reference does not exist.",
-            mapping.getEntityName(), by, value
+            mapping.getEntityName(), by, v
         );
       } else {
         arrayBuilder.add(object);
