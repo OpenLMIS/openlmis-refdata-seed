@@ -110,7 +110,7 @@ public abstract class BaseCommunicationService {
     for (int i = 0; i < array.size(); i++) {
       JsonObject object = array.getJsonObject(i);
       JsonString read = object.getJsonString(by);
-      if (value.equals(read.getString())) {
+      if (value.equalsIgnoreCase(read.getString())) {
         return object;
       }
     }
