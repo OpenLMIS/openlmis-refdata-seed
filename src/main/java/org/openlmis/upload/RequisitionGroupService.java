@@ -17,7 +17,6 @@ package org.openlmis.upload;
 
 import org.springframework.stereotype.Service;
 
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 
 @Service
@@ -31,15 +30,5 @@ public class RequisitionGroupService extends BaseCommunicationService {
   @Override
   public JsonObject findUnique(JsonObject object) {
     return findByCode(object.getString(CODE));
-  }
-
-  @Override
-  public void before() {
-    logger.info("Removing all RequisitionGroups and preparing to re-create.");
-    JsonArray groups = findAll();
-    for (int i = 0; i < groups.size(); ++i) {
-      JsonObject group = groups.getJsonObject(i);
-      deleteResource(group.getString(ID));
-    }
   }
 }
