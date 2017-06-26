@@ -25,6 +25,12 @@ docker-compose -f docker-compose.builder.yml run builder
 java -jar build/libs/openlmis-refdata-seed-1.0.0-SNAPSHOT.jar
 ```
 
+4. You can also run the tool in the debug mode (it will listen on port 5005).
+
+```shell
+gradle bootRun --debug-jvm
+```
+
 ## Configuration file
 
 The configuration file must be placed in the same directory as the tool (jar file) itself. 
