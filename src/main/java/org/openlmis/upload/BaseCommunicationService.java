@@ -17,6 +17,7 @@ package org.openlmis.upload;
 
 import static org.openlmis.upload.RequestHelper.createUri;
 
+import org.openlmis.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +33,13 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 
-import org.openlmis.Configuration;
-
 import java.io.StringReader;
 import java.net.URI;
 import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
@@ -53,6 +53,10 @@ public abstract class BaseCommunicationService {
   static final String ID = "id";
   static final String CODE = "code";
   static final String NAME = "name";
+
+  static final String TOTAL_PAGES = "totalPages";
+  static final String PAGE = "page";
+  static final String CONTENT = "content";
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -187,7 +191,15 @@ public abstract class BaseCommunicationService {
         allResources = convertToJsonArray(response.getBody());
       } else {
         JsonObject object = convertToJsonObject(response.getBody());
-        allResources = object.getJsonArray("content");
+        allResources = object.getJsonArray(CONTENT);
+
+        for (int i = 1; i < object.getInt(TOTAL_PAGES); i++) {
+          params.set(PAGE, i);
+          response = restTemplate.getForEntity(createUri(url, params), String.class);
+          object = convertToJsonObject(response.getBody());
+          JsonArray pagedResources = object.getJsonArray(CONTENT);
+          allResources = mergeJsonArrays(allResources, pagedResources);
+        }
       }
       return allResources;
     } catch (HttpStatusCodeException ex) {
@@ -337,6 +349,18 @@ public abstract class BaseCommunicationService {
     return new DataRetrievalException(Map.class.getSimpleName(),
         ex.getStatusCode(),
         ex.getResponseBodyAsString());
+  }
+
+  private JsonArray mergeJsonArrays(JsonArray allResources, JsonArray pagedResources) {
+    JsonArrayBuilder builder = Json.createArrayBuilder();
+    for (JsonValue value : allResources) {
+      builder.add(value);
+    }
+    for (JsonValue value : pagedResources) {
+      builder.add(value);
+    }
+
+    return builder.build();
   }
 
   private JsonStructure convertToJsonStructure(String body) {
