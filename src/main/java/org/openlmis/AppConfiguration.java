@@ -32,14 +32,17 @@ public class AppConfiguration {
    * Here the application starts with spring context.
    */
   @Bean
-  public CommandLineRunner commandLineRunner(DataSeeder seeder, ApplicationContext context) {
-    return args -> startUp(seeder, context);
+  public CommandLineRunner commandLineRunner(DataSeeder seeder, DataValidator validator,
+                                             ApplicationContext context) {
+    return args -> startUp(seeder, validator, context);
   }
 
-  private void startUp(DataSeeder seeder, ApplicationContext context) {
+  private void startUp(DataSeeder seeder, DataValidator validator, ApplicationContext context) {
     LOGGER.info("RUNNING");
     seeder.seedData();
-    LOGGER.info("Seeding complete. Exiting.");
+    LOGGER.info("Seeding complete.");
+    validator.validate();
+    LOGGER.info("Data validation complete.");
     SpringApplication.exit(context);
   }
 }
