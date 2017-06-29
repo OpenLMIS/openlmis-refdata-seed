@@ -57,7 +57,10 @@ public class SupervisoryNodeValidator implements Validator {
       String code = object.getString("code");
 
       forGroupsCode.add(code);
-      forSupplyCode.add(code);
+
+      if (!object.containsKey("parentNode") || object.isNull("parentNode")) {
+        forSupplyCode.add(code);
+      }
     });
 
     for (int j = 0, length = supplyLines.size(); j < length; ++j) {
@@ -80,17 +83,17 @@ public class SupervisoryNodeValidator implements Validator {
       }
     }
 
-    if (LOGGER.isWarnEnabled() && !forGroupsCode.isEmpty()) {
+    if (LOGGER.isWarnEnabled() && !forSupplyCode.isEmpty()) {
       LOGGER.warn(
           "Found Supervisory node without supply lines: {}",
-          String.join(", ", forGroupsCode)
+          String.join(", ", forSupplyCode)
       );
     }
 
-    if (LOGGER.isWarnEnabled() && !forSupplyCode.isEmpty()) {
+    if (LOGGER.isWarnEnabled() && !forGroupsCode.isEmpty()) {
       LOGGER.warn(
           "Found supervisory node without requisition group(s): {}",
-          String.join(", ", forSupplyCode)
+          String.join(", ", forGroupsCode)
       );
     }
   }
