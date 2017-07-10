@@ -63,25 +63,8 @@ public class SupervisoryNodeValidator implements Validator {
       }
     });
 
-    for (int j = 0, length = supplyLines.size(); j < length; ++j) {
-      JsonObject supplyLine = supplyLines.getJsonObject(j);
-      JsonObject supervisoryNode = supplyLine.getJsonObject("supervisoryNode");
-      String code = supervisoryNode.getString("code");
-
-      if (forSupplyCode.contains(code)) {
-        forSupplyCode.remove(code);
-      }
-    }
-
-    for (int j = 0, length = requisitionGroups.size(); j < length; ++j) {
-      JsonObject requisitionGroup = requisitionGroups.getJsonObject(j);
-      JsonObject supervisoryNode = requisitionGroup.getJsonObject("supervisoryNode");
-      String code = supervisoryNode.getString("code");
-
-      if (forGroupsCode.contains(code)) {
-        forGroupsCode.remove(code);
-      }
-    }
+    checkCodes(supplyLines, forSupplyCode);
+    checkCodes(requisitionGroups, forGroupsCode);
 
     if (LOGGER.isWarnEnabled() && !forSupplyCode.isEmpty()) {
       LOGGER.warn(
@@ -95,6 +78,18 @@ public class SupervisoryNodeValidator implements Validator {
           "Found supervisory node without requisition group(s): {}",
           String.join(", ", forGroupsCode)
       );
+    }
+  }
+
+  private void checkCodes(JsonArray array, Set<String> codes) {
+    for (int j = 0, length = array.size(); j < length; ++j) {
+      JsonObject item = array.getJsonObject(j);
+      JsonObject supervisoryNode = item.getJsonObject("supervisoryNode");
+      String code = supervisoryNode.getString("code");
+
+      if (codes.contains(code)) {
+        codes.remove(code);
+      }
     }
   }
 
