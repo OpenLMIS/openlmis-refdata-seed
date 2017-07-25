@@ -45,6 +45,7 @@ public class OrderableValidator implements Validator {
 
     Multimap<String, String> groupByName = HashMultimap.create();
     Set<String> multiplePrograms = Sets.newHashSet();
+    Set<String> zeroPrograms = Sets.newHashSet();
 
     for (int i = 0, size = orderables.size(); i < size; ++i) {
       JsonObject orderable = orderables.getJsonObject(i);
@@ -54,9 +55,25 @@ public class OrderableValidator implements Validator {
 
       groupByName.put(name, code);
 
+      if (programs == null || programs.isEmpty()) {
+        zeroPrograms.add(code);
+      }
+
       if (programs.size() > 1) {
         multiplePrograms.add(code);
       }
+    }
+
+    logWarnings(groupByName, multiplePrograms, zeroPrograms);
+  }
+
+  private void logWarnings(Multimap<String, String> groupByName, Set<String> multiplePrograms,
+                           Set<String> zeroPrograms) {
+    if (LOGGER.isWarnEnabled() && !zeroPrograms.isEmpty()) {
+      LOGGER.warn(
+          "Found products not included in any program: {}",
+          String.join(", ", zeroPrograms)
+      );
     }
 
     if (LOGGER.isWarnEnabled() && !multiplePrograms.isEmpty()) {
