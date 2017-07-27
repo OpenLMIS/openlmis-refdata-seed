@@ -78,7 +78,7 @@ GeographicZones.csv
 | code  | name           | level    | parent | catchementpopulation | latitude | longitude |
 | ----- | -------------- | -------- | ------ | -------------------- | -------- | --------- |
 | malaw | Malawi         | Country  |        |                      |          |           |	
-| cwes  | Central West   | Zone     | malaw  |                      |          |           |	
+| cwes  | Central West   | Zone     | malaw  |                      |          |           |
 | cest  | Central East   | Zone     | malaw  |                      |          |           |
 
 
@@ -87,7 +87,7 @@ GeographicZones_mapping.csv
 | from        | to                   | type              | entityName         | defaultValue  |
 | ----------- | -------------------- | ----------------- | ------------------ | ------------- |
 | code        | code                 | DIRECT	         |                    |               |
-| name        | name                 | DIRECT            |                    |               |	
+| name        | name                 | DIRECT            |                    |               |
 | level       | geographicLevel      | TO_OBJECT_BY_CODE | GeographicLevel    |               |
 | parent      | parent               | TO_OBJECT_BY_CODE | GeographicZone     |               |
 |             | catchmentPopulation  | USE_DEFAULT       |                    | 0             |
