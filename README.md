@@ -86,7 +86,7 @@ GeographicZones_mapping.csv
 
 | from        | to                   | type              | entityName         | defaultValue  |
 | ----------- | -------------------- | ----------------- | ------------------ | ------------- |
-| code        | code                 | DIRECT	           |                    |               |
+| code        | code                 | DIRECT	         |                    |               |
 | name        | name                 | DIRECT            |                    |               |	
 | level       | geographicLevel      | TO_OBJECT_BY_CODE | GeographicLevel    |               |
 | parent      | parent               | TO_OBJECT_BY_CODE | GeographicZone     |               |
