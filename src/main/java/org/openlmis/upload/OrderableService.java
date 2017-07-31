@@ -42,4 +42,11 @@ public class OrderableService extends BaseCommunicationService {
   public String buildUpdateUrl(String base, String id) {
     return base;
   }
+
+  @Override
+  public boolean updateResource(JsonObject jsonObject, String id) {
+    logger.warn("Updating Orderables is not supported. Product with code {} will NOT be updated",
+        id);
+    return false;
+  }
 }
