@@ -49,4 +49,8 @@ public class Configuration extends Properties {
   public String getUpdateAllowed() {
     return getProperty("updateAllowed");
   }
+
+  public boolean isUpdateAllowed() {
+    return !"false".equalsIgnoreCase(getUpdateAllowed());
+  }
 }

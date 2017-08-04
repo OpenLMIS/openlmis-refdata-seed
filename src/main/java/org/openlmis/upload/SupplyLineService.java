@@ -15,6 +15,8 @@
 
 package org.openlmis.upload;
 
+import org.openlmis.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.json.JsonArray;
@@ -23,6 +25,9 @@ import javax.json.JsonString;
 
 @Service
 public class SupplyLineService extends BaseCommunicationService {
+
+  @Autowired
+  private Configuration configuration;
 
   @Override
   protected String getUrl() {
@@ -53,11 +58,13 @@ public class SupplyLineService extends BaseCommunicationService {
 
   @Override
   public void before() {
-    logger.info("Removing all SupplyLines and preparing to re-create.");
-    JsonArray supplyLines = findAll();
-    for (int i = 0; i < supplyLines.size(); ++i) {
-      JsonObject supplyLine = supplyLines.getJsonObject(i);
-      deleteResource(supplyLine.getString(ID));
+    if (configuration.isUpdateAllowed()) {
+      logger.info("Removing all SupplyLines and preparing to re-create.");
+      JsonArray supplyLines = findAll();
+      for (int i = 0; i < supplyLines.size(); ++i) {
+        JsonObject supplyLine = supplyLines.getJsonObject(i);
+        deleteResource(supplyLine.getString(ID));
+      }
     }
   }
 
