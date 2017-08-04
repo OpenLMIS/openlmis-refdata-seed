@@ -15,6 +15,7 @@
 
 package org.openlmis.upload;
 
+import org.openlmis.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,9 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
   @Autowired
   private FacilityTypeService facilityTypeService;
 
+  @Autowired
+  private Configuration configuration;
+
   @Override
   protected String getUrl() {
     return "/api/facilityTypeApprovedProducts";
@@ -42,19 +46,21 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
   public void before() {
     orderableService.invalidateCache();
 
-    logger.info("Removing all FacilityTypeApprovedProducts and preparing to re-create.");
-    JsonArray types = facilityTypeService.findAll();
-    for (int i = 0; i < types.size(); i++) {
-      JsonObject type = types.getJsonObject(i);
-      String facilityTypeCode = type.getString(CODE);
+    if (configuration.isUpdateAllowed()) {
+      logger.info("Removing all FacilityTypeApprovedProducts and preparing to re-create.");
+      JsonArray types = facilityTypeService.findAll();
+      for (int i = 0; i < types.size(); i++) {
+        JsonObject type = types.getJsonObject(i);
+        String facilityTypeCode = type.getString(CODE);
 
-      Map<String, String> searchParams = new HashMap<>();
-      searchParams.put("facilityType", facilityTypeCode);
-      JsonArray ftaps = search(searchParams);
+        Map<String, String> searchParams = new HashMap<>();
+        searchParams.put("facilityType", facilityTypeCode);
+        JsonArray ftaps = search(searchParams);
 
-      for (int j = 0; j < ftaps.size(); j++) {
-        JsonObject ftap = ftaps.getJsonObject(j);
-        deleteResource(ftap.getString(ID));
+        for (int j = 0; j < ftaps.size(); j++) {
+          JsonObject ftap = ftaps.getJsonObject(j);
+          deleteResource(ftap.getString(ID));
+        }
       }
     }
   }
