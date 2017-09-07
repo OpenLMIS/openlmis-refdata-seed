@@ -96,6 +96,8 @@ Available transformation types are:
 
  - **DIRECT** a value from the input column will be directly moved to the output column, without alterations
 
+ - **DIRECT_DATE** a date value from the input column will be parsed to ISO date format (yyyy-MM-dd) before moved to the output column
+
  - **USE_DEFAULT** a value for the output will be taken directly from the defaultValue column of the mapping file
 
  - **TO_OBJECT** a value from the input column will be transformed into an object; the desired input format is: key1:value1,key2:value2

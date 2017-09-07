@@ -22,6 +22,7 @@ import org.openlmis.reader.GenericReader;
 import org.openlmis.upload.BaseCommunicationService;
 import org.openlmis.upload.Services;
 import org.openlmis.utils.SourceFile;
+import org.openlmis.utils.AppHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +67,6 @@ public class DataSeeder {
   private void seedFor(SourceFile source) {
     String inputFileName = source.getFullFileName(configuration.getDirectory());
     String mappingFileName = source.getFullMappingFileName(configuration.getDirectory());
-    boolean updateAllowed = !"false".equalsIgnoreCase(configuration.getUpdateAllowed());
 
     LOGGER.info(" == Seeding {} == ", source.getName());
     LOGGER.info("Using input file: {}", inputFileName);
@@ -75,17 +75,22 @@ public class DataSeeder {
     File inputFile = new File(inputFileName);
     File mappingFile = new File(mappingFileName);
 
-    List<Map<String, String>> csvs = reader.readFromFile(inputFile);
-    List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFile);
-
-    if (!inputFile.exists() || inputFile.isDirectory() || !mappingFile.exists()
-        || mappingFile.isDirectory()) {
-      LOGGER.warn("{} will not be processed due to missing input/mapping files.", source.getName());
+    if (!AppHelper.shouldProcess(inputFile, mappingFile, source)) {
       return;
     }
 
+    List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFile);
+
+    if (!AppHelper.shouldProcess(configuration, source, mappings)) {
+      return;
+    }
+
+    List<Map<String, String>> csvs = reader.readFromFile(inputFile);
+
     BaseCommunicationService service = services.getService(source);
     service.before();
+
+    boolean updateAllowed = !"false".equalsIgnoreCase(configuration.getUpdateAllowed());
 
     for (int i = 0, size = csvs.size(); i < size; ++i) {
       Map<String, String> csv = csvs.get(i);
@@ -105,4 +110,5 @@ public class DataSeeder {
       }
     }
   }
+
 }
