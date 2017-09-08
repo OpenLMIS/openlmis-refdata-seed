@@ -32,7 +32,7 @@ class DefaultTypeConverter extends BaseTypeConverter {
     String defaultValue = mapping.getDefaultValue();
 
     if (null == defaultValue) {
-      logger.warn("Null value for field: {}", mapping.getTo());
+      logger.debug("Null value for field: {}", mapping.getTo());
     } else {
       builder.add(mapping.getTo(), defaultValue);
     }

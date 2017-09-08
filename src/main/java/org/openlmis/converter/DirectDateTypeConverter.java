@@ -39,14 +39,14 @@ class DirectDateTypeConverter extends BaseTypeConverter {
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
     if (isBlank(value) || "null".equals(value)) {
-      logger.warn("Blank/null value for field: {}", mapping.getTo());
+      logger.debug("Blank/null value for field: {}", mapping.getTo());
       return;
     }
 
     String date = parseDate(value);
 
     if (null == date || "null".equals(date)) {
-      logger.warn("Can't parse date {} for field: {}", value, mapping.getTo());
+      logger.debug("Can't parse date {} for field: {}", value, mapping.getTo());
       return;
     }
 
