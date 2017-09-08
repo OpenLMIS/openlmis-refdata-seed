@@ -15,11 +15,13 @@
 
 package org.openlmis.converter;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import org.springframework.stereotype.Component;
 
 import javax.json.JsonObjectBuilder;
 
-@Component 
+@Component
 class DirectTypeConverter extends BaseTypeConverter {
 
   @Override
@@ -29,8 +31,8 @@ class DirectTypeConverter extends BaseTypeConverter {
 
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
-    if (null == value || "null".equals(value)) {
-      logger.warn("Null value for field: {}", mapping.getTo());
+    if (isBlank(value) || "null".equals(value)) {
+      logger.warn("Blank/null value for field: {}", mapping.getTo());
     } else {
       builder.add(mapping.getTo(), value);
     }
