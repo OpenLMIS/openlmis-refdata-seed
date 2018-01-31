@@ -40,6 +40,8 @@ public class DataSeeder {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataSeeder.class);
 
+  private static final int DELAY_SECONDS = 10;
+
   @Autowired
   private Configuration configuration;
 
@@ -101,14 +103,27 @@ public class DataSeeder {
       if (updateAllowed && existing != null) {
         LOGGER.info("Resource exists. Attempting to update.");
         service.updateResource(jsonObject, existing.getString("id"));
-        continue;
+        delay(source);
       } else if (existing == null) {
         LOGGER.info("Creating new resource.");
         service.createResource(jsonObject.toString());
+        delay(source);
       } else {
         LOGGER.info("Resource exists but update has been disabled. Skipping.");
       }
     }
   }
 
+  private void delay(SourceFile source) {
+    if (Arrays.asList(SourceFile.FACILITIES, SourceFile.REQUISITION_GROUP,
+        SourceFile.SUPERVISORY_NODES, SourceFile.ROLES)
+        .contains(source)) {
+      LOGGER.info("Delaying execution by " + DELAY_SECONDS + "s");
+      try {
+        Thread.sleep(DELAY_SECONDS * 1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
 }
