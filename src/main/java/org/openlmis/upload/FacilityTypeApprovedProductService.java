@@ -53,9 +53,9 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
         JsonObject type = types.getJsonObject(i);
         String facilityTypeCode = type.getString(CODE);
 
-        Map<String, String> searchParams = new HashMap<>();
-        searchParams.put("facilityType", facilityTypeCode);
-        JsonArray ftaps = search(searchParams);
+        RequestParameters searchParams = RequestParameters.init();
+        searchParams.set("facilityType", facilityTypeCode);
+        JsonArray ftaps = findAll("", searchParams);
 
         for (int j = 0; j < ftaps.size(); j++) {
           JsonObject ftap = ftaps.getJsonObject(j);
