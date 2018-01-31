@@ -40,7 +40,7 @@ public class DataSeeder {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataSeeder.class);
 
-  private static final int DELAY_SECONDS = 10;
+  private static final int DELAY_SECONDS = 30;
 
   @Autowired
   private Configuration configuration;
