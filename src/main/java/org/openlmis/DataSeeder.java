@@ -128,8 +128,8 @@ public class DataSeeder {
       LOGGER.info("Delaying execution by " + DELAY_SECONDS + "s");
       try {
         Thread.sleep(DELAY_SECONDS * 1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+      } catch (InterruptedException exc) {
+        exc.printStackTrace();
       }
     }
   }
