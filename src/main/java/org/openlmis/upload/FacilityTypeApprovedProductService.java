@@ -19,9 +19,6 @@ import org.openlmis.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 

@@ -129,7 +129,7 @@ public class DataSeeder {
       try {
         Thread.sleep(DELAY_SECONDS * 1000);
       } catch (InterruptedException exc) {
-        exc.printStackTrace();
+        LOGGER.info(exc.getMessage());
       }
     }
   }
