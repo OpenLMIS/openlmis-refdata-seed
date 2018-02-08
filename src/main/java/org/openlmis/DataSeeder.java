@@ -113,8 +113,9 @@ public class DataSeeder {
         }
       } else if (existing == null) {
         LOGGER.info("Creating new resource.");
-        service.createResource(jsonObject.toString());
-        delay(source);
+        if (service.createResource(jsonObject.toString())) {
+          delay(source);
+        }
       } else {
         LOGGER.info("Resource exists but update has been disabled. Skipping.");
       }
