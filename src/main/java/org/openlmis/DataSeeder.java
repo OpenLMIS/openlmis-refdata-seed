@@ -142,8 +142,8 @@ public class DataSeeder {
       if (!jsonValuesEqual(entry.getValue(), existingValue)) {
         if (enableLogging) {
           LOGGER.info(entry.getKey() + " has changed.");
-          LOGGER.info("Previous value: " + existingValue.toString());
-          LOGGER.info("New value: " + entry.getValue().toString());
+          LOGGER.debug("Previous value: " + existingValue.toString());
+          LOGGER.debug("New value: " + entry.getValue().toString());
         }
         return false;
       }
