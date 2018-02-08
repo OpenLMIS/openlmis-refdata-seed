@@ -105,8 +105,9 @@ public class DataSeeder {
       if (updateAllowed && existing != null) {
         if (!jsonObjectsEqual(jsonObject, existing, true)) {
           LOGGER.info("Resource exists. Attempting to update.");
-          service.updateResource(jsonObject, existing.getString("id"));
-          delay(source);
+          if (service.updateResource(jsonObject, existing.getString("id"))) {
+            delay(source);
+          }
         } else {
           LOGGER.info("Resource exists, but no update needed. Skipping.");
         }
