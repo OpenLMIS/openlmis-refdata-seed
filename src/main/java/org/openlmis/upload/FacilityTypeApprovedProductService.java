@@ -15,15 +15,11 @@
 
 package org.openlmis.upload;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import org.openlmis.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.json.JsonArray;
-import javax.json.JsonObject;
 
 @Service
 public class FacilityTypeApprovedProductService extends BaseCommunicationService {
@@ -49,19 +45,26 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
     if (configuration.isUpdateAllowed()) {
       logger.info("Removing all FacilityTypeApprovedProducts and preparing to re-create.");
       JsonArray types = facilityTypeService.findAll();
-      for (int i = 0; i < types.size(); i++) {
+      for (int i = 0; i < types.size(); ++i) {
         JsonObject type = types.getJsonObject(i);
         String facilityTypeCode = type.getString(CODE);
 
-        Map<String, String> searchParams = new HashMap<>();
-        searchParams.put("facilityType", facilityTypeCode);
-        JsonArray ftaps = search(searchParams);
+        RequestParameters parameters = RequestParameters
+            .init()
+            .set("facilityType", facilityTypeCode);
+        JsonArray ftaps = findAll("", parameters);
 
         for (int j = 0; j < ftaps.size(); j++) {
           JsonObject ftap = ftaps.getJsonObject(j);
           deleteResource(ftap.getString(ID));
         }
+
+        logger.info(
+            "Removed {} FacilityTypeApprovedProducts for facility type {}",
+            ftaps.size(), facilityTypeCode);
       }
+
+      logger.info("Removed all FacilityTypeApprovedProducts");
     }
   }
 
