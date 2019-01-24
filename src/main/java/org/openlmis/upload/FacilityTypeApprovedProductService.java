@@ -52,6 +52,8 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
         RequestParameters parameters = RequestParameters
             .init()
             .set("facilityType", facilityTypeCode);
+
+        invalidateCache();
         JsonArray ftaps = findAll("", parameters);
 
         for (int j = 0; j < ftaps.size(); j++) {
