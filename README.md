@@ -1,6 +1,6 @@
-# OpenLMIS Reference Data seed tool
+# OpenLMIS Configuration Tool
 
-This repository contains the code of the OpenLMIS Reference Data seeding tool. The tool converts
+This repository contains the code of the OpenLMIS Configuration Tool. It converts
 CSV input and mapping files into the JSON files that can be consumed by the OpenLMIS web API and inserts them into the running OpenLMIS instance.
 
 ## Prerequisites
