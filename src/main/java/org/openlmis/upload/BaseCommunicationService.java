@@ -253,7 +253,7 @@ public abstract class BaseCommunicationService {
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
     HttpEntity<String> body = new HttpEntity<>(jsonObject.toString(), headers);
     URI uri = createUri(url, parameters);
 
@@ -287,7 +287,7 @@ public abstract class BaseCommunicationService {
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
     URI uri = createUri(url, parameters);
 
     try {
@@ -319,7 +319,7 @@ public abstract class BaseCommunicationService {
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
     HttpEntity<String> body = new HttpEntity<>(json, headers);
     URI uri = createUri(url, parameters);
 
