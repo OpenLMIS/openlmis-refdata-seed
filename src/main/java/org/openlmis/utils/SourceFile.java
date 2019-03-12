@@ -21,7 +21,10 @@ import java.nio.file.Paths;
 
 public enum SourceFile {
   PROGRAMS("Programs"),
-  STOCK_ADJUSTMENT_REASONS("StockAdjustmentReasons"),
+  STOCK_ADJUSTMENT_REASONS("StockCardLineItemReasons"),
+  VALID_REASONS("ValidReasons"),
+  VALID_SOURCES("ValidSources"),
+  VALID_DESTINATIONS("ValidDestinations"),
   ORDERABLE_DISPLAY_CATEGORIES("OrderableDisplayCategory", "OrderableDisplayCategories"),
   FACILITY_TYPES("FacilityTypes"),
   ORDERABLES("Orderables"),

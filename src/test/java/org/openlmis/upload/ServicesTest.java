@@ -47,7 +47,10 @@ public class ServicesTest {
     MAP = ImmutableMap
         .<SourceFile, Class>builder()
         .put(SourceFile.PROGRAMS, ProgramService.class)
-        .put(SourceFile.STOCK_ADJUSTMENT_REASONS, StockAdjustmentReasonService.class)
+        .put(SourceFile.STOCK_ADJUSTMENT_REASONS, StockCardLineItemReasonService.class)
+        .put(SourceFile.VALID_DESTINATIONS, ValidDestinationService.class)
+        .put(SourceFile.VALID_REASONS, ValidReasonService.class)
+        .put(SourceFile.VALID_SOURCES, ValidSourceService.class)
         .put(SourceFile.ORDERABLE_DISPLAY_CATEGORIES, OrderableDisplayCategoryService.class)
         .put(SourceFile.FACILITY_TYPES, FacilityTypeService.class)
         .put(SourceFile.ORDERABLES, OrderableService.class)
@@ -96,8 +99,20 @@ public class ServicesTest {
   public void shouldFindServiceByName() throws Exception {
     assertServiceType("Program", ProgramService.class);
 
-    assertServiceType("StockAdjustmentReason", StockAdjustmentReasonService.class);
-    assertServiceType("Stock Adjustment Reason", StockAdjustmentReasonService.class);
+    assertServiceType("StockCardLineItemReason", StockCardLineItemReasonService.class);
+    assertServiceType("Stock Card Line Item Reason", StockCardLineItemReasonService.class);
+
+    assertServiceType("ValidReason", ValidReasonService.class);
+    assertServiceType("Valid Reason", ValidReasonService.class);
+
+    assertServiceType("ValidSource", ValidSourceService.class);
+    assertServiceType("Valid Source", ValidSourceService.class);
+
+    assertServiceType("ValidDestination", ValidDestinationService.class);
+    assertServiceType("Valid Destination", ValidDestinationService.class);
+
+    assertServiceType("StockCardLineItemReason", StockCardLineItemReasonService.class);
+    assertServiceType("Stock Card Line Item Reason", StockCardLineItemReasonService.class);
 
     assertServiceType("Geographic Zone", GeographicZoneService.class);
     assertServiceType("GeographicZone", GeographicZoneService.class);

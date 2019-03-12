@@ -49,7 +49,10 @@ directory=/home/user/inputFiles
 The input and mapping files are required to have a specific name that corresponds to the entity name.
 ```
 Programs.csv - Programs_mapping.csv
-StockAdjustmentReasons.csv - StockAdjustmentReasons_mapping.csv
+StockCardLineItemReasons.csv - StockCardLineItemReasons_mapping.csv
+ValidReasons.csv - ValidReasons_mapping.csv
+ValidSources.csv - ValidSources_mapping.csv
+ValidDestinations.csv - ValidDestinations_mapping.csv
 OrderableDisplayCategories.csv - OrderableDisplayCategories_mapping.csv
 FacilityTypes.csv - FacilityTypes_mapping.csv
 CommodityTypes.csv - CommodityTypes_mapping.csv
