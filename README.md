@@ -69,6 +69,7 @@ SupplyLines.csv - SupplyLines_mapping.csv
 Roles.csv - Roles.csv_mapping.csv
 Users.csv - Users.csv_mapping.csv
 AuthUsers.csv - AuthUsers_mapping.csv
+UserContactDetails.csv - UserContactDetails_mapping.csv
 ```
 
 Each reference data piece has got its own input file. The input files are CSV files that contain a header row with column names and then a list of entries. The mapping file exists for each input file and defines transformation rules.

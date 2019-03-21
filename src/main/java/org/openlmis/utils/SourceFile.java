@@ -40,7 +40,8 @@ public enum SourceFile {
   SUPPLY_LINE("SupplyLines"),
   ROLES("Roles"),
   USERS("Users"),
-  AUTH_USERS("AuthUsers");
+  AUTH_USERS("AuthUsers"),
+  USER_CONTACT_DETAILS("UserContactDetails");
 
   @Getter
   private final String name;

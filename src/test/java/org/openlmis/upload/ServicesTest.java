@@ -67,6 +67,7 @@ public class ServicesTest {
         .put(SourceFile.ROLES, RoleService.class)
         .put(SourceFile.USERS, UserService.class)
         .put(SourceFile.AUTH_USERS, AuthUserService.class)
+        .put(SourceFile.USER_CONTACT_DETAILS, UserContactDetailService.class)
         .build();
   }
 
@@ -142,6 +143,9 @@ public class ServicesTest {
     assertServiceType("SupervisoryNode", SupervisoryNodeService.class);
 
     assertServiceType("Orderable", OrderableService.class);
+
+    assertServiceType("User Contact Detail", UserContactDetailService.class);
+    assertServiceType("UserContactDetail", UserContactDetailService.class);
   }
 
   private void assertServiceType(String name, Class clazz) {
