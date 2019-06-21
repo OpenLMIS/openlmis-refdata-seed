@@ -15,8 +15,13 @@
 
 package org.openlmis.validation;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.Map;
+import java.util.UUID;
+import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.openlmis.upload.RequisitionGroupService;
 import org.openlmis.upload.SupervisoryNodeService;
 import org.openlmis.upload.SupplyLineService;
@@ -50,16 +55,17 @@ public class SupervisoryNodeValidator implements Validator {
 
     JsonArray supervisoryNodes = supervisoryNodeService.findAll();
 
-    Set<String> forGroupsCode = Sets.newHashSet();
-    Set<String> forSupplyCode = Sets.newHashSet();
+    Map<String, String> forGroupsCode = Maps.newHashMap();
+    Map<String, String> forSupplyCode = Maps.newHashMap();
     supervisoryNodes.forEach(supervisoryNode -> {
       JsonObject object = (JsonObject) supervisoryNode;
+      String id = object.getString("id");
       String code = object.getString("code");
 
-      forGroupsCode.add(code);
+      forGroupsCode.put(id, code);
 
       if (!object.containsKey("parentNode") || object.isNull("parentNode")) {
-        forSupplyCode.add(code);
+        forSupplyCode.put(id, code);
       }
     });
 
@@ -69,28 +75,27 @@ public class SupervisoryNodeValidator implements Validator {
     if (LOGGER.isWarnEnabled() && !forSupplyCode.isEmpty()) {
       LOGGER.warn(
           "Found Supervisory node without supply lines: {}",
-          String.join(", ", forSupplyCode)
+          String.join(", ", forSupplyCode.values())
       );
     }
 
     if (LOGGER.isWarnEnabled() && !forGroupsCode.isEmpty()) {
       LOGGER.warn(
           "Found supervisory node without requisition group(s): {}",
-          String.join(", ", forGroupsCode)
+          String.join(", ", forGroupsCode.values())
       );
     }
   }
 
-  private void checkCodes(JsonArray array, Set<String> codes) {
+  private void checkCodes(JsonArray array, Map<String, String> codes) {
     for (int j = 0, length = array.size(); j < length; ++j) {
       JsonObject item = array.getJsonObject(j);
       JsonObject supervisoryNode = item.getJsonObject("supervisoryNode");
-      String code = supervisoryNode.getString("code");
+      String id = supervisoryNode.getString("id");
 
-      if (codes.contains(code)) {
-        codes.remove(code);
+      if (codes.containsKey(id)) {
+        codes.remove(id);
       }
     }
   }
-
 }
