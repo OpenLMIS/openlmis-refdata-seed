@@ -1,6 +1,6 @@
-# OpenLMIS Reference Data seed tool
+# OpenLMIS Configuration Tool
 
-This repository contains the code of the OpenLMIS Reference Data seeding tool. The tool converts
+This repository contains the code of the OpenLMIS Configuration Tool. It converts
 CSV input and mapping files into the JSON files that can be consumed by the OpenLMIS web API and inserts them into the running OpenLMIS instance.
 
 ## Prerequisites
@@ -49,7 +49,10 @@ directory=/home/user/inputFiles
 The input and mapping files are required to have a specific name that corresponds to the entity name.
 ```
 Programs.csv - Programs_mapping.csv
-StockAdjustmentReasons.csv - StockAdjustmentReasons_mapping.csv
+StockCardLineItemReasons.csv - StockCardLineItemReasons_mapping.csv
+ValidReasons.csv - ValidReasons_mapping.csv
+ValidSources.csv - ValidSources_mapping.csv
+ValidDestinations.csv - ValidDestinations_mapping.csv
 OrderableDisplayCategories.csv - OrderableDisplayCategories_mapping.csv
 FacilityTypes.csv - FacilityTypes_mapping.csv
 CommodityTypes.csv - CommodityTypes_mapping.csv
@@ -66,13 +69,47 @@ SupplyLines.csv - SupplyLines_mapping.csv
 Roles.csv - Roles.csv_mapping.csv
 Users.csv - Users.csv_mapping.csv
 AuthUsers.csv - AuthUsers_mapping.csv
+UserContactDetails.csv - UserContactDetails_mapping.csv
 ```
 
 Each reference data piece has got its own input file. The input files are CSV files that contain a header row with column names and then a list of entries. The mapping file exists for each input file and defines transformation rules.
 
+When processing user-related files, remember that the each `auth_user` needs related `user_contact_details` entity
+to be able to authorize. Previously, file `UserContactDetails.csv` was not used, and users emails were specified in `Users.csv` file. 
+If the files to process will be created in this form, you should create `UserContactDetails.csv` 
+based on `Users.csv` as in the examples in section below.
 
 **Sample input and mapping file**
 ___
+
+UserContactDetails.csv
+
+| username | phoneNumber | email            | allowNotify |
+| -------- | ----------- | ---------------- | ----------- |
+| user12   |             | user12@gmail.com | TRUE        |
+
+UserContactDetails_mapping.csv
+
+| from        | to                   | type                         | entityName       | defaultValue  |
+| ----------- | -------------------- | ---------------------------- | ---------------- | ------------- |
+| username    | referenceDataUserId  | TO_ID_BY_USERNAME            | User             |               |
+| phoneNumber | phoneNumber          | DIRECT                       |                  |               |
+| allowNotify | allowNotify          | DIRECT                       | GeographicLevel  |               |
+| email       | emailDetails         | TO_OBJECT_FROM_FILE_BY_EMAIL | EmailDetails.csv |               |
+
+EmailDetails.csv
+
+| email              | verified    |
+| ------------------ | ----------- |
+| user12@gmail.com   | TRUE        |
+
+EmailDetails_mapping.csv
+
+| from     | to            | type   | entityName | defaultValue  |
+| -------- | --------------| ------ | ---------- | ------------- |
+| email    | email         | DIRECT |            |               |
+| verified | emailVerified | DIRECT |            |               |
+
 GeographicZones.csv
 
 | code  | name           | level    | parent | catchementpopulation | latitude | longitude |

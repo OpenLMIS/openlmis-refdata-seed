@@ -253,7 +253,7 @@ public abstract class BaseCommunicationService {
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
     HttpEntity<String> body = new HttpEntity<>(jsonObject.toString(), headers);
     URI uri = createUri(url, parameters);
 
@@ -287,7 +287,7 @@ public abstract class BaseCommunicationService {
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
     URI uri = createUri(url, parameters);
 
     try {
@@ -312,14 +312,23 @@ public abstract class BaseCommunicationService {
    * @return whether the attempt was successful
    */
   public boolean createResource(String json) {
-    String url = configuration.getHost() + getUrl();
+    return createResource(configuration.getHost() + getUrl(), json);
+  }
 
+  /**
+   * Attempts to create a new resource in OpenLMIS if URL structure differs from the casual one.
+   *
+   * @param url custom URL for creating resource endpoint
+   * @param json JSON representation of the resource to create
+   * @return whether the attempt was successful
+   */
+  public boolean createResource(String url, String json) {
     RequestParameters parameters = RequestParameters
         .init()
         .set(ACCESS_TOKEN, authService.obtainAccessToken());
 
     HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
     HttpEntity<String> body = new HttpEntity<>(json, headers);
     URI uri = createUri(url, parameters);
 
@@ -352,7 +361,7 @@ public abstract class BaseCommunicationService {
    * Specific services can override to whatever is appropriate.
    * @return HTTP method.
    */
-  public HttpMethod getCreateMethod() {
+  protected HttpMethod getCreateMethod() {
     return HttpMethod.POST;
   }
 
@@ -362,6 +371,12 @@ public abstract class BaseCommunicationService {
 
   protected String buildDeleteUrl(String base, String id) {
     return base + "/" + id;
+  }
+
+  protected JsonObject convertToJsonObject(String body) {
+    try (JsonReader reader = Json.createReader(new StringReader(body))) {
+      return reader.readObject();
+    }
   }
 
   private JsonObject addIdToObject(JsonObject jsonObject, String id) {
@@ -402,12 +417,6 @@ public abstract class BaseCommunicationService {
   private JsonArray convertToJsonArray(String body) {
     try (JsonReader reader = Json.createReader(new StringReader(body))) {
       return reader.readArray();
-    }
-  }
-
-  private JsonObject convertToJsonObject(String body) {
-    try (JsonReader reader = Json.createReader(new StringReader(body))) {
-      return reader.readObject();
     }
   }
 

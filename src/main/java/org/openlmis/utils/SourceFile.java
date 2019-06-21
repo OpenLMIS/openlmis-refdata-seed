@@ -21,23 +21,27 @@ import java.nio.file.Paths;
 
 public enum SourceFile {
   PROGRAMS("Programs"),
-  STOCK_ADJUSTMENT_REASONS("StockAdjustmentReasons"),
-  ORDERABLE_DISPLAY_CATEGORIES("OrderableDisplayCategory", "OrderableDisplayCategories"),
   FACILITY_TYPES("FacilityTypes"),
-  ORDERABLES("Orderables"),
-  FACILITY_TYPE_APPROVED_PRODUCTS("FacilityTypeApprovedProducts"),
-  PROCESSING_SCHEDULE("ProcessingSchedules"),
-  PROCESSING_PERIOD("ProcessingPeriods"),
   FACILITY_OPERATORS("FacilityOperators"),
   GEOGRAPHIC_LEVELS("GeographicLevels"),
   GEOGRAPHIC_ZONES("GeographicZones"),
   FACILITIES("Facility", "Facilities"),
+  STOCK_ADJUSTMENT_REASONS("StockCardLineItemReasons"),
+  VALID_REASONS("ValidReasons"),
+  VALID_SOURCES("ValidSources"),
+  VALID_DESTINATIONS("ValidDestinations"),
+  ORDERABLE_DISPLAY_CATEGORIES("OrderableDisplayCategory", "OrderableDisplayCategories"),
+  ORDERABLES("Orderables"),
+  FACILITY_TYPE_APPROVED_PRODUCTS("FacilityTypeApprovedProducts"),
+  PROCESSING_SCHEDULE("ProcessingSchedules"),
   SUPERVISORY_NODES("SupervisoryNodes"),
+  PROCESSING_PERIOD("ProcessingPeriods"),
   REQUISITION_GROUP("RequisitionGroups"),
   SUPPLY_LINE("SupplyLines"),
   ROLES("Roles"),
   USERS("Users"),
-  AUTH_USERS("AuthUsers");
+  AUTH_USERS("AuthUsers"),
+  USER_CONTACT_DETAILS("UserContactDetails");
 
   @Getter
   private final String name;

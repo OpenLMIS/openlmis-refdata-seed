@@ -12,7 +12,18 @@ then
     if [ -f data.zip ]
     then
         unzip -o data.zip
-        find . -name "*.csv" -exec cp -vf {} ${CURRENT_DIR}/build/execute \;
+        if [ -z ${FILTER_FILES} ]
+        then
+            find . -name "*.csv" -exec cp -vf {} ${CURRENT_DIR}/build/execute \;
+        else
+            for filter in ${FILTER_FILES}
+            do :
+                file=$filter".csv"
+                mapping=$filter"_mapping.csv"
+                find . -name $file -exec cp -vf {} ${CURRENT_DIR}/build/execute \;
+                find . -name $mapping -exec cp -vf {} ${CURRENT_DIR}/build/execute \;
+            done
+        fi
     else
         echo "Missing reference data zip file"
     fi
