@@ -25,8 +25,6 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import lombok.AccessLevel;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -45,10 +43,19 @@ public class TradeItemService extends BaseCommunicationService {
 
   @Autowired
   private OrderableService orderableService;
-
-  @Getter(AccessLevel.PUBLIC)
+  
   private Map<String, String> cachedTradeItemIdByOrderableCode;
 
+  /**
+   * Finds trade item id based on product code.
+   * @param orderableCode the value of product code
+   * @return String trade item id if it exits in cache, Null otherwise.
+   */
+  public String findCachedTradeItemIdByOrderableCode(String orderableCode) {
+    return cachedTradeItemIdByOrderableCode.getOrDefault(orderableCode, null);
+  }
+  
+  
   @Override
   public void before() {
     JsonArray orderables = this.orderableService.findAll();
@@ -133,7 +140,7 @@ public class TradeItemService extends BaseCommunicationService {
   public boolean updateResource(JsonObject jsonObject, String id) {
     String productCode = jsonObject.getString(PRODUCT_CODE);
 
-    String tradeItemId = cachedTradeItemIdByOrderableCode.get(productCode);
+    String tradeItemId = findCachedTradeItemIdByOrderableCode(productCode);
 
     if (tradeItemId == null) {
       logger.error("Can't find an trade item for product with code {}.", productCode);

@@ -38,7 +38,7 @@ public class FindCachedTradeItemTypeConverter extends BaseTypeConverter {
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
 
-    String tradeItemId = tradeItemService.getCachedTradeItemIdByOrderableCode().get(value);
+    String tradeItemId = tradeItemService.findCachedTradeItemIdByOrderableCode(value);
 
     if (tradeItemId == null) {
       logger.warn("Can't find cached trade item associated with product code: {}", value);

@@ -20,8 +20,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -54,11 +52,8 @@ public class FindCachedTradeItemTypeConverterTest {
 
   @Before
   public void setUp() {
-    Map<String, String> tradeItemIdByOrderableCode = new HashMap<>();
-    tradeItemIdByOrderableCode.put(VALUE, tradeItemId);
-
-    doReturn(tradeItemIdByOrderableCode).when(tradeItemService)
-        .getCachedTradeItemIdByOrderableCode();
+    doReturn(tradeItemId).when(tradeItemService)
+        .findCachedTradeItemIdByOrderableCode(VALUE);
   }
 
   @Test
