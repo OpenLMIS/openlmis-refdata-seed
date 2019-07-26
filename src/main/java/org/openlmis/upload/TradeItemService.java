@@ -17,6 +17,7 @@ package org.openlmis.upload;
 
 import static org.openlmis.upload.RequestHelper.createUri;
 
+import com.google.common.collect.Maps;
 import java.net.URI;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,7 +45,7 @@ public class TradeItemService extends BaseCommunicationService {
   @Autowired
   private OrderableService orderableService;
   
-  private Map<String, String> cachedTradeItemIdByOrderableCode;
+  private Map<String, String> cachedTradeItemIdByOrderableCode = Maps.newHashMap();
 
   /**
    * Finds trade item id based on product code.
