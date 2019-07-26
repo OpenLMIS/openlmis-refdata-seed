@@ -15,8 +15,9 @@
 
 package org.openlmis.utils;
 
-import java.nio.file.Paths;
 import lombok.Getter;
+
+import java.nio.file.Paths;
 
 public enum SourceFile {
   PROGRAMS("Programs"),
@@ -30,9 +31,7 @@ public enum SourceFile {
   VALID_SOURCES("ValidSources"),
   VALID_DESTINATIONS("ValidDestinations"),
   ORDERABLE_DISPLAY_CATEGORIES("OrderableDisplayCategory", "OrderableDisplayCategories"),
-  TRADE_ITEMS("TradeItems"),
   ORDERABLES("Orderables"),
-  LOTS("Lots"),
   FACILITY_TYPE_APPROVED_PRODUCTS("FacilityTypeApprovedProducts"),
   PROCESSING_SCHEDULE("ProcessingSchedules"),
   SUPERVISORY_NODES("SupervisoryNodes"),
@@ -43,7 +42,6 @@ public enum SourceFile {
   USERS("Users"),
   AUTH_USERS("AuthUsers"),
   USER_CONTACT_DETAILS("UserContactDetails");
-
 
   @Getter
   private final String name;
