@@ -151,30 +151,7 @@ public class TradeItemService extends BaseCommunicationService {
     jsonObject.forEach(builder::add);
     builder.add(ID, tradeItemId);
     
-    String url = buildUpdateUrl(configuration.getHost() + getUrl(), "");
-    RequestParameters parameters = RequestParameters
-        .init()
-        .set(ACCESS_TOKEN, authService.obtainAccessToken());
-
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-    HttpEntity<String> body = new HttpEntity<>(builder.build().toString(), headers);
-    URI uri = createUri(url, parameters);
-
-    try {
-      logger.debug("PUT {}", uri);
-      logger.debug(body.getBody());
-      restTemplate.put(uri, body);
-    } catch (RestClientResponseException ex) {
-      logger.error("Can not update resource: {}", ex.getResponseBodyAsString());
-      return false;
-    } catch (RestClientException ex) {
-      logger.error("Can not update resource: {}", ex.getMessage());
-      return false;
-    }
-
-    invalidateCache();
-    return true;
+    return super.updateResource(builder.build(), "", false);
   }
 
   @Override
