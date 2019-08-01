@@ -150,7 +150,8 @@ public class TradeItemService extends BaseCommunicationService {
     JsonObjectBuilder builder = Json.createObjectBuilder();
     jsonObject.forEach(builder::add);
     builder.add(ID, tradeItemId);
-    return super.updateResource(builder.build(), "");
+    
+    return super.updateResource(builder.build(), "", false);
   }
 
   @Override
