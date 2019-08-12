@@ -68,6 +68,8 @@ public class ServicesTest {
         .put(SourceFile.USERS, UserService.class)
         .put(SourceFile.AUTH_USERS, AuthUserService.class)
         .put(SourceFile.USER_CONTACT_DETAILS, UserContactDetailService.class)
+        .put(SourceFile.TRADE_ITEMS, TradeItemService.class)
+        .put(SourceFile.LOTS, LotService.class)
         .build();
   }
 

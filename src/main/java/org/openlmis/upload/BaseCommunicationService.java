@@ -49,6 +49,7 @@ import javax.json.JsonValue;
 
 @SuppressWarnings("PMD.TooManyMethods")
 public abstract class BaseCommunicationService {
+
   static final String ACCESS_TOKEN = "access_token";
   static final String ID = "id";
   static final String CODE = "code";
@@ -67,12 +68,11 @@ public abstract class BaseCommunicationService {
 
   @Autowired
   protected Configuration configuration;
+  private JsonArray allResources;
 
   protected abstract String getUrl();
 
   public abstract JsonObject findUnique(JsonObject object);
-
-  private JsonArray allResources;
 
   /**
    * A method that is invoked before the seeding of the resources starts.
@@ -245,8 +245,23 @@ public abstract class BaseCommunicationService {
    * @return whether the attempt was successful
    */
   public boolean updateResource(JsonObject jsonObject, String id) {
+    return updateResource(jsonObject, id, true);
+  }
+
+  /**
+   * Attempts to update a resource in OpenLMIS.
+   *
+   * @param jsonObject JSON object representation of the resource to update
+   * @param id the UUID of the resource that will be updated
+   * @param addIdToObject determines if id will be added to json object.
+   * @return whether the attempt was successful
+   */
+  boolean updateResource(JsonObject jsonObject, String id, boolean addIdToObject) {
     String url = buildUpdateUrl(configuration.getHost() + getUrl(), id);
-    jsonObject = addIdToObject(jsonObject, id);
+    
+    if (addIdToObject) {
+      jsonObject = addIdToObject(jsonObject, id);
+    }
 
     RequestParameters parameters = RequestParameters
         .init()
@@ -357,8 +372,9 @@ public abstract class BaseCommunicationService {
   }
 
   /**
-   * HTTP method that is used to create the resource.
-   * Specific services can override to whatever is appropriate.
+   * HTTP method that is used to create the resource. Specific services can override to whatever is
+   * appropriate.
+   *
    * @return HTTP method.
    */
   protected HttpMethod getCreateMethod() {
