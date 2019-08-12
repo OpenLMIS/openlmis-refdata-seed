@@ -16,12 +16,9 @@
 package org.openlmis.validation;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import java.util.Map;
-import java.util.UUID;
-import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import org.openlmis.upload.RequisitionGroupService;
 import org.openlmis.upload.SupervisoryNodeService;
 import org.openlmis.upload.SupplyLineService;
@@ -29,11 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Set;
-
-import javax.json.JsonArray;
-import javax.json.JsonObject;
 
 @Component
 public class SupervisoryNodeValidator implements Validator {
