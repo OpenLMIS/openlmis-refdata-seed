@@ -2,7 +2,7 @@ version: "2"
 services:
 
   runner:
-    image: openlmis/dev:3
+    image: openlmis/dev:5.2
     volumes:
       - '.:/app'
     command:
