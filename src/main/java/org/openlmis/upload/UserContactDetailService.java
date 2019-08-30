@@ -15,14 +15,20 @@
 
 package org.openlmis.upload;
 
+import static org.openlmis.upload.RequestHelper.createUri;
+
+import java.net.URI;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
 import javax.json.JsonObject;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 public class UserContactDetailService extends BaseCommunicationService {
 
+  private static final String VERIFICATIONS_URL = "/verifications";
+  
   @Override
   protected String getUrl() {
     return "/api/userContactDetails";
@@ -43,5 +49,62 @@ public class UserContactDetailService extends BaseCommunicationService {
     JsonObject jsonObject = convertToJsonObject(json);
     String customUrl = getUrl() + "/" + jsonObject.getString("referenceDataUserId");
     return super.createResource(configuration.getHost() + customUrl, json);
+  }
+
+  @Override
+  public void afterEach(JsonObject userContactDetails) {
+    JsonObject emailDetails = userContactDetails.getJsonObject("emailDetails");
+
+    if (emailDetails == null) {
+      return;
+    }
+
+    boolean autoVerifyEmail = configuration.autoVerifyEmails();
+
+    if (autoVerifyEmail) {
+      verifyUserEmail(userContactDetails);
+    }
+  }
+
+  private void verifyUserEmail(JsonObject userContactDetails) {
+
+    String userId = userContactDetails.getString("referenceDataUserId");
+
+    if (userId == null) {
+      logger.info("User id is missing. Stop performing verification");
+      return;
+    }
+    
+    RequestParameters parameters = RequestParameters
+        .init()
+        .set(ACCESS_TOKEN, authService.obtainAccessToken());
+    String getTokenUrl = configuration.getHost() + getUrl() + "/" + userId + VERIFICATIONS_URL;
+    URI getTokenUri = createUri(getTokenUrl, parameters);
+    
+    String response = restTemplate
+        .getForObject(getTokenUri, String.class);
+    
+    if (response == null) {
+      logger.info("No verification email token was found for user with id {}. " 
+          + "Possible the email address was not changed", userId);
+      return;
+    }
+    
+    JsonObject emailVerificationToken = this.convertToJsonObject(response);
+    
+    String token = emailVerificationToken.getString("token");
+    
+    String verifyUrl = getTokenUrl + "/" + token;
+    URI verifyUri = createUri(verifyUrl, parameters);
+    
+    try {
+      restTemplate.getForObject(verifyUri, String.class);
+    } catch (HttpClientErrorException httpException) {
+      // This situation may occur when the EmailVerificationToken exists for given user id
+      // and the emails in the EmailVerificationToken and request DTO are the same. Because of that
+      // the token will not be renewed and possible the date will be expired.
+      logger.error("Cannot verify email. Possible the token is invalid or token is expired." 
+          + "Please contact administrator to remove old tokens from database");
+    }
   }
 }
