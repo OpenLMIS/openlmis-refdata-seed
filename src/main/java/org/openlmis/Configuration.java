@@ -50,7 +50,15 @@ public class Configuration extends Properties {
     return getProperty("updateAllowed");
   }
 
+  public String getAutoVerifyEmails() {
+    return getProperty("autoVerifyEmails");
+  }
+
   public boolean isUpdateAllowed() {
     return !"false".equalsIgnoreCase(getUpdateAllowed());
+  }
+
+  public boolean autoVerifyEmails() {
+    return !"false".equalsIgnoreCase(getAutoVerifyEmails());
   }
 }

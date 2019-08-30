@@ -83,6 +83,15 @@ public abstract class BaseCommunicationService {
   }
 
   /**
+   * A method that is invoked after seeding each of the single resource.
+   * By default it does nothing.
+   * @param object JsonObject which was just seeded
+   */
+  public void afterEach(JsonObject object) {
+    // Nothing by default
+  }
+  
+  /**
    * Finds the JSON representation of the resource by its code.
    *
    * @param code the value of the field to find

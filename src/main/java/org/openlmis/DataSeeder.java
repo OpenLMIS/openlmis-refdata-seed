@@ -119,6 +119,7 @@ public class DataSeeder {
       } else {
         LOGGER.info("Resource exists but update has been disabled. Skipping.");
       }
+      service.afterEach(jsonObject);
     }
   }
 
