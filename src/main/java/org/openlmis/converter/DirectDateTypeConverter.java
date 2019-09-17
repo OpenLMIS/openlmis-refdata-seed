@@ -28,7 +28,7 @@ import javax.json.JsonObjectBuilder;
 @Component
 class DirectDateTypeConverter extends BaseTypeConverter {
   private static final String[] DATE_FORMATS = new String[]{
-      "yyyy-M-d", "yy-M-d", "M/d/yyyy", "M/d/yy"
+      "yyyy-M-d", "yy-M-d", "d/M/yyyy", "d/M/yy", "dd/MM/yyyy"
   };
 
   @Override
