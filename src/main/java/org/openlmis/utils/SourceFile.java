@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import lombok.Getter;
 
 public enum SourceFile {
+  ORGANIZATIONS("Organizations"),
   PROGRAMS("Programs"),
   FACILITY_TYPES("FacilityTypes"),
   FACILITY_OPERATORS("FacilityOperators"),
