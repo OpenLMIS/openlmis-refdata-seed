@@ -15,17 +15,11 @@
 
 package org.openlmis.upload;
 
-import javax.json.JsonArray;
 import javax.json.JsonObject;
-import org.openlmis.Configuration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ValidSourceService extends BaseCommunicationService {
-
-  @Autowired
-  private Configuration configuration;
 
   @Override
   protected String getUrl() {
@@ -34,20 +28,22 @@ public class ValidSourceService extends BaseCommunicationService {
 
   @Override
   public void before() {
-    invalidateCache();
-
-    if (configuration.isUpdateAllowed()) {
-      logger.info("Removing all ValidSources and preparing to re-create.");
-
-      JsonArray validSources = findAll();
-      for (int i = 0; i < validSources.size(); ++i) {
-        JsonObject validSource = validSources.getJsonObject(i);
-        deleteResource(validSource.getString(ID));
-      }
-
-      logger.info("Removed all ValidSources");
-      invalidateCache();
-    }
+    // TODO: we should uncomment it after stockmanagement 5.0.0 release
+    //
+    //    invalidateCache();
+    //
+    //    if (configuration.isUpdateAllowed()) {
+    //      logger.info("Removing all ValidSources and preparing to re-create.");
+    //
+    //      JsonArray validSources = findAll();
+    //      for (int i = 0; i < validSources.size(); ++i) {
+    //        JsonObject validSource = validSources.getJsonObject(i);
+    //        deleteResource(validSource.getString(ID));
+    //      }
+    //
+    //      logger.info("Removed all ValidSources");
+    //      invalidateCache();
+    //    }
   }
 
   @Override
