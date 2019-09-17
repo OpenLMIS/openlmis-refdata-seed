@@ -15,15 +15,39 @@
 
 package org.openlmis.upload;
 
+import javax.json.JsonArray;
 import javax.json.JsonObject;
+import org.openlmis.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ValidDestinationService extends BaseCommunicationService {
 
+  @Autowired
+  private Configuration configuration;
+
   @Override
   protected String getUrl() {
     return "/api/validDestinations";
+  }
+
+  @Override
+  public void before() {
+    invalidateCache();
+
+    if (configuration.isUpdateAllowed()) {
+      logger.info("Removing all ValidDestinations and preparing to re-create.");
+
+      JsonArray validDestinations = findAll();
+      for (int i = 0; i < validDestinations.size(); ++i) {
+        JsonObject validDestination = validDestinations.getJsonObject(i);
+        deleteResource(validDestination.getString(ID));
+      }
+
+      logger.info("Removed all ValidDestinations");
+      invalidateCache();
+    }
   }
 
   @Override
