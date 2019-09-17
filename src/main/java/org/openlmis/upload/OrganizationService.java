@@ -21,6 +21,7 @@ import javax.json.JsonObject;
 
 @Service
 public class OrganizationService extends BaseCommunicationService {
+  
   @Override
   protected String getUrl() {
     return "/api/organizations";
@@ -28,6 +29,13 @@ public class OrganizationService extends BaseCommunicationService {
 
   @Override
   public JsonObject findUnique(JsonObject object) {
-    return findByCode(object.getString(NAME));
+    return findBy("name", object.getString(NAME));
+  }
+
+  @Override
+  public boolean updateResource(JsonObject jsonObject, String id) {
+    logger.warn("Updating Organizations is not supported by seed tool. Organization with name " 
+            + "{} will NOT be updated.", jsonObject.getString("name", null));
+    return false;
   }
 }

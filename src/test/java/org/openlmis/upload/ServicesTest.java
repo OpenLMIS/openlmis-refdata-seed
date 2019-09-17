@@ -46,6 +46,7 @@ public class ServicesTest {
   static {
     MAP = ImmutableMap
         .<SourceFile, Class>builder()
+        .put(SourceFile.ORGANIZATIONS, OrganizationService.class)
         .put(SourceFile.PROGRAMS, ProgramService.class)
         .put(SourceFile.STOCK_ADJUSTMENT_REASONS, StockCardLineItemReasonService.class)
         .put(SourceFile.VALID_DESTINATIONS, ValidDestinationService.class)
