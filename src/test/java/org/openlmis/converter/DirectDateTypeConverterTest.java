@@ -57,15 +57,15 @@ public class DirectDateTypeConverterTest {
     convert("16-02-5", expected);
     convert("16-2-5", expected);
 
-    convert("02/05/2016", expected);
-    convert("2/05/2016", expected);
-    convert("02/5/2016", expected);
-    convert("2/5/2016", expected);
+    convert("05/02/2016", expected);
+    convert("5/02/2016", expected);
+    convert("5/02/2016", expected);
+    convert("5/2/2016", expected);
 
-    convert("02/05/16", expected);
-    convert("2/05/16", expected);
-    convert("02/5/16", expected);
-    convert("2/5/16", expected);
+    convert("05/02/16", expected);
+    convert("05/2/16", expected);
+    convert("5/02/16", expected);
+    convert("5/2/16", expected);
   }
 
   @Test
