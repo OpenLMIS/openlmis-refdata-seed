@@ -15,11 +15,17 @@
 
 package org.openlmis.upload;
 
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+
 import org.openlmis.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Objects;
 
 @Service
 public class FacilityTypeApprovedProductService extends BaseCommunicationService {
@@ -33,6 +39,8 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
   @Autowired
   private Configuration configuration;
 
+  private ArrayList<JsonObject> ftapList = new ArrayList<>();
+
   @Override
   protected String getUrl() {
     return "/api/facilityTypeApprovedProducts";
@@ -43,7 +51,7 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
     orderableService.invalidateCache();
 
     if (configuration.isUpdateAllowed()) {
-      logger.info("Removing all FacilityTypeApprovedProducts and preparing to re-create.");
+      logger.info("Retrive all FacilityTypeApprovedProducts.");
       JsonArray types = facilityTypeService.findAll();
       for (int i = 0; i < types.size(); ++i) {
         JsonObject type = types.getJsonObject(i);
@@ -57,21 +65,42 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
         JsonArray ftaps = findAll("", parameters);
 
         for (int j = 0; j < ftaps.size(); j++) {
-          JsonObject ftap = ftaps.getJsonObject(j);
-          deleteResource(ftap.getString(ID));
+          ftapList.add(ftaps.getJsonObject(j));
         }
 
         logger.info(
-            "Removed {} FacilityTypeApprovedProducts for facility type {}",
+            "Retrieved {} FacilityTypeApprovedProducts for facility type {}",
             ftaps.size(), facilityTypeCode);
       }
-
-      logger.info("Removed all FacilityTypeApprovedProducts");
     }
   }
 
   @Override
   public JsonObject findUnique(JsonObject object) {
+    for(JsonObject ftap: ftapList) {
+      if (Objects.equals(ftap.getJsonString("facilityTypeId"), object.getJsonString(
+          "facilityTypeId")) &&
+          Objects.equals(ftap.getJsonString("programId"), object.getJsonString(
+              "programId")) &&
+          Objects.equals(ftap.getJsonString("orderableId"), object.getJsonString(
+              "orderableId"))) {
+        logger.info(
+            "Found {} FacilityTypeApprovedProduct",
+            ftap.toString());
+        return ftap;
+      }
+    }
     return null;
   }
+
+  @Override
+  public boolean updateResource(JsonObject jsonObject, String id) {
+    JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
+
+    jsonObject.forEach(jsonBuilder::add);
+    jsonBuilder.add("meta",  Json.createObjectBuilder());
+
+    return super.updateResource(jsonBuilder.build(), id, true);
+  }
+
 }
