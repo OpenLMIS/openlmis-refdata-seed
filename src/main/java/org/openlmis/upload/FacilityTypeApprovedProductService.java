@@ -78,13 +78,13 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
   @Override
   public JsonObject findUnique(JsonObject object) {
     for (JsonObject ftap: ftapList) {
-      if (Objects.equals(ftap.getJsonString("facilityTypeId"), object.getJsonString(
-          "facilityTypeId"))
-          && Objects.equals(ftap.getJsonString("programId"), object.getJsonString(
-              "programId"))
-          && Objects.equals(ftap.getJsonString("orderableId"), object.getJsonString(
-              "orderableId"))) {
-        logger.info(
+      if (Objects.equals(ftap.getJsonObject("facilityType").getJsonString("id"),
+          object.getJsonObject("facilityType").getJsonString("id"))
+          && Objects.equals(ftap.getJsonObject("program").getJsonString("id"),
+          object.getJsonObject("program").getJsonString("id"))
+          && Objects.equals(ftap.getJsonObject("orderable").getJsonString("id"),
+          object.getJsonObject("orderable").getJsonString("id"))) {
+        logger.debug(
             "Found {} FacilityTypeApprovedProduct",
             ftap.toString());
         return ftap;
