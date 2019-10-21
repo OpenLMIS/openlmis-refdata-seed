@@ -85,23 +85,23 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
 
     for (JsonObject ftap: ftapList) {
       if (validateFtap(object, ftap, "facilityType")
-        && validateFtap(object, ftap, "program")
-        && validateFtap(object, ftap, "orderable")) {
+          && validateFtap(object, ftap, "program")
+          && validateFtap(object, ftap, "orderable")) {
         return ftap;
       }
     }
     return null;
   }
 
-  private boolean validateObject(JsonObject object, String parameter){
-    if (null == object.getJsonObject(parameter).getJsonString("id")){
+  private boolean validateObject(JsonObject object, String parameter) {
+    if (null == object.getJsonObject(parameter).getJsonString("id")) {
       logger.debug("Object missing this parameter: {}", parameter);
       return true;
     }
     return false;
   }
 
-  private boolean validateFtap(JsonObject object, JsonObject ftap, String parameter){
+  private boolean validateFtap(JsonObject object, JsonObject ftap, String parameter) {
     return Objects.equals(ftap.getJsonObject(parameter).getJsonString("id"),
         object.getJsonObject(parameter).getJsonString("id"));
   }
