@@ -77,20 +77,33 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
 
   @Override
   public JsonObject findUnique(JsonObject object) {
+    if (validateObject(object, "facilityType")
+        || validateObject(object, "program")
+        || validateObject(object, "orderable")) {
+      return null;
+    }
+
     for (JsonObject ftap: ftapList) {
-      if (Objects.equals(ftap.getJsonObject("facilityType").getJsonString("id"),
-          object.getJsonObject("facilityType").getJsonString("id"))
-          && Objects.equals(ftap.getJsonObject("program").getJsonString("id"),
-          object.getJsonObject("program").getJsonString("id"))
-          && Objects.equals(ftap.getJsonObject("orderable").getJsonString("id"),
-          object.getJsonObject("orderable").getJsonString("id"))) {
-        logger.debug(
-            "Found {} FacilityTypeApprovedProduct",
-            ftap.toString());
+      if (validateFtap(object, ftap, "facilityType")
+        && validateFtap(object, ftap, "program")
+        && validateFtap(object, ftap, "orderable")) {
         return ftap;
       }
     }
     return null;
+  }
+
+  private boolean validateObject(JsonObject object, String parameter){
+    if (null == object.getJsonObject(parameter).getJsonString("id")){
+      logger.debug("Object missing this parameter: {}", parameter);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean validateFtap(JsonObject object, JsonObject ftap, String parameter){
+    return Objects.equals(ftap.getJsonObject(parameter).getJsonString("id"),
+        object.getJsonObject(parameter).getJsonString("id"));
   }
 
   @Override
