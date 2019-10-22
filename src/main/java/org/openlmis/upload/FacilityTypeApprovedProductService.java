@@ -95,7 +95,7 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
 
   private boolean hasNoParameter(JsonObject object, String parameter) {
     if (null == object.getJsonObject(parameter)
-        && null == object.getJsonObject(parameter).getJsonString("id")) {
+        || null == object.getJsonObject(parameter).getJsonString("id")) {
       logger.debug("Object missing this parameter: {}", parameter);
       return true;
     }
