@@ -77,9 +77,9 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
 
   @Override
   public JsonObject findUnique(JsonObject object) {
-    if (validateObject(object, "facilityType")
-        || validateObject(object, "program")
-        || validateObject(object, "orderable")) {
+    if (hasNoParameter(object, "facilityType")
+        || hasNoParameter(object, "program")
+        || hasNoParameter(object, "orderable")) {
       return null;
     }
 
@@ -93,8 +93,9 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
     return null;
   }
 
-  private boolean validateObject(JsonObject object, String parameter) {
-    if (null == object.getJsonObject(parameter).getJsonString("id")) {
+  private boolean hasNoParameter(JsonObject object, String parameter) {
+    if (null == object.getJsonObject(parameter)
+        && null == object.getJsonObject(parameter).getJsonString("id")) {
       logger.debug("Object missing this parameter: {}", parameter);
       return true;
     }
