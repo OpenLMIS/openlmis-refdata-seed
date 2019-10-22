@@ -15,6 +15,7 @@
 
 package org.openlmis.upload;
 
+import org.openlmis.utils.JsonObjectComparisonUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -39,14 +40,7 @@ public class OrderableService extends BaseCommunicationService {
   }
 
   @Override
-  public String buildUpdateUrl(String base, String id) {
-    return base;
-  }
-
-  @Override
-  public boolean updateResource(JsonObject jsonObject, String id) {
-    logger.warn("Updating Orderables is not supported. Product with code {} will NOT be updated",
-        id);
-    return false;
+  public boolean isUpdateNeeded(JsonObject newObject, JsonObject existingObject) {
+    return !JsonObjectComparisonUtils.equals(newObject, existingObject);
   }
 }

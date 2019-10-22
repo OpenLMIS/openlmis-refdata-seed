@@ -18,6 +18,7 @@ package org.openlmis.upload;
 import static org.openlmis.upload.RequestHelper.createUri;
 
 import org.openlmis.Configuration;
+import org.openlmis.utils.JsonObjectComparisonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,7 +91,7 @@ public abstract class BaseCommunicationService {
   public void afterEach(JsonObject object) {
     // Nothing by default
   }
-  
+
   /**
    * Finds the JSON representation of the resource by its code.
    *
@@ -267,7 +268,7 @@ public abstract class BaseCommunicationService {
    */
   boolean updateResource(JsonObject jsonObject, String id, boolean addIdToObject) {
     String url = buildUpdateUrl(configuration.getHost() + getUrl(), id);
-    
+
     if (addIdToObject) {
       jsonObject = addIdToObject(jsonObject, id);
     }
@@ -377,6 +378,20 @@ public abstract class BaseCommunicationService {
     }
 
     invalidateCache();
+    return true;
+  }
+
+  /**
+   * Checks if the update of existing entry is needed. By default, it is allowed to update all
+   * entries. However, this behavior should be changed eg. in case of versioning entries.
+   * Overwriting this method allows implementing custom logic of comparing existing entry with an
+   * entry passed in an input file in order to prevent updates on each run of seedtool.
+   *
+   * @param newObject JSON which was created based on input data (CSV) and mappings.
+   * @param existingObject JSON which represents object fetched from OLMIS.
+   * @return a flag which determines if the update is needed.
+   */
+  public boolean isUpdateNeeded(JsonObject newObject, JsonObject existingObject) {
     return true;
   }
 

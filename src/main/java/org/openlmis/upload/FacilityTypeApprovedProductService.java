@@ -21,6 +21,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
 import org.openlmis.Configuration;
+import org.openlmis.utils.JsonObjectComparisonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -117,4 +118,8 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
     return super.updateResource(jsonBuilder.build(), id, true);
   }
 
+  @Override
+  public boolean isUpdateNeeded(JsonObject newObject, JsonObject existingObject) {
+    return !JsonObjectComparisonUtils.equals(newObject, existingObject);
+  }
 }

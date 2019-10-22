@@ -21,7 +21,6 @@ import org.openlmis.converter.MappingConverter;
 import org.openlmis.reader.GenericReader;
 import org.openlmis.upload.BaseCommunicationService;
 import org.openlmis.upload.Services;
-import org.openlmis.utils.JsonObjectComparisonUtils;
 import org.openlmis.utils.SourceFile;
 import org.openlmis.utils.AppHelper;
 import org.slf4j.Logger;
@@ -100,7 +99,7 @@ public class DataSeeder {
 
       LOGGER.info("{}/{}", i + 1, size);
       if (updateAllowed && existing != null) {
-        updateIfNotEquals(service, jsonObject, existing);
+        updateIfNeeded(service, jsonObject, existing);
       } else if (existing == null) {
         LOGGER.info("Creating new resource.");
         service.createResource(jsonObject.toString());
@@ -111,11 +110,11 @@ public class DataSeeder {
     }
   }
 
-  private void updateIfNotEquals(BaseCommunicationService service, JsonObject jsonObject,
-      JsonObject existing) {
-    if (!JsonObjectComparisonUtils.equals(jsonObject, existing)) {
+  private void updateIfNeeded(BaseCommunicationService service, JsonObject newObject,
+      JsonObject existingObject) {
+    if (service.isUpdateNeeded(newObject, existingObject)) {
       LOGGER.info("Resource exists. Attempting to update.");
-      service.updateResource(jsonObject, existing.getString("id"));
+      service.updateResource(newObject, existingObject.getString("id"));
     } else {
       LOGGER.info("Resource exists, but no update needed. Skipping.");
     }
