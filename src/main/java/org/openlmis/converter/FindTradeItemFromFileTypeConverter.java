@@ -13,62 +13,63 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
+
 package org.openlmis.converter;
 
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
+import org.openlmis.upload.TradeItemService;
 import org.openlmis.utils.AppHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.StringReader;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.json.Json;
-import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
 
 @Component
-class FileArrayTypeConverter extends BaseTypeConverter {
+public class FindTradeItemFromFileTypeConverter extends BaseTypeConverter {
+
+  private static final String TRADE_ITEM = "tradeItem";
 
   @Autowired
-  private Converter converter;
+  private TradeItemService tradeItemService;
 
   @Autowired
   private AppHelper appHelper;
 
   @Override
   public boolean supports(String type) {
-    return startsWithIgnoreCase(type, "TO_ARRAY_FROM_FILE_BY");
+    return startsWithIgnoreCase(type, "FIND_TRADE_ITEM_FROM_FILE_BY");
   }
 
   @Override
-  public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
-    List<String> codes = getArrayValues(value);
+  public void convert(JsonObjectBuilder builder, Mapping mapping, String orderableCode) {
+    tradeItemService.before();
+
     String by = getBy(mapping.getType());
     String entityFileName = mapping.getEntityName();
 
-    List<Map<String, String>> csvs = appHelper.readCsv(entityFileName).stream()
-        .filter(map -> codes.contains(map.get(by)))
-        .collect(Collectors.toList());
+    boolean tradeItemIsAssociated = appHelper.readCsv(entityFileName).stream()
+        .anyMatch(map -> orderableCode.equals(map.get(by)));
 
-    JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+    JsonObjectBuilder identifiers = Json.createObjectBuilder();
 
-    if (!csvs.isEmpty()) {
-      List<Mapping> mappings = appHelper.readMappings(entityFileName);
-      for (Map<String, String> csv : csvs) {
-        String json = converter.convert(csv, mappings).toString();
-
-        try (JsonReader jsonReader = Json.createReader(new StringReader(json))) {
-          arrayBuilder.add(jsonReader.readObject());
-        }
+    if (tradeItemIsAssociated) {
+      String existingId = getTradeItemId(orderableCode);
+      if (existingId != null) {
+        identifiers.add(TRADE_ITEM, existingId);
       }
     }
 
-    builder.add(mapping.getTo(), arrayBuilder);
+    builder.add(mapping.getTo(), identifiers);
   }
 
+  private String getTradeItemId(String orderableCode) {
+    String existingId = tradeItemService.findTradeItemIdByOrderableCode(orderableCode);
+    if (existingId == null) {
+      logger.warn("Can't find trade item associated with product code: {}. "
+          + "Creating without identifier...", orderableCode);
+    }
+    return existingId;
+  }
 }

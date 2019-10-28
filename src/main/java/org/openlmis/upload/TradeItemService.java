@@ -17,15 +17,6 @@ package org.openlmis.upload;
 
 import static org.openlmis.upload.RequestHelper.createUri;
 
-import com.google.common.collect.Maps;
-import java.net.URI;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +25,16 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
+
+import java.net.URI;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
 @Service
 public class TradeItemService extends BaseCommunicationService {
@@ -44,21 +45,25 @@ public class TradeItemService extends BaseCommunicationService {
 
   @Autowired
   private OrderableService orderableService;
-  
-  private Map<String, String> cachedTradeItemIdByOrderableCode = Maps.newHashMap();
+
+  private Map<String, String> cachedTradeItemIdByOrderableCode;
 
   /**
    * Finds trade item id based on product code.
    * @param orderableCode the value of product code
    * @return String trade item id if it exits in cache, Null otherwise.
    */
-  public String findCachedTradeItemIdByOrderableCode(String orderableCode) {
+  public String findTradeItemIdByOrderableCode(String orderableCode) {
     return cachedTradeItemIdByOrderableCode.getOrDefault(orderableCode, null);
   }
-  
-  
+
   @Override
   public void before() {
+    if (cachedTradeItemIdByOrderableCode != null) {
+      // Use cached version if available
+      return;
+    }
+
     JsonArray orderables = this.orderableService.findAll();
     cachedTradeItemIdByOrderableCode = IntStream.range(0, orderables.size())
         .mapToObj(orderables::getJsonObject)
@@ -141,7 +146,7 @@ public class TradeItemService extends BaseCommunicationService {
   public boolean updateResource(JsonObject jsonObject, String id) {
     String productCode = jsonObject.getString(PRODUCT_CODE);
 
-    String tradeItemId = findCachedTradeItemIdByOrderableCode(productCode);
+    String tradeItemId = findTradeItemIdByOrderableCode(productCode);
 
     if (tradeItemId == null) {
       logger.error("Can't find an trade item for product with code {}.", productCode);

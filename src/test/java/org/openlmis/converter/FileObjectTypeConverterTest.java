@@ -20,26 +20,29 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.Configuration;
-import org.openlmis.reader.Reader;
+import org.openlmis.utils.AppHelper;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
 public class FileObjectTypeConverterTest {
@@ -51,10 +54,7 @@ public class FileObjectTypeConverterTest {
   private Configuration configuration;
 
   @Mock
-  private Reader reader;
-
-  @Mock
-  private MappingConverter mappingConverter;
+  private AppHelper appHelper;
 
   @Mock
   private Converter converter;
@@ -77,8 +77,8 @@ public class FileObjectTypeConverterTest {
     );
 
     doReturn("").when(configuration).getDirectory();
-    doReturn(innerData).when(reader).readFromFile(Matchers.any(File.class));
-    doReturn(innerMapping).when(mappingConverter).getMappingForFile(Matchers.any(File.class));
+    doReturn(innerData).when(appHelper).readCsv(anyString());
+    doReturn(innerMapping).when(appHelper).readMappings(anyString());
     doAnswer(invocation -> {
       JsonObjectBuilder inner = Json.createObjectBuilder();
       Mapping mapping = innerMapping.get(0);
@@ -116,5 +116,19 @@ public class FileObjectTypeConverterTest {
     JsonObject object = builder.build();
     assertThat(object.containsKey(mapping.getTo()), is(true));
     assertThat(object.getJsonObject("my_object").getString(CODE), is(equalTo(FIVE)));
+  }
+
+  @Test
+  public void shouldAddNothingIfCsvIsEmpty() {
+    doReturn(Collections.emptyList()).when(appHelper).readCsv(anyString());
+
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+    Mapping mapping = new Mapping(
+        CODE, "my_object", "TO_OBJECT_FROM_FILE_BY_CODE", "inner.csv", "");
+
+    typeConverter.convert(builder, mapping, FIVE);
+
+    JsonObject object = builder.build();
+    assertThat(object.isEmpty(), is(true));
   }
 }

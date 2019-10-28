@@ -17,6 +17,10 @@ package org.openlmis.utils;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -24,21 +28,29 @@ import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.Configuration;
 import org.openlmis.converter.Mapping;
+import org.openlmis.converter.MappingConverter;
+import org.openlmis.reader.Reader;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AppHelperTest {
   private static final SourceFile SOURCE = SourceFile.FACILITIES;
-  private static final String TYPE = "TO_ARRAY_FROM_FILE_BY_CODE";
+  private static final String DIRECT_TYPE = "DIRECT";
+  private static final String FROM_FILE_TYPE = "TO_ARRAY_FROM_FILE_BY_CODE";
+  private static final String FROM = "programCode";
 
   @Mock
   private File inputFile;
@@ -52,35 +64,48 @@ public class AppHelperTest {
   @Mock
   private Mapping mapping;
 
+  @Mock
+  private MappingConverter mappingConverter;
+
+  @Mock
+  private Reader reader;
+
+  @InjectMocks
+  private AppHelper appHelper;
+
   private List<Mapping> mappings;
 
+  private List<Map<String, String>> csv = Collections
+      .singletonList(Collections.singletonMap("fieldName", "value"));
+
   @Before
-  public void setUp() throws Exception {
+  public void setUp(){
     when(configuration.getDirectory()).thenReturn(System.getProperty("java.io.tmpdir"));
-    when(mapping.getType()).thenReturn(TYPE);
+    when(mapping.getFrom()).thenReturn(FROM);
+    when(mapping.getType()).thenReturn(FROM_FILE_TYPE);
 
     mappings = Lists.newArrayList(mapping);
   }
 
   @Test
-  public void shouldProcessIfFilesExists() throws Exception {
+  public void shouldProcessIfFilesExists() {
     when(inputFile.exists()).thenReturn(true);
     when(mappingFile.exists()).thenReturn(true);
 
-    assertThat(AppHelper.shouldProcess(inputFile, mappingFile, SOURCE), is(true));
+    assertThat(appHelper.inputAndMappingFileExist(inputFile, mappingFile, SOURCE), is(true));
   }
 
   @Test
-  public void shouldNotProcessIfOneOfFileNotExist() throws Exception {
+  public void shouldNotProcessIfOneOfFileNotExist() {
     when(inputFile.exists()).thenReturn(false);
     when(mappingFile.exists()).thenReturn(true);
 
-    assertThat(AppHelper.shouldProcess(inputFile, mappingFile, SOURCE), is(false));
+    assertThat(appHelper.inputAndMappingFileExist(inputFile, mappingFile, SOURCE), is(false));
 
     when(inputFile.exists()).thenReturn(true);
     when(mappingFile.exists()).thenReturn(false);
 
-    assertThat(AppHelper.shouldProcess(inputFile, mappingFile, SOURCE), is(false));
+    assertThat(appHelper.inputAndMappingFileExist(inputFile, mappingFile, SOURCE), is(false));
   }
 
   @Test
@@ -88,7 +113,7 @@ public class AppHelperTest {
     when(inputFile.exists()).thenReturn(false);
     when(mappingFile.exists()).thenReturn(false);
 
-    assertThat(AppHelper.shouldProcess(inputFile, mappingFile, SOURCE), is(false));
+    assertThat(appHelper.inputAndMappingFileExist(inputFile, mappingFile, SOURCE), is(false));
   }
 
   @Test
@@ -104,14 +129,123 @@ public class AppHelperTest {
 
     when(mapping.getEntityName()).thenReturn("test.csv");
 
-    assertThat(AppHelper.shouldProcess(configuration, SOURCE, mappings), is(true));
+    assertThat(appHelper.shouldProcess(SOURCE, mappings), is(true));
   }
 
   @Test
   public void shouldNotProcessIfMappingIsInvalid() throws Exception {
     when(mapping.getEntityName()).thenReturn("invalid.csv");
 
-    assertThat(AppHelper.shouldProcess(configuration, SOURCE, mappings), is(false));
+    assertThat(appHelper.shouldProcess(SOURCE, mappings), is(false));
+  }
+
+  @Test
+  public void shouldProcessIfFromIsWrittenInLowerCamelCase() {
+    when(mapping.getType()).thenReturn(DIRECT_TYPE);
+
+    assertThat(appHelper.shouldProcess(SOURCE, mappings), is(true));
+  }
+
+  @Test
+  public void shouldNotProcessIfFromIsNotWrittenInUpperCamelCase() {
+    when(mapping.getType()).thenReturn(DIRECT_TYPE);
+    when(mapping.getFrom()).thenReturn("UpperCamelCase");
+
+    assertThat(appHelper.shouldProcess(SOURCE, mappings), is(false));
+  }
+
+  @Test
+  public void shouldNotProcessIfFromPhraseOfDependingMappingsIsNotWrittenInUpperCamelCase()
+      throws Exception {
+    Path inputPath = Paths.get(System.getProperty("java.io.tmpdir"), "test.csv");
+    Path mappingPath = Paths.get(System.getProperty("java.io.tmpdir"), "test_mapping.csv");
+
+    Files.deleteIfExists(inputPath);
+    Files.deleteIfExists(mappingPath);
+
+    Files.createFile(inputPath);
+    Files.createFile(mappingPath);
+
+    Mapping dependedOnMapping = mock(Mapping.class);
+    when(dependedOnMapping.getType()).thenReturn(DIRECT_TYPE);
+    when(dependedOnMapping.getFrom()).thenReturn("UpperCamelCase");
+
+    when(mapping.getEntityName()).thenReturn("test.csv");
+    when(mappingConverter.getMappingForFile(any()))
+        .thenReturn(Collections.singletonList(dependedOnMapping));
+
+    assertThat(appHelper.shouldProcess(SOURCE, mappings), is(false));
+  }
+
+  @Test
+  public void shouldProcessIfFromPhraseOfDependingMappingsIsWrittenInCamelCase()
+      throws Exception {
+    Path inputPath = Paths.get(System.getProperty("java.io.tmpdir"), "test.csv");
+    Path mappingPath = Paths.get(System.getProperty("java.io.tmpdir"), "test_mapping.csv");
+
+    Files.deleteIfExists(inputPath);
+    Files.deleteIfExists(mappingPath);
+
+    Files.createFile(inputPath);
+    Files.createFile(mappingPath);
+
+    Mapping dependedOnMapping = mock(Mapping.class);
+    when(dependedOnMapping.getType()).thenReturn(DIRECT_TYPE);
+    when(dependedOnMapping.getFrom()).thenReturn("camelCase");
+
+    when(mapping.getEntityName()).thenReturn("test.csv");
+    when(mappingConverter.getMappingForFile(any()))
+        .thenReturn(Collections.singletonList(dependedOnMapping));
+
+    assertThat(appHelper.shouldProcess(SOURCE, mappings), is(true));
+  }
+
+  @Test
+  public void shouldReadMappingsByEntityName() {
+    ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
+    String entityFileName = SOURCE.getName() + ".csv";
+    String expectedPath = SOURCE.getFullMappingFileName(configuration.getDirectory());
+
+    when(mappingConverter.getMappingForFile(fileCapture.capture())).thenReturn(mappings);
+
+    assertThat(appHelper.readMappings(entityFileName), is(mappings));
+    assertThat(fileCapture.getValue().getAbsolutePath(), is(expectedPath));
+  }
+
+  @Test
+  public void shouldReadCashedMappingsByEntityName() {
+    ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
+    String entityFileName = SOURCE.getName() + ".csv";
+
+    when(mappingConverter.getMappingForFile(fileCapture.capture())).thenReturn(mappings);
+
+    assertThat(appHelper.readMappings(entityFileName), is(mappings));
+    assertThat(appHelper.readMappings(entityFileName), is(mappings));
+    verify(mappingConverter, times(1)).getMappingForFile(any());
+  }
+
+  @Test
+  public void shouldReadCsvByEntityName() {
+    ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
+    String entityFileName = SOURCE.getName() + ".csv";
+    String expectedPath = SOURCE.getFullFileName(configuration.getDirectory());
+
+    when(reader.readFromFile(fileCapture.capture())).thenReturn(csv);
+
+    assertThat(appHelper.readCsv(entityFileName), is(csv));
+    assertThat(fileCapture.getValue().getAbsolutePath(), is(expectedPath));
+  }
+
+  @Test
+  public void shouldReadCashedCsvByEntityName() {
+    ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
+    String entityFileName = SOURCE.getName() + ".csv";
+
+    when(reader.readFromFile(fileCapture.capture())).thenReturn(csv);
+
+    assertThat(appHelper.readCsv(entityFileName), is(csv));
+    assertThat(appHelper.readCsv(entityFileName), is(csv));
+    verify(reader, times(1)).readFromFile(any());
   }
 }
 

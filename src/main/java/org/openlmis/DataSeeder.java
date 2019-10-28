@@ -53,6 +53,9 @@ public class DataSeeder {
   private MappingConverter mappingConverter;
 
   @Autowired
+  private AppHelper appHelper;
+
+  @Autowired
   private Services services;
 
   /**
@@ -75,13 +78,13 @@ public class DataSeeder {
     File inputFile = new File(inputFileName);
     File mappingFile = new File(mappingFileName);
 
-    if (!AppHelper.shouldProcess(inputFile, mappingFile, source)) {
+    if (!appHelper.inputAndMappingFileExist(inputFile, mappingFile, source)) {
       return;
     }
 
     List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFile);
 
-    if (!AppHelper.shouldProcess(configuration, source, mappings)) {
+    if (!appHelper.shouldProcess(source, mappings)) {
       return;
     }
 
