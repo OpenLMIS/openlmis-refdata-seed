@@ -1,11 +1,12 @@
 package org.openlmis.utils;
 
-import javax.json.Json;
-import javax.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import javax.json.Json;
+import javax.json.JsonObject;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JsonObjectComparisonUtilsTest {
@@ -118,6 +119,33 @@ public class JsonObjectComparisonUtilsTest {
     Assert.assertTrue(result);
   }
 
+  @Test
+  public void equalsShouldReturnTrueIfValuesInNestedObjectAreEqual() {
+    boolean result = JsonObjectComparisonUtils.equals(
+        createJsonObjectWithValue(createJsonObjectWithValue("A111")),
+        createJsonObjectWithValue(createJsonObjectWithValue("A111")));
+
+    Assert.assertTrue(result);
+  }
+
+  @Test
+  public void equalsShouldReturnFalseIfValuesInNestedObjectAreNotEqual() {
+    boolean result = JsonObjectComparisonUtils.equals(
+        createJsonObjectWithValue(createJsonObjectWithValue("A111")),
+        createJsonObjectWithValue(createJsonObjectWithValue("A112")));
+
+    Assert.assertFalse(result);
+  }
+
+  @Test
+  public void equalsShouldReturnFalseIfItIsObjectCleanupCase() {
+    boolean result = JsonObjectComparisonUtils.equals(
+        createJsonObjectWithValue(Json.createObjectBuilder().build()),
+        createJsonObjectWithValue(createJsonObjectWithValue("A112")));
+
+    Assert.assertFalse(result);
+  }
+
   private JsonObject createJsonArrayWithValue(String value) {
     return Json.createObjectBuilder()
         .add("fieldName", Json.createArrayBuilder().add(value))
@@ -133,6 +161,10 @@ public class JsonObjectComparisonUtilsTest {
   }
 
   private JsonObject createJsonObjectWithValue(int value) {
+    return Json.createObjectBuilder().add("fieldName", value).build();
+  }
+
+  private JsonObject createJsonObjectWithValue(JsonObject value) {
     return Json.createObjectBuilder().add("fieldName", value).build();
   }
 }
