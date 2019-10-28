@@ -46,11 +46,16 @@ import java.util.List;
 import java.util.Map;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("PMD.TooManyMethods")
 public class AppHelperTest {
   private static final SourceFile SOURCE = SourceFile.FACILITIES;
   private static final String DIRECT_TYPE = "DIRECT";
   private static final String FROM_FILE_TYPE = "TO_ARRAY_FROM_FILE_BY_CODE";
   private static final String FROM = "programCode";
+  private static final String CSV_EXTENSION = ".csv";
+  private static final String TEST_CSV_FILE = "test.csv";
+  private static final String TEST_MAPPING_FILE = "test_mapping.csv";
+  private static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
 
   @Mock
   private File inputFile;
@@ -79,8 +84,8 @@ public class AppHelperTest {
       .singletonList(Collections.singletonMap("fieldName", "value"));
 
   @Before
-  public void setUp(){
-    when(configuration.getDirectory()).thenReturn(System.getProperty("java.io.tmpdir"));
+  public void setUp() {
+    when(configuration.getDirectory()).thenReturn(System.getProperty(JAVA_IO_TMPDIR));
     when(mapping.getFrom()).thenReturn(FROM);
     when(mapping.getType()).thenReturn(FROM_FILE_TYPE);
 
@@ -118,8 +123,8 @@ public class AppHelperTest {
 
   @Test
   public void shouldProcessIfMappingIsValid() throws Exception {
-    Path inputPath = Paths.get(System.getProperty("java.io.tmpdir"), "test.csv");
-    Path mappingPath = Paths.get(System.getProperty("java.io.tmpdir"), "test_mapping.csv");
+    Path inputPath = Paths.get(System.getProperty(JAVA_IO_TMPDIR), TEST_CSV_FILE);
+    Path mappingPath = Paths.get(System.getProperty(JAVA_IO_TMPDIR), TEST_MAPPING_FILE);
 
     Files.deleteIfExists(inputPath);
     Files.deleteIfExists(mappingPath);
@@ -127,7 +132,7 @@ public class AppHelperTest {
     Files.createFile(inputPath);
     Files.createFile(mappingPath);
 
-    when(mapping.getEntityName()).thenReturn("test.csv");
+    when(mapping.getEntityName()).thenReturn(TEST_CSV_FILE);
 
     assertThat(appHelper.shouldProcess(SOURCE, mappings), is(true));
   }
@@ -157,8 +162,8 @@ public class AppHelperTest {
   @Test
   public void shouldNotProcessIfFromPhraseOfDependingMappingsIsNotWrittenInUpperCamelCase()
       throws Exception {
-    Path inputPath = Paths.get(System.getProperty("java.io.tmpdir"), "test.csv");
-    Path mappingPath = Paths.get(System.getProperty("java.io.tmpdir"), "test_mapping.csv");
+    Path inputPath = Paths.get(System.getProperty(JAVA_IO_TMPDIR), TEST_CSV_FILE);
+    Path mappingPath = Paths.get(System.getProperty(JAVA_IO_TMPDIR), TEST_MAPPING_FILE);
 
     Files.deleteIfExists(inputPath);
     Files.deleteIfExists(mappingPath);
@@ -170,7 +175,7 @@ public class AppHelperTest {
     when(dependedOnMapping.getType()).thenReturn(DIRECT_TYPE);
     when(dependedOnMapping.getFrom()).thenReturn("UpperCamelCase");
 
-    when(mapping.getEntityName()).thenReturn("test.csv");
+    when(mapping.getEntityName()).thenReturn(TEST_CSV_FILE);
     when(mappingConverter.getMappingForFile(any()))
         .thenReturn(Collections.singletonList(dependedOnMapping));
 
@@ -180,8 +185,8 @@ public class AppHelperTest {
   @Test
   public void shouldProcessIfFromPhraseOfDependingMappingsIsWrittenInCamelCase()
       throws Exception {
-    Path inputPath = Paths.get(System.getProperty("java.io.tmpdir"), "test.csv");
-    Path mappingPath = Paths.get(System.getProperty("java.io.tmpdir"), "test_mapping.csv");
+    Path inputPath = Paths.get(System.getProperty(JAVA_IO_TMPDIR), TEST_CSV_FILE);
+    Path mappingPath = Paths.get(System.getProperty(JAVA_IO_TMPDIR), TEST_MAPPING_FILE);
 
     Files.deleteIfExists(inputPath);
     Files.deleteIfExists(mappingPath);
@@ -193,7 +198,7 @@ public class AppHelperTest {
     when(dependedOnMapping.getType()).thenReturn(DIRECT_TYPE);
     when(dependedOnMapping.getFrom()).thenReturn("camelCase");
 
-    when(mapping.getEntityName()).thenReturn("test.csv");
+    when(mapping.getEntityName()).thenReturn(TEST_CSV_FILE);
     when(mappingConverter.getMappingForFile(any()))
         .thenReturn(Collections.singletonList(dependedOnMapping));
 
@@ -203,7 +208,7 @@ public class AppHelperTest {
   @Test
   public void shouldReadMappingsByEntityName() {
     ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
-    String entityFileName = SOURCE.getName() + ".csv";
+    String entityFileName = SOURCE.getName() + CSV_EXTENSION;
     String expectedPath = SOURCE.getFullMappingFileName(configuration.getDirectory());
 
     when(mappingConverter.getMappingForFile(fileCapture.capture())).thenReturn(mappings);
@@ -215,7 +220,7 @@ public class AppHelperTest {
   @Test
   public void shouldReadCashedMappingsByEntityName() {
     ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
-    String entityFileName = SOURCE.getName() + ".csv";
+    String entityFileName = SOURCE.getName() + CSV_EXTENSION;
 
     when(mappingConverter.getMappingForFile(fileCapture.capture())).thenReturn(mappings);
 
@@ -227,7 +232,7 @@ public class AppHelperTest {
   @Test
   public void shouldReadCsvByEntityName() {
     ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
-    String entityFileName = SOURCE.getName() + ".csv";
+    String entityFileName = SOURCE.getName() + CSV_EXTENSION;
     String expectedPath = SOURCE.getFullFileName(configuration.getDirectory());
 
     when(reader.readFromFile(fileCapture.capture())).thenReturn(csv);
@@ -239,7 +244,7 @@ public class AppHelperTest {
   @Test
   public void shouldReadCashedCsvByEntityName() {
     ArgumentCaptor<File> fileCapture = ArgumentCaptor.forClass(File.class);
-    String entityFileName = SOURCE.getName() + ".csv";
+    String entityFileName = SOURCE.getName() + CSV_EXTENSION;
 
     when(reader.readFromFile(fileCapture.capture())).thenReturn(csv);
 

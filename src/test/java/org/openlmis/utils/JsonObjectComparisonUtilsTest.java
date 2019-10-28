@@ -1,3 +1,18 @@
+/*
+ * This program is part of the OpenLMIS logistics management information system platform software.
+ * Copyright © 2017 VillageReach
+ *
+ * This program is free software: you can redistribute it and/or modify it under the terms
+ * of the GNU Affero General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later version.
+ *  
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ * See the GNU Affero General Public License for more details. You should have received a copy of
+ * the GNU Affero General Public License along with this program. If not, see
+ * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
+ */
+
 package org.openlmis.utils;
 
 import org.junit.Assert;
@@ -9,7 +24,12 @@ import javax.json.Json;
 import javax.json.JsonObject;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("PMD.TooManyMethods")
 public class JsonObjectComparisonUtilsTest {
+
+  public static final String FIELD_NAME = "fieldName";
+  public static final String STRING_VALUE_2 = "A112";
+  public static final String STRING_VALUE_1 = "A111";
 
   @Test
   public void equalsShouldCompareDoubleWithIntNumerically() {
@@ -86,8 +106,8 @@ public class JsonObjectComparisonUtilsTest {
   @Test
   public void equalsShouldReturnTrueIfComparingEqualStrings() {
     boolean result = JsonObjectComparisonUtils.equals(
-        createJsonObjectWithValue("A111"),
-        createJsonObjectWithValue("A111"));
+        createJsonObjectWithValue(STRING_VALUE_1),
+        createJsonObjectWithValue(STRING_VALUE_1));
 
     Assert.assertTrue(result);
   }
@@ -95,8 +115,8 @@ public class JsonObjectComparisonUtilsTest {
   @Test
   public void equalsShouldReturnFalseIfComparingNotEqualStrings() {
     boolean result = JsonObjectComparisonUtils.equals(
-        createJsonObjectWithValue("A111"),
-        createJsonObjectWithValue("A112"));
+        createJsonObjectWithValue(STRING_VALUE_1),
+        createJsonObjectWithValue(STRING_VALUE_2));
 
     Assert.assertFalse(result);
   }
@@ -104,8 +124,8 @@ public class JsonObjectComparisonUtilsTest {
   @Test
   public void equalsShouldReturnFalseIfValuesInNestedArrayAreNotEqual() {
     boolean result = JsonObjectComparisonUtils.equals(
-        createJsonArrayWithValue("A111"),
-        createJsonArrayWithValue("A112"));
+        createJsonArrayWithValue(STRING_VALUE_1),
+        createJsonArrayWithValue(STRING_VALUE_2));
 
     Assert.assertFalse(result);
   }
@@ -113,8 +133,8 @@ public class JsonObjectComparisonUtilsTest {
   @Test
   public void equalsShouldReturnTrueIfValuesInNestedArrayAreEqual() {
     boolean result = JsonObjectComparisonUtils.equals(
-        createJsonArrayWithValue("A111"),
-        createJsonArrayWithValue("A111"));
+        createJsonArrayWithValue(STRING_VALUE_1),
+        createJsonArrayWithValue(STRING_VALUE_1));
 
     Assert.assertTrue(result);
   }
@@ -122,8 +142,8 @@ public class JsonObjectComparisonUtilsTest {
   @Test
   public void equalsShouldReturnTrueIfValuesInNestedObjectAreEqual() {
     boolean result = JsonObjectComparisonUtils.equals(
-        createJsonObjectWithValue(createJsonObjectWithValue("A111")),
-        createJsonObjectWithValue(createJsonObjectWithValue("A111")));
+        createJsonObjectWithValue(createJsonObjectWithValue(STRING_VALUE_1)),
+        createJsonObjectWithValue(createJsonObjectWithValue(STRING_VALUE_1)));
 
     Assert.assertTrue(result);
   }
@@ -131,8 +151,8 @@ public class JsonObjectComparisonUtilsTest {
   @Test
   public void equalsShouldReturnFalseIfValuesInNestedObjectAreNotEqual() {
     boolean result = JsonObjectComparisonUtils.equals(
-        createJsonObjectWithValue(createJsonObjectWithValue("A111")),
-        createJsonObjectWithValue(createJsonObjectWithValue("A112")));
+        createJsonObjectWithValue(createJsonObjectWithValue(STRING_VALUE_1)),
+        createJsonObjectWithValue(createJsonObjectWithValue(STRING_VALUE_2)));
 
     Assert.assertFalse(result);
   }
@@ -141,30 +161,30 @@ public class JsonObjectComparisonUtilsTest {
   public void equalsShouldReturnFalseIfItIsObjectCleanupCase() {
     boolean result = JsonObjectComparisonUtils.equals(
         createJsonObjectWithValue(Json.createObjectBuilder().build()),
-        createJsonObjectWithValue(createJsonObjectWithValue("A112")));
+        createJsonObjectWithValue(createJsonObjectWithValue(STRING_VALUE_2)));
 
     Assert.assertFalse(result);
   }
 
   private JsonObject createJsonArrayWithValue(String value) {
     return Json.createObjectBuilder()
-        .add("fieldName", Json.createArrayBuilder().add(value))
+        .add(FIELD_NAME, Json.createArrayBuilder().add(value))
         .build();
   }
 
   private JsonObject createJsonObjectWithValue(String value) {
-    return Json.createObjectBuilder().add("fieldName", value).build();
+    return Json.createObjectBuilder().add(FIELD_NAME, value).build();
   }
 
   private JsonObject createJsonObjectWithValue(double value) {
-    return Json.createObjectBuilder().add("fieldName", value).build();
+    return Json.createObjectBuilder().add(FIELD_NAME, value).build();
   }
 
   private JsonObject createJsonObjectWithValue(int value) {
-    return Json.createObjectBuilder().add("fieldName", value).build();
+    return Json.createObjectBuilder().add(FIELD_NAME, value).build();
   }
 
   private JsonObject createJsonObjectWithValue(JsonObject value) {
-    return Json.createObjectBuilder().add("fieldName", value).build();
+    return Json.createObjectBuilder().add(FIELD_NAME, value).build();
   }
 }
