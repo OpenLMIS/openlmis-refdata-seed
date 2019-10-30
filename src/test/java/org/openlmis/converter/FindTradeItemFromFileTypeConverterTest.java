@@ -15,15 +15,11 @@
 
 package org.openlmis.converter;
 
-
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
-import java.util.UUID;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,41 +27,54 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.upload.TradeItemService;
+import org.openlmis.utils.AppHelper;
+
+import java.util.Collections;
+import java.util.UUID;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FindCachedTradeItemTypeConverterTest {
+public class FindTradeItemFromFileTypeConverterTest {
 
-  private static final String FIND_CACHED_TRADE_ITEM = "FIND_CACHED_TRADE_ITEM";
+  private static final String FIND_TRADE_ITEM_FROM_FILE
+      = "FIND_TRADE_ITEM_FROM_FILE_BY_PRODUCT_CODE";
+  private static final String PRODUCT_CODE = "productCode";
   private static final String TRADE_ITEM = "tradeItem";
   private static final String VALUE = "112233";
   private static final String FROM = "from";
   private static final String TO = "to";
 
-
   @Mock
   private TradeItemService tradeItemService;
 
+  @Mock
+  private AppHelper appHelper;
+
   @InjectMocks
-  private FindCachedTradeItemTypeConverter converter;
+  private FindTradeItemFromFileTypeConverter converter;
 
   private String tradeItemId = UUID.randomUUID().toString();
 
   @Before
   public void setUp() {
+    doReturn(Collections.singletonList(Collections.singletonMap(PRODUCT_CODE, VALUE)))
+        .when(appHelper).readCsv(anyString());
     doReturn(tradeItemId).when(tradeItemService)
-        .findCachedTradeItemIdByOrderableCode(VALUE);
+        .findTradeItemIdByOrderableCode(VALUE);
   }
 
   @Test
-  public void shouldSupportTypes() throws Exception {
-    assertThat(converter.supports(FIND_CACHED_TRADE_ITEM), is(true));
+  public void shouldSupportTypes() {
+    assertThat(converter.supports(FIND_TRADE_ITEM_FROM_FILE), is(true));
   }
 
   @Test
-  public void shouldConvert() throws Exception {
-
+  public void shouldAddTradeItemIfEntryExistsInCsv() {
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping(FROM, TO, FIND_CACHED_TRADE_ITEM, "", "");
+    Mapping mapping = new Mapping(FROM, TO, FIND_TRADE_ITEM_FROM_FILE, "", "");
 
     converter.convert(builder, mapping, VALUE);
 
@@ -76,14 +85,32 @@ public class FindCachedTradeItemTypeConverterTest {
   }
 
   @Test
-  public void shouldNotSetValueIfOrderableCodeNotInCache() {
+  public void shouldNotAddTradeItemIfEntryDoesNotExistInCsv() {
+    doReturn(Collections.emptyList()).when(appHelper).readCsv(anyString());
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping(FROM, TO, FIND_CACHED_TRADE_ITEM, "", "");
+    Mapping mapping = new Mapping(FROM, TO, FIND_TRADE_ITEM_FROM_FILE, "", "");
 
-    converter.convert(builder, mapping, "NOT_VALID_PRODUCT_CODE");
+    converter.convert(builder, mapping, VALUE);
 
     JsonObject object = builder.build();
-    assertThat(object.containsKey(mapping.getTo()), is(false));
+    assertThat(object.containsKey(mapping.getTo()), is(true));
+    JsonObject identifiersObject = object.getJsonObject(mapping.getTo());
+    assertThat(identifiersObject.isEmpty(), is(true));
+  }
+
+  @Test
+  public void shouldNotAddTradeItemIfItDoesNotExistInDb() {
+    doReturn(null).when(tradeItemService).findTradeItemIdByOrderableCode(VALUE);
+
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+    Mapping mapping = new Mapping(FROM, TO, FIND_TRADE_ITEM_FROM_FILE, "", "");
+
+    converter.convert(builder, mapping, VALUE);
+
+    JsonObject object = builder.build();
+    assertThat(object.containsKey(mapping.getTo()), is(true));
+    JsonObject identifiersObject = object.getJsonObject(mapping.getTo());
+    assertThat(identifiersObject.isEmpty(), is(true));
   }
 }

@@ -15,27 +15,24 @@
 
 package org.openlmis;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import javax.json.JsonObject;
 import org.openlmis.converter.Converter;
 import org.openlmis.converter.Mapping;
 import org.openlmis.converter.MappingConverter;
 import org.openlmis.reader.GenericReader;
 import org.openlmis.upload.BaseCommunicationService;
 import org.openlmis.upload.Services;
-import org.openlmis.utils.SourceFile;
 import org.openlmis.utils.AppHelper;
+import org.openlmis.utils.SourceFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 
 @Component
 public class DataSeeder {
@@ -43,6 +40,11 @@ public class DataSeeder {
   private static final Logger LOGGER = LoggerFactory.getLogger(DataSeeder.class);
 
   private static final int DELAY_SECONDS = 240;
+
+  private static final List<SourceFile> DELAYED_SOURCES = Arrays.asList(
+      SourceFile.FACILITIES, SourceFile.REQUISITION_GROUP,
+      SourceFile.SUPERVISORY_NODES, SourceFile.ROLES
+  );
 
   @Autowired
   private Configuration configuration;
@@ -55,6 +57,9 @@ public class DataSeeder {
 
   @Autowired
   private MappingConverter mappingConverter;
+
+  @Autowired
+  private AppHelper appHelper;
 
   @Autowired
   private Services services;
@@ -79,13 +84,13 @@ public class DataSeeder {
     File inputFile = new File(inputFileName);
     File mappingFile = new File(mappingFileName);
 
-    if (!AppHelper.shouldProcess(inputFile, mappingFile, source)) {
+    if (!appHelper.inputAndMappingFileExist(inputFile, mappingFile, source)) {
       return;
     }
 
     List<Mapping> mappings = mappingConverter.getMappingForFile(mappingFile);
 
-    if (!AppHelper.shouldProcess(configuration, source, mappings)) {
+    if (!appHelper.shouldProcess(source, mappings)) {
       return;
     }
 
@@ -103,14 +108,7 @@ public class DataSeeder {
 
       LOGGER.info("{}/{}", i + 1, size);
       if (updateAllowed && existing != null) {
-        if (!jsonObjectsEqual(jsonObject, existing, true)) {
-          LOGGER.info("Resource exists. Attempting to update.");
-          if (service.updateResource(jsonObject, existing.getString("id"))) {
-            delay(source);
-          }
-        } else {
-          LOGGER.info("Resource exists, but no update needed. Skipping.");
-        }
+        updateIfNeeded(service, jsonObject, existing, source);
       } else if (existing == null) {
         LOGGER.info("Creating new resource.");
         if (service.createResource(jsonObject.toString())) {
@@ -123,60 +121,27 @@ public class DataSeeder {
     }
   }
 
+  private void updateIfNeeded(BaseCommunicationService service, JsonObject newObject,
+      JsonObject existingObject, SourceFile source) {
+    if (service.isUpdateNeeded(newObject, existingObject)) {
+      LOGGER.info("Resource exists. Attempting to update.");
+      if (service.updateResource(newObject, existingObject.getString("id"))) {
+        delay(source);
+      }
+    } else {
+      LOGGER.info("Resource exists, but no update needed. Skipping.");
+    }
+  }
+
   private void delay(SourceFile source) {
-    if (Arrays.asList(SourceFile.FACILITIES, SourceFile.REQUISITION_GROUP,
-        SourceFile.SUPERVISORY_NODES, SourceFile.ROLES)
-        .contains(source)) {
-      LOGGER.info("Delaying execution by " + DELAY_SECONDS + "s");
+    if (DELAYED_SOURCES.contains(source)) {
+      LOGGER.info("Delaying execution by {}s", DELAY_SECONDS);
+
       try {
-        Thread.sleep(DELAY_SECONDS * 1000);
+        TimeUnit.SECONDS.sleep(DELAY_SECONDS);
       } catch (InterruptedException exc) {
-        LOGGER.info(exc.getMessage());
+        LOGGER.info("Error occurred", exc);
       }
     }
-  }
-
-  private Boolean jsonObjectsEqual(JsonObject newObject, JsonObject existingObject,
-                                   Boolean enableLogging) {
-    for (Map.Entry<String, JsonValue> entry : newObject.entrySet()) {
-      JsonValue existingValue = existingObject.getOrDefault(entry.getKey(), JsonValue.NULL);
-      if (!jsonValuesEqual(entry.getValue(), existingValue)) {
-        if (enableLogging) {
-          LOGGER.info(entry.getKey() + " has changed.");
-          LOGGER.debug("Previous value: " + existingValue.toString());
-          LOGGER.debug("New value: " + entry.getValue().toString());
-        }
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private Boolean jsonArraysEqual(JsonArray newArray, JsonArray existingArray) {
-    for (JsonValue item : newArray) {
-      Boolean itemExistsInBothArrays = false;
-      for (JsonValue existingItem : existingArray) {
-        if (jsonValuesEqual(item, existingItem)) {
-          itemExistsInBothArrays = true;
-          break;
-        }
-      }
-      if (!itemExistsInBothArrays) {
-        return false;
-      }
-    }
-    return newArray.size() == existingArray.size();
-  }
-
-  private Boolean jsonValuesEqual(JsonValue newValue, JsonValue existingValue) {
-    if (newValue.getValueType().equals(JsonValue.ValueType.ARRAY)
-        && existingValue.getValueType().equals(JsonValue.ValueType.ARRAY)) {
-      return jsonArraysEqual((JsonArray) newValue, (JsonArray) existingValue);
-    } else if (newValue.getValueType().equals(JsonValue.ValueType.OBJECT)
-        && existingValue.getValueType().equals(JsonValue.ValueType.OBJECT)) {
-      return jsonObjectsEqual((JsonObject) newValue, (JsonObject) existingValue, false);
-    }
-    return newValue.toString().replace("\"", "").equals(
-        existingValue.toString().replace("\"", ""));
   }
 }

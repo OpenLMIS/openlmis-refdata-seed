@@ -15,17 +15,15 @@
 
 package org.openlmis.upload;
 
+import java.util.ArrayList;
+import java.util.Objects;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-
 import org.openlmis.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Objects;
 
 @Service
 public class FacilityTypeApprovedProductService extends BaseCommunicationService {
@@ -83,7 +81,7 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
       return null;
     }
 
-    for (JsonObject ftap: ftapList) {
+    for (JsonObject ftap : ftapList) {
       if (validateFtap(object, ftap, "facilityType")
           && validateFtap(object, ftap, "program")
           && validateFtap(object, ftap, "orderable")) {
@@ -112,7 +110,7 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
     JsonObjectBuilder jsonBuilder = Json.createObjectBuilder();
 
     jsonObject.forEach(jsonBuilder::add);
-    jsonBuilder.add("meta",  Json.createObjectBuilder());
+    jsonBuilder.add("meta", Json.createObjectBuilder());
 
     return super.updateResource(jsonBuilder.build(), id, true);
   }

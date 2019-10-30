@@ -17,6 +17,7 @@ package org.openlmis.converter;
 
 import com.google.common.collect.Lists;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -69,7 +70,7 @@ public class Converter {
   }
 
   private String getValue(Map<String, String> input, Mapping mapping) {
-    String value = input.get(mapping.getFrom());
+    String value = StringUtils.strip(input.get(mapping.getFrom()));
 
     if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
       value = value.toLowerCase(Locale.ENGLISH);

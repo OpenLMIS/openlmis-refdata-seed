@@ -17,33 +17,28 @@ package org.openlmis.converter;
 
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
-import java.io.File;
+import org.openlmis.utils.AppHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import org.openlmis.Configuration;
-import org.openlmis.reader.Reader;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Component
 class FileObjectTypeConverter extends BaseTypeConverter {
 
   @Autowired
-  private Configuration configuration;
-
-  @Autowired
-  private Reader reader;
-
-  @Autowired
-  private MappingConverter mappingConverter;
-
-  @Autowired
   private Converter converter;
+
+  @Autowired
+  private AppHelper appHelper;
 
   @Override
   public boolean supports(String type) {
@@ -53,19 +48,16 @@ class FileObjectTypeConverter extends BaseTypeConverter {
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
     String by = getBy(mapping.getType());
+    String entityFileName = mapping.getEntityName();
 
-    String parent = configuration.getDirectory();
-    String inputFileName = new File(parent, mapping.getEntityName()).getAbsolutePath();
-    List<Map<String, String>> csvs = reader.readFromFile(new File(inputFileName));
-
-    csvs.removeIf(map -> !value.equals(map.get(by)));
+    List<Map<String, String>> csvs = appHelper.readCsv(entityFileName).stream()
+        .filter(map -> value.equals(map.get(by)))
+        .collect(Collectors.toList());
 
     if (!csvs.isEmpty()) {
       Map<String, String> csv = csvs.get(0);
 
-      String mappingFileName = inputFileName.replace(".csv", "_mapping.csv");
-      List<Mapping> mappings = mappingConverter.getMappingForFile(new File(mappingFileName));
-
+      List<Mapping> mappings = appHelper.readMappings(entityFileName);
       String json = converter.convert(csv, mappings).toString();
 
       try (JsonReader jsonReader = Json.createReader(new StringReader(json))) {
@@ -74,7 +66,7 @@ class FileObjectTypeConverter extends BaseTypeConverter {
       }
     } else {
       logger.warn("The CSV file contained reference to {} {} from input file {}, "
-              + "but it does not exist.", by, value, mapping.getEntityName());
+              + "but it does not exist.", by, value, entityFileName);
     }
   }
 

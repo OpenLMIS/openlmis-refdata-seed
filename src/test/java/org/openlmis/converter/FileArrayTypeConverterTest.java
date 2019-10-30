@@ -21,24 +21,22 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
-import com.google.common.collect.ImmutableMap;
-
 import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.Configuration;
-import org.openlmis.reader.Reader;
+import org.openlmis.utils.AppHelper;
 
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -55,10 +53,7 @@ public class FileArrayTypeConverterTest {
   private Configuration configuration;
 
   @Mock
-  private Reader reader;
-
-  @Mock
-  private MappingConverter mappingConverter;
+  private AppHelper appHelper;
 
   @Mock
   private Converter converter;
@@ -81,8 +76,8 @@ public class FileArrayTypeConverterTest {
     );
 
     doReturn("").when(configuration).getDirectory();
-    doReturn(innerData).when(reader).readFromFile(Matchers.any(File.class));
-    doReturn(innerMapping).when(mappingConverter).getMappingForFile(Matchers.any(File.class));
+    doReturn(innerData).when(appHelper).readCsv(anyString());
+    doReturn(innerMapping).when(appHelper).readMappings(anyString());
     doAnswer(invocation -> {
       JsonObjectBuilder inner = Json.createObjectBuilder();
       Mapping mapping = innerMapping.get(0);

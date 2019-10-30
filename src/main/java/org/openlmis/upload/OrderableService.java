@@ -15,10 +15,9 @@
 
 package org.openlmis.upload;
 
+import javax.json.JsonObject;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-
-import javax.json.JsonObject;
 
 @Service
 public class OrderableService extends BaseCommunicationService {
@@ -38,15 +37,4 @@ public class OrderableService extends BaseCommunicationService {
     return HttpMethod.PUT;
   }
 
-  @Override
-  public String buildUpdateUrl(String base, String id) {
-    return base;
-  }
-
-  @Override
-  public boolean updateResource(JsonObject jsonObject, String id) {
-    logger.warn("Updating Orderables is not supported. Product with code {} will NOT be updated",
-        id);
-    return false;
-  }
 }
