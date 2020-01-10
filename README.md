@@ -41,6 +41,8 @@ login=administrator
 password=password
 clientId=user-client
 clientSecret=changeme
+updateAllowed=true
+autoVerifyEmails=false
 directory=/home/user/inputFiles
 ```
 
