@@ -43,7 +43,9 @@ public enum SourceFile {
   ROLES("Roles"),
   USERS("Users"),
   AUTH_USERS("AuthUsers"),
-  USER_CONTACT_DETAILS("UserContactDetails");
+  USER_CONTACT_DETAILS("UserContactDetails"),
+  CATALOG_ITEMS("CatalogItems"),
+  INVENTORY_ITEMS("InventoryItems");
 
 
   @Getter

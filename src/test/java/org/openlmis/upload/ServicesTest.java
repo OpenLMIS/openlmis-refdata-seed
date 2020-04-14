@@ -71,6 +71,8 @@ public class ServicesTest {
         .put(SourceFile.USER_CONTACT_DETAILS, UserContactDetailService.class)
         .put(SourceFile.TRADE_ITEMS, TradeItemService.class)
         .put(SourceFile.LOTS, LotService.class)
+        .put(SourceFile.INVENTORY_ITEMS, InventoryItemService.class)
+        .put(SourceFile.CATALOG_ITEMS, CatalogItemService.class)
         .build();
   }
 
@@ -149,6 +151,9 @@ public class ServicesTest {
 
     assertServiceType("User Contact Detail", UserContactDetailService.class);
     assertServiceType("UserContactDetail", UserContactDetailService.class);
+
+    assertServiceType("Catalog Item", CatalogItemService.class);
+    assertServiceType("CatalogItem", CatalogItemService.class);
   }
 
   private void assertServiceType(String name, Class clazz) {
