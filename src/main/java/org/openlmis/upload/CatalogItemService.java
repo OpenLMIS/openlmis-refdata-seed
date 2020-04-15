@@ -15,12 +15,23 @@
 
 package org.openlmis.upload;
 
+import com.google.common.collect.Maps;
+import java.util.Map;
+import javax.json.JsonArray;
+import javax.json.JsonString;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.json.JsonObject;
 
 @Service
 public class CatalogItemService extends BaseCommunicationService {
+
+  private static final String EQUIPMENT_CODE = "equipmentCode";
+
+  private static final String SEPARATOR = "||";
+
+  private static final String MODEL = "model";
 
   @Override
   protected String getUrl() {
@@ -29,6 +40,32 @@ public class CatalogItemService extends BaseCommunicationService {
 
   @Override
   public JsonObject findUnique(JsonObject object) {
-    return findByCode(object.getString(ID));
+    return findByEquipmentCodeAndModel(
+        getKey(object.getString(EQUIPMENT_CODE), object.getString(MODEL)));
+  }
+
+  /**
+   * Finds the JSON representation of the resource by its key.
+   *
+   * @param key item's equipment code and model separated by '-'
+   * @return JsonObject by its key
+   */
+  public JsonObject findByEquipmentCodeAndModel(String key) {
+    JsonArray array = findAll();
+    Map<String, JsonObject> items = Maps.newHashMap();
+
+    for (int i = 0; i < array.size(); i++) {
+      JsonObject item = array.getJsonObject(i);
+      JsonString itemCode = item.getJsonString(EQUIPMENT_CODE);
+      JsonString itemModel = item.getJsonString(MODEL);
+      items.put(getKey(itemCode.toString(), itemModel.toString()), item);
+    }
+
+    return items.get(key);
+  }
+
+  private String getKey(String equipmentCode, String model) {
+    return StringUtils.strip(equipmentCode, "\"")
+        + SEPARATOR + StringUtils.strip(model, "\"");
   }
 }

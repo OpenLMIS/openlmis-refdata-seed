@@ -73,6 +73,7 @@ Users.csv - Users.csv_mapping.csv
 AuthUsers.csv - AuthUsers_mapping.csv
 UserContactDetails.csv - UserContactDetails_mapping.csv
 InventoryItems.csv - InventoryItems_mapping.csv
+CatalogItems.csv - CatalogItems_mapping.csv
 ```
 
 Each reference data piece has got its own input file. The input files are CSV files that contain a header row with column names and then a list of entries. The mapping file exists for each input file and defines transformation rules.
@@ -132,6 +133,38 @@ GeographicZones_mapping.csv
 | parent      | parent               | TO_OBJECT_BY_CODE | GeographicZone     |               |
 |             | catchmentPopulation  | USE_DEFAULT       |                    | 0             |
 	
+
+InventoryItems_mapping.csv
+
+| from                       | to                         | type                        | entityName  | defaultValue | 
+|----------------------------|----------------------------|-----------------------------|-------------|--------------| 
+| id                         | id                         | DIRECT                      |             |              | 
+| facilityCode               | facility                   | TO_OBJECT_BY_CODE           | Facility    |              | 
+| catalogItem                | catalogItem                | FIND_CATALOG_ITEM_TO_OBJECT | CatalogItem |              | 
+| programCode                | program                    | TO_OBJECT_BY_CODE           | Program     |              | 
+| serialNumber               | equipmentTrackingId        | DIRECT                      |             |              | 
+| referenceName              | referenceName              | DIRECT                      |             |              | 
+| yearOfInstallation         | yearOfInstallation         | DIRECT                      |             |              | 
+| yearOfWarrantyExpiry       | yearOfWarrantyExpiry       | DIRECT                      |             |              | 
+| source                     | source                     | DIRECT                      |             |              | 
+| functionalStatus           | functionalStatus           | DIRECT                      |             |              | 
+| reasonNotWorkingOrNotInUse | reasonNotWorkingOrNotInUse | DIRECT                      |             |              | 
+| utilization                | utilization                | DIRECT                      |             |              | 
+| voltageStabilizer          | voltageStabilizer          | DIRECT                      |             |              | 
+| backupGenerator            | backupGenerator            | DIRECT                      |             |              | 
+| voltageRegulator           | voltageRegulator           | DIRECT                      |             |              | 
+| manualTemperatureGauge     | manualTemperatureGauge     | DIRECT                      |             |              | 
+| remoteTemperatureMonitor   | remoteTemperatureMonitor   | DIRECT                      |             |              | 
+| additionalNotes            | additionalNotes            | DIRECT                      |             |              | 
+| decommissionDate           | decommissionDate           | DIRECT                      |             |              | 
+	
+FindCatalogItemToObjectTypeConverter and FindCatalogItemTypeConverter handle 
+**FIND_CATALOG_ITEM_TO_OBJECT** and **FIND_CATALOG_ITEM**.
+
+**catalogItem** is a concatenation of catalog item's equipment code and model using `||` 
+separator e.g. `E3/88-M||RCW 50 EG`.
+
+
 Available transformation types are:
 
  - **DIRECT** a value from the input column will be directly moved to the output column, without alterations
