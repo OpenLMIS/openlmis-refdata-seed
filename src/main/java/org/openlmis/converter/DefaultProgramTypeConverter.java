@@ -32,7 +32,7 @@ class DefaultProgramTypeConverter extends BaseTypeConverter {
 
   @Override
   public boolean supports(String type) {
-    return "USE_DEFAULT_OBJECT".equalsIgnoreCase(type);
+    return "USE_DEFAULT_PROGRAM".equalsIgnoreCase(type);
   }
 
   @Override

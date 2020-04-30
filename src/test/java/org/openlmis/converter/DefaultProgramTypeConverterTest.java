@@ -32,7 +32,7 @@ import org.openlmis.upload.ProgramService;
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultProgramTypeConverterTest {
 
-  private static final String USE_DEFAULT_OBJECT = "USE_DEFAULT_OBJECT";
+  private static final String USE_DEFAULT_PROGRAM = "USE_DEFAULT_PROGRAM";
   private static final String CODE = "code";
   private static final String VALUE = "COVID";
   private static final String PROGRAM = "program";
@@ -49,7 +49,7 @@ public class DefaultProgramTypeConverterTest {
 
   @Test
   public void shouldSupportTypes() throws Exception {
-    assertThat(converter.supports(USE_DEFAULT_OBJECT), is(true));
+    assertThat(converter.supports(USE_DEFAULT_PROGRAM), is(true));
   }
 
   @Test
@@ -57,7 +57,7 @@ public class DefaultProgramTypeConverterTest {
     doReturn(program).when(programService).findBy(CODE, VALUE);
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping(PROGRAM, PROGRAM, USE_DEFAULT_OBJECT, "", VALUE);
+    Mapping mapping = new Mapping(PROGRAM, PROGRAM, USE_DEFAULT_PROGRAM, "", VALUE);
 
     converter.convert(builder, mapping, null);
 
@@ -70,7 +70,7 @@ public class DefaultProgramTypeConverterTest {
     doReturn(null).when(programService).findBy(CODE, VALUE);
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping(PROGRAM, PROGRAM, USE_DEFAULT_OBJECT, "", VALUE);
+    Mapping mapping = new Mapping(PROGRAM, PROGRAM, USE_DEFAULT_PROGRAM, "", VALUE);
 
     converter.convert(builder, mapping, null);
 
@@ -83,7 +83,7 @@ public class DefaultProgramTypeConverterTest {
     doReturn(null).when(programService).findBy(CODE, VALUE);
 
     JsonObjectBuilder builder = Json.createObjectBuilder();
-    Mapping mapping = new Mapping(PROGRAM, PROGRAM, USE_DEFAULT_OBJECT, "", "");
+    Mapping mapping = new Mapping(PROGRAM, PROGRAM, USE_DEFAULT_PROGRAM, "", "");
 
     converter.convert(builder, mapping, null);
 
