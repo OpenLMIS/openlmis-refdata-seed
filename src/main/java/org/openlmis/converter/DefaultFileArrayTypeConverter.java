@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DefaultRequisitionGroupProgramSchedulesTypeConverter extends BaseTypeConverter {
+public class DefaultFileArrayTypeConverter extends BaseTypeConverter {
 
   @Autowired
   private Converter converter;

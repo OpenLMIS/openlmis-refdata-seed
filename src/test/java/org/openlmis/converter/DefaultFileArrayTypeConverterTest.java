@@ -43,7 +43,7 @@ import org.openlmis.Configuration;
 import org.openlmis.utils.AppHelper;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DefaultRequisitionGroupProgramSchedulesTypeConverterTest {
+public class DefaultFileArrayTypeConverterTest {
   private static final String CODE = "code";
 
   @Mock
@@ -56,7 +56,7 @@ public class DefaultRequisitionGroupProgramSchedulesTypeConverterTest {
   private Converter converter;
 
   @InjectMocks
-  private DefaultRequisitionGroupProgramSchedulesTypeConverter typeConverter;
+  private DefaultFileArrayTypeConverter typeConverter;
 
   @Before
   public void setUp() throws Exception {
