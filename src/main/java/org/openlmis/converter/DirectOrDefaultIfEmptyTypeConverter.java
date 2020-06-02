@@ -36,6 +36,7 @@ class DirectOrDefaultIfEmptyTypeConverter extends BaseTypeConverter {
       String buildValue = getValue(val);
       if (buildValue != null) {
         builder.add(mapping.getTo(), buildValue);
+        break;
       }
     }
   }

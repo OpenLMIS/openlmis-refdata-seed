@@ -124,4 +124,20 @@ public class DirectOrDefaultIfEmptyTypeConverterTest {
     JsonObject object = builder.build();
     assertThat(object.getString(mapping.getTo()), is(equalTo(whitespace)));
   }
+
+  @Test
+  public void shouldSetValueWhenBoth() {
+    JsonObjectBuilder builder = Json.createObjectBuilder();
+    final String value = "4.03";
+    final String defaultValue = "0";
+
+    Mapping mapping = new Mapping(DESCRIPTION, DESCRIPTION, TYPE, "", defaultValue);
+
+    con.convert(builder, mapping, value);
+
+    JsonObject object = builder.build();
+    assertThat(object.containsKey(mapping.getTo()), is(true));
+    assertThat(object.getString(mapping.getTo()), is(equalTo(value)));
+  }
+
 }
