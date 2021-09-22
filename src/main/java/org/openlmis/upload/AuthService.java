@@ -15,8 +15,6 @@
 
 package org.openlmis.upload;
 
-import static org.openlmis.upload.RequestHelper.createUri;
-
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -27,9 +25,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
+
 
 import org.openlmis.Configuration;
 import org.openlmis.utils.AuthorizationException;
@@ -71,15 +71,30 @@ public class AuthService {
         .set("grant_type", "password");
 
     try {
-      ResponseEntity<?> response = restTemplate.exchange(
-          createUri(configuration.getHost() + "/api/oauth/token", params), HttpMethod.POST, request,
-          Object.class
-      );
-      return ((Map<String, String>) response.getBody()).get(ACCESS_TOKEN);
+      return ((Map<String, String>)runWithTokenRetry(() -> restTemplate.exchange(
+          RequestHelper.createUri(configuration.getHost() + "/api/oauth/token", params),
+          HttpMethod.POST,
+          request,
+          Object.class)).getBody()).get(ACCESS_TOKEN);
     } catch (RestClientException ex) {
       throw new AuthorizationException("Cannot obtain access token using the provided credentials. "
           + "Please verify they are correct.", ex);
     }
+  }
+
+  protected <P> ResponseEntity<P> runWithTokenRetry(HttpTask<P> task) {
+    try {
+      return task.run();
+    } catch (HttpStatusCodeException ex) {
+      return task.run();
+    }
+  }
+
+  @FunctionalInterface
+  protected interface HttpTask<T> {
+
+    ResponseEntity<T> run();
+
   }
 
   void setRestTemplate(RestOperations restTemplate) {
