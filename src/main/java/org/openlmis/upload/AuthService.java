@@ -25,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
@@ -85,7 +84,7 @@ public class AuthService {
   protected <P> ResponseEntity<P> runWithTokenRetry(HttpTask<P> task) {
     try {
       return task.run();
-    } catch (HttpStatusCodeException ex) {
+    } catch (Exception ex) {
       return task.run();
     }
   }
