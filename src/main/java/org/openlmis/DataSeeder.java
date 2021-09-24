@@ -19,7 +19,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.json.JsonObject;
 import org.openlmis.converter.Converter;
 import org.openlmis.converter.Mapping;
@@ -38,13 +37,6 @@ import org.springframework.stereotype.Component;
 public class DataSeeder {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DataSeeder.class);
-
-  private static final int DELAY_SECONDS = 240;
-
-  private static final List<SourceFile> DELAYED_SOURCES = Arrays.asList(
-      SourceFile.FACILITIES, SourceFile.REQUISITION_GROUP,
-      SourceFile.SUPERVISORY_NODES, SourceFile.ROLES
-  );
 
   @Autowired
   private Configuration configuration;
@@ -108,12 +100,10 @@ public class DataSeeder {
 
       LOGGER.info("{}/{}", i + 1, size);
       if (updateAllowed && existing != null) {
-        updateIfNeeded(service, jsonObject, existing, source);
+        updateIfNeeded(service, jsonObject, existing);
       } else if (existing == null) {
         LOGGER.info("Creating new resource.");
-        if (service.createResource(jsonObject.toString())) {
-          delay(source);
-        }
+        service.createResource(jsonObject.toString());
       } else {
         LOGGER.info("Resource exists but update has been disabled. Skipping.");
       }
@@ -122,26 +112,12 @@ public class DataSeeder {
   }
 
   private void updateIfNeeded(BaseCommunicationService service, JsonObject newObject,
-      JsonObject existingObject, SourceFile source) {
+      JsonObject existingObject) {
     if (service.isUpdateNeeded(newObject, existingObject)) {
       LOGGER.info("Resource exists. Attempting to update.");
-      if (service.updateResource(newObject, existingObject.getString("id"))) {
-        delay(source);
-      }
+      service.updateResource(newObject, existingObject.getString("id"));
     } else {
       LOGGER.info("Resource exists, but no update needed. Skipping.");
-    }
-  }
-
-  private void delay(SourceFile source) {
-    if (DELAYED_SOURCES.contains(source)) {
-      LOGGER.info("Delaying execution by {}s", DELAY_SECONDS);
-
-      try {
-        TimeUnit.SECONDS.sleep(DELAY_SECONDS);
-      } catch (InterruptedException exc) {
-        LOGGER.info("Error occurred", exc);
-      }
     }
   }
 }
