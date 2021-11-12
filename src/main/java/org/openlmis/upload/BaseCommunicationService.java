@@ -216,10 +216,10 @@ public abstract class BaseCommunicationService {
       if (ex.getStatusCode().equals(HttpStatus.GATEWAY_TIMEOUT)) {
         findAll(resourceUrl, parameters);
       } else {
-        return null;
+        throw buildDataRetrievalException(ex);
       }
-      throw buildDataRetrievalException(ex);
     }
+    return null;
   }
 
   /**
