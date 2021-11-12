@@ -213,13 +213,8 @@ public abstract class BaseCommunicationService {
       }
       return allResources;
     } catch (HttpStatusCodeException ex) {
-      if (ex.getStatusCode().equals(HttpStatus.GATEWAY_TIMEOUT)) {
-        findAll(resourceUrl, parameters);
-      } else {
-        throw buildDataRetrievalException(ex);
-      }
+      throw buildDataRetrievalException(ex);
     }
-    return null;
   }
 
   /**
