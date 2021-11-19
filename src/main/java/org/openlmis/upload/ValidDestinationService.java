@@ -55,7 +55,7 @@ public class ValidDestinationService extends BaseCommunicationService {
   public JsonArray findAll() {
     RequestParameters parameters = RequestParameters.init()
             .set("page", 0)
-            .set("size", 1000); // Implementation contains ~30k elements, 1k chunk size should be optimal
+            .set("size", 50000); // Implementation contains ~30k elements
 
     return findAll("", parameters);
   }
