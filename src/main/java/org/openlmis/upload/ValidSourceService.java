@@ -50,4 +50,13 @@ public class ValidSourceService extends BaseCommunicationService {
   public JsonObject findUnique(JsonObject object) {
     return null;
   }
+
+  @Override
++  public JsonArray findAll() {
++    RequestParameters parameters = RequestParameters.init()
++            .set("page", 0)
++            .set("size", 50000);
++
++    return findAll("", parameters);
+  }
 }
