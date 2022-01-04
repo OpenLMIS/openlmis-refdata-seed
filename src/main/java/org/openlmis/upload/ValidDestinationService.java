@@ -55,7 +55,7 @@ public class ValidDestinationService extends BaseCommunicationService {
   public JsonArray findAll() {
     RequestParameters parameters = RequestParameters.init()
             .set("page", 0)
-            .set("size", 50000);
+            .set("size", 5000000);
 
     return findAll("", parameters);
   }
