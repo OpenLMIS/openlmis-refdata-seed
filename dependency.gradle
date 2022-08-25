@@ -23,4 +23,7 @@ dependencies {
 
     testCompile "org.springframework.boot:spring-boot-starter-test"
 
+    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.10'
+
 }

@@ -93,7 +93,7 @@ public class DataSeeder {
     BaseCommunicationService service = services.getService(source);
     service.before();
 
-    boolean updateAllowed = !"false".equalsIgnoreCase(configuration.getUpdateAllowed());
+    boolean updateAllowed = configuration.isUpdateAllowed();
 
     for (int i = 0, size = csvs.size(); i < size; ++i) {
       Map<String, String> csv = csvs.get(i);
