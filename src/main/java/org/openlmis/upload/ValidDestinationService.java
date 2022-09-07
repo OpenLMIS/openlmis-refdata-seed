@@ -32,7 +32,7 @@ public class ValidDestinationService extends BaseCommunicationService {
   public void before() {
     invalidateCache();
 
-    if (configuration.isUpdateAllowed()) {
+    if (!configuration.isUpdateAllowed()) {
       logger.info("Removing all ValidDestinations and preparing to re-create.");
 
       JsonArray validDestinations = findAll();

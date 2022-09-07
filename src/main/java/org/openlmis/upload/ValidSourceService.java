@@ -32,7 +32,7 @@ public class ValidSourceService extends BaseCommunicationService {
   public void before() {
     invalidateCache();
 
-    if (configuration.isUpdateAllowed()) {
+    if (!configuration.isUpdateAllowed()) {
       logger.info("Removing all ValidSources and preparing to re-create.");
 
       JsonArray validSources = findAll();
