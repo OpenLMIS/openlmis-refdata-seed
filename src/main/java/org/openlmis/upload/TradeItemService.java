@@ -28,6 +28,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -42,6 +43,7 @@ public class TradeItemService extends BaseCommunicationService {
   private static final String PRODUCT_CODE = "productCode";
   private static final String IDENTIFIERS = "identifiers";
   private static final String TRADE_ITEM = "tradeItem";
+  private static final String MANUFACTURER = "manufacturerOfTradeItem";
 
   @Autowired
   private OrderableService orderableService;
@@ -72,7 +74,6 @@ public class TradeItemService extends BaseCommunicationService {
             json -> json.getString(PRODUCT_CODE),
             json -> json.getJsonObject(IDENTIFIERS).getString(TRADE_ITEM)));
   }
-
 
   @Override
   protected String getUrl() {
@@ -140,6 +141,13 @@ public class TradeItemService extends BaseCommunicationService {
     }
     cacheTradeItem(json, response);
     return true;
+  }
+
+  @Override
+  public boolean isUpdateNeeded(JsonObject newObject, JsonObject existingObject) {
+    String newValue = newObject.getString(MANUFACTURER);
+    String existingValue = existingObject.getString(MANUFACTURER);
+    return !Objects.equals(newValue, existingValue);
   }
 
   @Override
