@@ -223,7 +223,7 @@ public abstract class BaseCommunicationService {
    * @param searchParameters a map of parameters to use while searching
    * @return array of found instances
    */
-  public JsonArray search(Map<String, String> searchParameters) {
+  public JsonArray search(Map<String, Object> searchParameters) {
     String url = configuration.getHost() + getUrl() + "/search";
 
     RequestParameters params = RequestParameters

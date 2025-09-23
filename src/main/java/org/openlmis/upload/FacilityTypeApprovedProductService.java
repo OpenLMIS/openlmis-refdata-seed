@@ -15,18 +15,19 @@
 
 package org.openlmis.upload;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-
 import org.openlmis.Configuration;
 import org.openlmis.utils.JsonObjectComparisonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Objects;
 
 @Service
 public class FacilityTypeApprovedProductService extends BaseCommunicationService {
@@ -58,12 +59,11 @@ public class FacilityTypeApprovedProductService extends BaseCommunicationService
         JsonObject type = types.getJsonObject(i);
         String facilityTypeCode = type.getString(CODE);
 
-        RequestParameters parameters = RequestParameters
-            .init()
-            .set("facilityType", facilityTypeCode);
+        Map<String, Object> searchParams = new HashMap<>();
+        searchParams.put("facilityTypeCodes", Collections.singletonList(facilityTypeCode));
 
         invalidateCache();
-        JsonArray ftaps = findAll("", parameters);
+        JsonArray ftaps = search(searchParams);
 
         for (int j = 0; j < ftaps.size(); j++) {
           ftapList.add(ftaps.getJsonObject(j));
