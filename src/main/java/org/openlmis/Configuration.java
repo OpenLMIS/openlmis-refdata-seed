@@ -22,6 +22,8 @@ import java.util.Properties;
 @NoArgsConstructor
 public class Configuration extends Properties {
 
+  private static final String DEFAULT_OUTPUT_DIRECTORY = "/export";
+
   public String getClientSecret() {
     return getProperty("clientSecret");
   }
@@ -52,6 +54,24 @@ public class Configuration extends Properties {
 
   public String getAutoVerifyEmails() {
     return getProperty("autoVerifyEmails");
+  }
+
+  public String getMode() {
+    return getProperty("mode");
+  }
+
+  /**
+   * Returns the directory that exported CSV files are written to, falling back to
+   * {@value #DEFAULT_OUTPUT_DIRECTORY} when the {@code outputDirectory} property is not set.
+   *
+   * @return the configured output directory, or the default when none is configured
+   */
+  public String getOutputDirectory() {
+    String outputDirectory = getProperty("outputDirectory");
+    if (outputDirectory == null || outputDirectory.trim().isEmpty()) {
+      return DEFAULT_OUTPUT_DIRECTORY;
+    }
+    return outputDirectory;
   }
 
   public boolean isUpdateAllowed() {

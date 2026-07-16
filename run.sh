@@ -43,7 +43,9 @@ echo "login=${LOGIN}" >> config.properties
 echo "password=${PASSWORD}" >> config.properties
 echo "clientId=${CLIENT_ID}" >> config.properties
 echo "clientSecret=${CLIENT_SECRET}" >> config.properties
+echo "mode=${MODE}" >> config.properties
 echo "directory=${CURRENT_DIR}/build/execute" >> config.properties
+echo "outputDirectory=${OUTPUT_DIR}" >> config.properties
 echo "updateAllowed=${UPDATE_ALLOWED}" >> config.properties
 
 cp ../libs/openlmis-refdata-seed-1.0.0-SNAPSHOT.jar tool.jar

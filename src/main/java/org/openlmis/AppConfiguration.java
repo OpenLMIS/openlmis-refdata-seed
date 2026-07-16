@@ -15,6 +15,7 @@
 
 package org.openlmis;
 
+import org.openlmis.export.utils.DataExporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -32,17 +33,28 @@ public class AppConfiguration {
    * Here the application starts with spring context.
    */
   @Bean
-  public CommandLineRunner commandLineRunner(DataSeeder seeder, DataValidator validator,
+  public CommandLineRunner commandLineRunner(DataSeeder seeder, DataExporter exporter,
+                                             DataValidator validator, Configuration configuration,
                                              ApplicationContext context) {
+    if ("export".equalsIgnoreCase(configuration.getMode())) {
+      return args -> startUpExport(exporter, context);
+    }
     return args -> startUp(seeder, validator, context);
   }
 
   private void startUp(DataSeeder seeder, DataValidator validator, ApplicationContext context) {
-    LOGGER.info("RUNNING");
+    LOGGER.info("RUNNING SEED");
     seeder.seedData();
     LOGGER.info("Seeding complete.");
     validator.validate();
     LOGGER.info("Data validation complete.");
+    SpringApplication.exit(context);
+  }
+
+  private void startUpExport(DataExporter exporter, ApplicationContext context) {
+    LOGGER.info("RUNNING EXPORT");
+    exporter.exportData();
+    LOGGER.info("Exporting complete.");
     SpringApplication.exit(context);
   }
 }

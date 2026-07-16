@@ -15,9 +15,9 @@
 
 package org.openlmis.upload;
 
-import org.springframework.stereotype.Service;
-
+import javax.json.JsonArray;
 import javax.json.JsonObject;
+import org.springframework.stereotype.Service;
 
 @Service
 public class FacilityService extends BaseCommunicationService {
@@ -29,5 +29,10 @@ public class FacilityService extends BaseCommunicationService {
   @Override
   public JsonObject findUnique(JsonObject object) {
     return findByCode(object.getString(CODE));
+  }
+
+  @Override
+  public JsonArray findAllForExport() {
+    return findAll("/full", RequestParameters.init());
   }
 }

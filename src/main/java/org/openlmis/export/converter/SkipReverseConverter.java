@@ -13,28 +13,22 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.upload;
+package org.openlmis.export.converter;
 
-import org.springframework.stereotype.Service;
-
-import javax.json.JsonArray;
+import java.util.Map;
 import javax.json.JsonObject;
+import org.openlmis.converter.Mapping;
+import org.springframework.stereotype.Component;
 
-@Service
-public class AuthUserService extends BaseCommunicationService {
-
+@Component
+public class SkipReverseConverter extends BaseReverseTypeConverter {
   @Override
-  protected String getUrl() {
-    return "/api/users/auth";
+  public boolean supports(String type) {
+    return "SKIP".equalsIgnoreCase(type) || "USE_DEFAULT".equalsIgnoreCase(type);
   }
 
   @Override
-  public JsonObject findUnique(JsonObject object) {
-    return null;
-  }
-
-  @Override
-  public JsonArray findAllForExport() {
-    return findAll("/batch", RequestParameters.init());
+  public void deconvert(JsonObject source, Mapping mapping, Map<String, String> row) {
+    // nothing to do
   }
 }

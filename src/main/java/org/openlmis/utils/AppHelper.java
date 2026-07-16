@@ -19,7 +19,10 @@ import static org.apache.commons.lang3.StringUtils.INDEX_NOT_FOUND;
 import static org.apache.commons.lang3.StringUtils.indexOfIgnoreCase;
 
 import com.google.common.collect.Maps;
-
+import java.io.File;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.openlmis.Configuration;
 import org.openlmis.converter.Mapping;
 import org.openlmis.converter.MappingConverter;
@@ -28,11 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 @Component
 public class AppHelper {
@@ -90,7 +88,7 @@ public class AppHelper {
   /**
    * Checks if mappings contains valid data.
    *
-   * @param source the processing source file
+   * @param source   the processing source file
    * @param mappings the mapping list
    * @return result of validation
    */
@@ -145,6 +143,20 @@ public class AppHelper {
       return false;
     }
 
+    return true;
+  }
+
+  /**
+   * Creates the output directory (including any missing parents) if it does not already exist.
+   *
+   * @param outputDirectoryPath path of the directory to create
+   * @return true if the directory exists or was created successfully
+   */
+  public boolean createOutputDirectory(String outputDirectoryPath) {
+    File outputDirectory = new File(outputDirectoryPath);
+    if (!outputDirectory.exists()) {
+      return outputDirectory.mkdirs();
+    }
     return true;
   }
 

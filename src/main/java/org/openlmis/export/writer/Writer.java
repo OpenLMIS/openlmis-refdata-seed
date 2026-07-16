@@ -13,28 +13,13 @@
  * http://www.gnu.org/licenses.  For additional information contact info@OpenLMIS.org. 
  */
 
-package org.openlmis.upload;
+package org.openlmis.export.writer;
 
-import org.springframework.stereotype.Service;
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
+public interface Writer {
 
-@Service
-public class AuthUserService extends BaseCommunicationService {
-
-  @Override
-  protected String getUrl() {
-    return "/api/users/auth";
-  }
-
-  @Override
-  public JsonObject findUnique(JsonObject object) {
-    return null;
-  }
-
-  @Override
-  public JsonArray findAllForExport() {
-    return findAll("/batch", RequestParameters.init());
-  }
+  void write(File file, List<String> header, List<Map<String, String>> rows);
 }

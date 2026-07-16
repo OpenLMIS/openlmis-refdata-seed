@@ -17,6 +17,19 @@ package org.openlmis.upload;
 
 import static org.openlmis.upload.RequestHelper.createUri;
 
+import java.io.StringReader;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
+import javax.json.JsonString;
+import javax.json.JsonStructure;
+import javax.json.JsonValue;
 import org.openlmis.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,25 +40,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.StringReader;
-import java.net.URI;
-import java.util.Map;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
-import javax.json.JsonString;
-import javax.json.JsonStructure;
-import javax.json.JsonValue;
 
 @SuppressWarnings("PMD.TooManyMethods")
 public abstract class BaseCommunicationService {
@@ -61,7 +61,23 @@ public abstract class BaseCommunicationService {
 
   protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-  protected RestOperations restTemplate = new RestTemplate();
+  protected RestOperations restTemplate = createRestTemplate();
+
+  /**
+   * Builds a RestTemplate whose String converter decodes responses as UTF-8.
+   *
+   * @return a RestTemplate configured to read response bodies as UTF-8
+   */
+  private static RestTemplate createRestTemplate() {
+    RestTemplate template = new RestTemplate();
+    for (org.springframework.http.converter.HttpMessageConverter<?> converter
+        : template.getMessageConverters()) {
+      if (converter instanceof StringHttpMessageConverter) {
+        ((StringHttpMessageConverter) converter).setDefaultCharset(StandardCharsets.UTF_8);
+      }
+    }
+    return template;
+  }
 
   @Autowired
   protected AuthService authService;
@@ -75,16 +91,17 @@ public abstract class BaseCommunicationService {
   public abstract JsonObject findUnique(JsonObject object);
 
   /**
-   * A method that is invoked before the seeding of the resources starts.
-   * By default it does nothing.
+   * A method that is invoked before the seeding of the resources starts. By default it does
+   * nothing.
    */
   public void before() {
     // Nothing by default
   }
 
   /**
-   * A method that is invoked after seeding each of the single resource.
-   * By default it does nothing.
+   * A method that is invoked after seeding each of the single resource. By default it does
+   * nothing.
+   *
    * @param object JsonObject which was just seeded
    */
   public void afterEach(JsonObject object) {
@@ -115,7 +132,7 @@ public abstract class BaseCommunicationService {
    * Finds the JSON representation of the resource by its field.
    *
    * @param value the value of the field to find
-   * @param by the field to look by
+   * @param by    the field to look by
    * @return JsonObject by its field value
    */
   public JsonObject findBy(String by, String value) {
@@ -176,7 +193,7 @@ public abstract class BaseCommunicationService {
    * Finds all resources using specified query parameters and URL.
    *
    * @param resourceUrl the relative URL to use for retrieval
-   * @param parameters the URL params
+   * @param parameters  the URL params
    * @return resources
    */
   public JsonArray findAll(String resourceUrl, RequestParameters parameters) {
@@ -216,6 +233,10 @@ public abstract class BaseCommunicationService {
     }
   }
 
+  public JsonArray findAllForExport() {
+    return findAll();
+  }
+
   /**
    * Searches the instances using the "/search" endpoint and POST HTTP method. It also supports
    * query parameters.
@@ -250,7 +271,7 @@ public abstract class BaseCommunicationService {
    * Attempts to update a resource in OpenLMIS.
    *
    * @param jsonObject JSON object representation of the resource to update
-   * @param id the UUID of the resource that will be updated
+   * @param id         the UUID of the resource that will be updated
    * @return whether the attempt was successful
    */
   public boolean updateResource(JsonObject jsonObject, String id) {
@@ -260,8 +281,8 @@ public abstract class BaseCommunicationService {
   /**
    * Attempts to update a resource in OpenLMIS.
    *
-   * @param jsonObject JSON object representation of the resource to update
-   * @param id the UUID of the resource that will be updated
+   * @param jsonObject    JSON object representation of the resource to update
+   * @param id            the UUID of the resource that will be updated
    * @param addIdToObject determines if id will be added to json object.
    * @return whether the attempt was successful
    */
@@ -342,7 +363,7 @@ public abstract class BaseCommunicationService {
   /**
    * Attempts to create a new resource in OpenLMIS if URL structure differs from the casual one.
    *
-   * @param url custom URL for creating resource endpoint
+   * @param url  custom URL for creating resource endpoint
    * @param json JSON representation of the resource to create
    * @return whether the attempt was successful
    */
@@ -386,7 +407,7 @@ public abstract class BaseCommunicationService {
    * Overwriting this method allows implementing custom logic of comparing existing entry with an
    * entry passed in an input file in order to prevent updates on each run of seedtool.
    *
-   * @param newObject JSON which was created based on input data (CSV) and mappings.
+   * @param newObject      JSON which was created based on input data (CSV) and mappings.
    * @param existingObject JSON which represents object fetched from OLMIS.
    * @return a flag which determines if the update is needed.
    */
