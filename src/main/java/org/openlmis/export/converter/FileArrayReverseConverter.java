@@ -26,6 +26,7 @@ import javax.json.JsonObject;
 import javax.json.JsonValue;
 import org.openlmis.converter.Mapping;
 import org.openlmis.export.utils.ChildCsvCollector;
+import org.openlmis.export.utils.OriginalCodeResolver;
 import org.openlmis.utils.AppHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -43,6 +44,9 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
 
   @Autowired
   private ChildCsvCollector collector;
+
+  @Autowired
+  private OriginalCodeResolver originalCodeResolver;
 
   @Override
   public boolean supports(String type) {
@@ -86,7 +90,9 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
       }
 
       Map<String, String> childRow = deconverter.deconvert((JsonObject) element, childMappings);
-      String joinValue = joinsByExistingColumn ? sharedKey : resolveJoinValue(childRow, joinColumn);
+      String joinValue = joinsByExistingColumn
+          ? sharedKey
+          : resolveJoinValue(childRow, joinColumn, childFileName);
       childRow.put(joinColumn, joinValue);
       collector.add(childFileName, childHeader, childRow);
       joinValues.add(joinValue);
@@ -98,18 +104,21 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
   }
 
   /**
-   * Determines the value that links a child row back to its parent. If the reversed child row
-   * already carries the join column (a key recoverable from the API, e.g. a program code), that
-   * value is used directly. Otherwise the column is a seed-time-only synthetic key (marked SKIP in
-   * the child mapping) with no API counterpart, so a deterministic code is synthesized from the
-   * row's contents. It is stable across runs and de-duplicated, so the child CSV and every parent
-   * reference stay internally consistent (which is all the seed tool needs on re-import); it will
-   * not, however, reproduce the original hand-authored codes from the seed CSVs.
+   * Determines the value that links a child row back to its parent: the join column when the API
+   * provides it, otherwise the code the original master data used for the same row, otherwise a
+   * deterministic code synthesized from the row's contents.
    */
-  private String resolveJoinValue(Map<String, String> childRow, String joinColumn) {
+  private String resolveJoinValue(Map<String, String> childRow, String joinColumn,
+      String childFileName) {
     String existing = childRow.get(joinColumn);
     if (!isBlank(existing)) {
       return existing;
+    }
+
+    String original = originalCodeResolver
+        .findOriginalCode(childFileName, childRow, joinColumn);
+    if (!isBlank(original)) {
+      return original;
     }
 
     return "GEN_" + Integer.toHexString(childRow.toString().hashCode());

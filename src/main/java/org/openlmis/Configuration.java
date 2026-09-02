@@ -60,6 +60,10 @@ public class Configuration extends Properties {
     return getProperty("mode");
   }
 
+  public String getOriginalMasterDataDirectory() {
+    return getProperty("exportOriginalMasterDataDirectory");
+  }
+
   /**
    * Returns the directory that exported CSV files are written to, falling back to
    * {@value #DEFAULT_OUTPUT_DIRECTORY} when the {@code outputDirectory} property is not set.

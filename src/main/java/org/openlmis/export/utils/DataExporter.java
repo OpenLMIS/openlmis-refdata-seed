@@ -61,6 +61,9 @@ public class DataExporter {
   @Autowired
   private ChildCsvCollector childCsvCollector;
 
+  @Autowired
+  private OriginalCodeResolver originalCodeResolver;
+
   /**
    * Exports master data from a running OLMIS instance into CSV files, one per source entity,
    * written to the configured output directory.
@@ -77,6 +80,7 @@ public class DataExporter {
         .forEach(this::exportDataFor);
 
     flushChildFiles();
+    originalCodeResolver.logSummary();
   }
 
   /**

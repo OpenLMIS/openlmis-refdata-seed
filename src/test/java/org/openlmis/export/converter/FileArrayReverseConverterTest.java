@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.converter.Mapping;
 import org.openlmis.export.utils.ChildCsvCollector;
+import org.openlmis.export.utils.OriginalCodeResolver;
 import org.openlmis.utils.AppHelper;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -44,6 +45,8 @@ public class FileArrayReverseConverterTest {
   private static final String ROLE_NAME = "roleName";
   private static final String CODE = "code";
   private static final String FILE = "RoleAssignments.csv";
+  private static final String STORE_MANAGER = "STORE_MANAGER";
+  private static final String ARRAY_FROM_FILE_BY_CODE = "TO_ARRAY_FROM_FILE_BY_CODE";
 
   @Mock
   private Deconverter deconverter;
@@ -54,13 +57,16 @@ public class FileArrayReverseConverterTest {
   @Mock
   private ChildCsvCollector collector;
 
+  @Mock
+  private OriginalCodeResolver originalCodeResolver;
+
   @InjectMocks
   private FileArrayReverseConverter converter;
 
   @Test
   public void shouldSupportGenericFromFileArraysButNotProgramCode() {
     // BY_PROGRAM_CODE is delegated to SupportedProgramReverseConverter, so it is excluded here.
-    assertThat(converter.supports("TO_ARRAY_FROM_FILE_BY_CODE"), is(true));
+    assertThat(converter.supports(ARRAY_FROM_FILE_BY_CODE), is(true));
     assertThat(converter.supports("TO_ARRAY_FROM_FILE_BY"), is(true));
     assertThat(converter.supports("TO_ARRAY_FROM_FILE_BY_PROGRAM_CODE"), is(false));
     assertThat(converter.supports("TO_ARRAY_BY_CODE"), is(false));
@@ -70,7 +76,7 @@ public class FileArrayReverseConverterTest {
   public void shouldCollectChildRowsAndEmitTheJoinList() {
     final JsonObject source = Json.createObjectBuilder()
         .add(ROLE_ASSIGNMENTS, Json.createArrayBuilder()
-            .add(Json.createObjectBuilder().add(ROLE_NAME, "STORE_MANAGER")))
+            .add(Json.createObjectBuilder().add(ROLE_NAME, STORE_MANAGER)))
         .build();
 
     List<Mapping> childMappings = asList(
@@ -81,16 +87,69 @@ public class FileArrayReverseConverterTest {
 
     Map<String, String> childRow = new LinkedHashMap<>();
     childRow.put(CODE, "RA1");
-    childRow.put(ROLE_NAME, "STORE_MANAGER");
+    childRow.put(ROLE_NAME, STORE_MANAGER);
     when(deconverter.deconvert(any(JsonObject.class), eq(childMappings))).thenReturn(childRow);
 
     Mapping mapping =
-        new Mapping(ROLE_ASSIGNMENTS, ROLE_ASSIGNMENTS, "TO_ARRAY_FROM_FILE_BY_CODE", FILE, "");
+        new Mapping(ROLE_ASSIGNMENTS, ROLE_ASSIGNMENTS, ARRAY_FROM_FILE_BY_CODE, FILE, "");
     Map<String, String> parentRow = new LinkedHashMap<>();
 
     converter.deconvert(source, mapping, parentRow);
 
     verify(collector).add(eq(FILE), eq(asList(CODE, ROLE_NAME)), eq(childRow));
     assertThat(parentRow.get(ROLE_ASSIGNMENTS), is("[RA1]"));
+  }
+
+  @Test
+  public void shouldUseTheOriginalCodeInsteadOfAGeneratedOne() {
+    final JsonObject source = Json.createObjectBuilder()
+        .add(ROLE_ASSIGNMENTS, Json.createArrayBuilder()
+            .add(Json.createObjectBuilder().add(ROLE_NAME, STORE_MANAGER)))
+        .build();
+
+    List<Mapping> childMappings = asList(
+        new Mapping(CODE, "", "SKIP", "", ""),
+        new Mapping(ROLE_NAME, "roleId", "TO_ID_BY_NAME", "Role", ""));
+    when(appHelper.readMappings(FILE)).thenReturn(childMappings);
+    when(deconverter.getHeader(childMappings)).thenReturn(asList(CODE, ROLE_NAME));
+
+    Map<String, String> childRow = new LinkedHashMap<>();
+    childRow.put(ROLE_NAME, STORE_MANAGER);
+    when(deconverter.deconvert(any(JsonObject.class), eq(childMappings))).thenReturn(childRow);
+    when(originalCodeResolver.findOriginalCode(eq(FILE), eq(childRow), eq(CODE)))
+        .thenReturn("RA_0001");
+
+    Map<String, String> row = new LinkedHashMap<>();
+    converter.deconvert(source, new Mapping(ROLE_ASSIGNMENTS, ROLE_ASSIGNMENTS,
+        ARRAY_FROM_FILE_BY_CODE, FILE, ""), row);
+
+    assertThat(childRow.get(CODE), is("RA_0001"));
+    assertThat(row.get(ROLE_ASSIGNMENTS), is("[RA_0001]"));
+  }
+
+  @Test
+  public void shouldGenerateACodeWhenTheRowHasNoOriginalCounterpart() {
+    final JsonObject source = Json.createObjectBuilder()
+        .add(ROLE_ASSIGNMENTS, Json.createArrayBuilder()
+            .add(Json.createObjectBuilder().add(ROLE_NAME, STORE_MANAGER)))
+        .build();
+
+    List<Mapping> childMappings = asList(
+        new Mapping(CODE, "", "SKIP", "", ""),
+        new Mapping(ROLE_NAME, "roleId", "TO_ID_BY_NAME", "Role", ""));
+    when(appHelper.readMappings(FILE)).thenReturn(childMappings);
+    when(deconverter.getHeader(childMappings)).thenReturn(asList(CODE, ROLE_NAME));
+
+    Map<String, String> childRow = new LinkedHashMap<>();
+    childRow.put(ROLE_NAME, STORE_MANAGER);
+    when(deconverter.deconvert(any(JsonObject.class), eq(childMappings))).thenReturn(childRow);
+    when(originalCodeResolver.findOriginalCode(eq(FILE), eq(childRow), eq(CODE)))
+        .thenReturn(null);
+
+    Map<String, String> row = new LinkedHashMap<>();
+    converter.deconvert(source, new Mapping(ROLE_ASSIGNMENTS, ROLE_ASSIGNMENTS,
+        ARRAY_FROM_FILE_BY_CODE, FILE, ""), row);
+
+    assertThat(childRow.get(CODE).startsWith("GEN_"), is(true));
   }
 }
