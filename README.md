@@ -82,6 +82,14 @@ outputDirectory=/home/user/exportOutput
   child mapping files referenced by `*_FROM_FILE_*` mappings (e.g. `SupportedPrograms_mapping.csv`)
   must be present too.
 * `outputDirectory` is where the exported `<Entity>.csv` files are written.
+* `exportOriginalMasterDataDirectory` (optional) points at the original seeding package - the
+  directory holding the data CSVs the instance was seeded from. Child entities that have no code
+  column of their own (`RoleAssignments`, `RequisitionGroupProgramSchedules`) reuse the codes that
+  package gave them, matched on the columns both files share, so the export keeps the authored
+  codes instead of inventing new ones. Rows with no counterpart there - data added after seeding -
+  fall back to a generated `GEN_<hash>` code. Leave the setting unset to generate every code.
+  This directory is read for its data CSVs only; keep it separate from `directory`, whose mapping
+  files drive the export.
 
 Run it exactly like the seed mode:
 

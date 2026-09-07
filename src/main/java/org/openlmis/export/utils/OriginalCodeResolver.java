@@ -16,6 +16,7 @@
 package org.openlmis.export.utils;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Reuses the join codes of the original master data, matching each {@code *_FROM_FILE_*} child row
- * to its original counterpart by the values of all its other columns.
+ * to its original counterpart by the values of the columns the child file declares, so extra
+ * columns carried by the original master data are ignored.
  */
 @Component
 public class OriginalCodeResolver {
@@ -58,16 +60,20 @@ public class OriginalCodeResolver {
   /**
    * Finds the code the original master data used for the given child row.
    *
+   * @param header the columns the child file declares; columns outside it are not compared
    * @return the original code, or null when there is no original counterpart
    */
-  public String findOriginalCode(String fileName, Map<String, String> row, String joinColumn) {
+  public String findOriginalCode(String fileName, Collection<String> header,
+      Map<String, String> row, String joinColumn) {
     if (!isEnabled()) {
       return null;
     }
 
+    Set<String> columns = comparableColumns(header, joinColumn);
     String code = indexes
-        .computeIfAbsent(fileName + '#' + joinColumn, key -> buildIndex(fileName, joinColumn))
-        .get(naturalKey(row, joinColumn));
+        .computeIfAbsent(fileName + '#' + joinColumn, key -> buildIndex(fileName, joinColumn,
+            columns))
+        .get(naturalKey(row, columns));
 
     if (code == null) {
       ++generated;
@@ -88,7 +94,8 @@ public class OriginalCodeResolver {
     }
   }
 
-  private Map<String, String> buildIndex(String fileName, String joinColumn) {
+  private Map<String, String> buildIndex(String fileName, String joinColumn,
+      Set<String> columns) {
     Map<String, String> index = new HashMap<>();
     File file = new File(configuration.getOriginalMasterDataDirectory(), fileName);
     List<Map<String, String>> originalRows = reader.readFromFile(file);
@@ -96,7 +103,7 @@ public class OriginalCodeResolver {
     for (Map<String, String> originalRow : originalRows) {
       String code = originalRow.get(joinColumn);
       if (StringUtils.isNotBlank(code)) {
-        index.put(naturalKey(originalRow, joinColumn), code);
+        index.put(naturalKey(originalRow, columns), code);
       }
     }
 
@@ -104,11 +111,18 @@ public class OriginalCodeResolver {
     return index;
   }
 
-  private String naturalKey(Map<String, String> row, String joinColumn) {
+  private Set<String> comparableColumns(Collection<String> header, String joinColumn) {
+    Set<String> columns = new TreeSet<>(header);
+    columns.remove(joinColumn);
+    return columns;
+  }
+
+  private String naturalKey(Map<String, String> row, Set<String> columns) {
     Set<String> parts = new TreeSet<>();
-    for (Map.Entry<String, String> entry : row.entrySet()) {
-      if (!entry.getKey().equals(joinColumn) && StringUtils.isNotBlank(entry.getValue())) {
-        parts.add(entry.getKey() + KEY_VALUE_SEPARATOR + entry.getValue());
+    for (String column : columns) {
+      String value = row.get(column);
+      if (StringUtils.isNotBlank(value)) {
+        parts.add(column + KEY_VALUE_SEPARATOR + value);
       }
     }
     return String.join(PART_SEPARATOR, parts);

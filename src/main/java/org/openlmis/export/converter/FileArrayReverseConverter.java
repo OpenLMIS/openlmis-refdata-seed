@@ -92,7 +92,7 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
       Map<String, String> childRow = deconverter.deconvert((JsonObject) element, childMappings);
       String joinValue = joinsByExistingColumn
           ? sharedKey
-          : resolveJoinValue(childRow, joinColumn, childFileName);
+          : resolveJoinValue(childRow, joinColumn, childFileName, childHeader);
       childRow.put(joinColumn, joinValue);
       collector.add(childFileName, childHeader, childRow);
       joinValues.add(joinValue);
@@ -109,14 +109,14 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
    * deterministic code synthesized from the row's contents.
    */
   private String resolveJoinValue(Map<String, String> childRow, String joinColumn,
-      String childFileName) {
+      String childFileName, List<String> childHeader) {
     String existing = childRow.get(joinColumn);
     if (!isBlank(existing)) {
       return existing;
     }
 
     String original = originalCodeResolver
-        .findOriginalCode(childFileName, childRow, joinColumn);
+        .findOriginalCode(childFileName, childHeader, childRow, joinColumn);
     if (!isBlank(original)) {
       return original;
     }

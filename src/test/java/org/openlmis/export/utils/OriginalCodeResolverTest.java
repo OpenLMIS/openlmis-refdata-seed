@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +47,7 @@ public class OriginalCodeResolverTest {
   private static final String RA_0002 = "RA_0002";
   private static final String RA_0001 = "RA_0001";
   private static final String VIH = "VIH";
+  private static final List<String> HEADER = asList(CODE, ROLE_NAME, PROGRAM_CODE);
 
   @Mock
   private Configuration configuration;
@@ -66,7 +68,7 @@ public class OriginalCodeResolverTest {
 
   @Test
   public void shouldReuseTheCodeOfAMatchingOriginalRow() {
-    assertThat(resolver.findOriginalCode(FILE, row(STORE_MANAGER, VIH), CODE), is(RA_0001));
+    assertThat(resolver.findOriginalCode(FILE, HEADER, row(STORE_MANAGER, VIH), CODE), is(RA_0001));
   }
 
   @Test
@@ -74,12 +76,33 @@ public class OriginalCodeResolverTest {
     Map<String, String> withoutProgram = new LinkedHashMap<>();
     withoutProgram.put(ROLE_NAME, "STOCK_MANAGER");
 
-    assertThat(resolver.findOriginalCode(FILE, withoutProgram, CODE), is(RA_0002));
+    assertThat(resolver.findOriginalCode(FILE, HEADER, withoutProgram, CODE), is(RA_0002));
+  }
+
+  @Test
+  public void shouldIgnoreColumnsTheExportDoesNotProduce() {
+    when(reader.readFromFile(any(File.class))).thenReturn(asList(
+        originalRowWithType(RA_0001, STORE_MANAGER, VIH, "supervision")));
+
+    assertThat(resolver.findOriginalCode(FILE, HEADER, row(STORE_MANAGER, VIH), CODE), is(RA_0001));
+  }
+
+  @Test
+  public void shouldNotMatchOriginalRowsDifferingInADeclaredColumn() {
+    when(reader.readFromFile(any(File.class))).thenReturn(asList(
+        originalRow(RA_0001, STORE_MANAGER, ""),
+        originalRow(RA_0002, STORE_MANAGER, VIH)));
+
+    Map<String, String> withoutProgram = new LinkedHashMap<>();
+    withoutProgram.put(ROLE_NAME, STORE_MANAGER);
+
+    assertThat(resolver.findOriginalCode(FILE, HEADER, withoutProgram, CODE), is(RA_0001));
   }
 
   @Test
   public void shouldReturnNothingWhenThereIsNoOriginalCounterpart() {
-    assertThat(resolver.findOriginalCode(FILE, row("NEW_ROLE", VIH), CODE), is(nullValue()));
+    assertThat(resolver.findOriginalCode(FILE, HEADER, row("NEW_ROLE", VIH), CODE),
+        is(nullValue()));
   }
 
   @Test
@@ -87,7 +110,8 @@ public class OriginalCodeResolverTest {
     when(configuration.getOriginalMasterDataDirectory()).thenReturn(null);
 
     assertThat(resolver.isEnabled(), is(false));
-    assertThat(resolver.findOriginalCode(FILE, row(STORE_MANAGER, VIH), CODE), is(nullValue()));
+    assertThat(resolver.findOriginalCode(FILE, HEADER, row(STORE_MANAGER, VIH), CODE),
+        is(nullValue()));
   }
 
   private Map<String, String> row(String roleName, String programCode) {
@@ -100,6 +124,13 @@ public class OriginalCodeResolverTest {
   private Map<String, String> originalRow(String code, String roleName, String programCode) {
     Map<String, String> row = row(roleName, programCode);
     row.put(CODE, code);
+    return row;
+  }
+
+  private Map<String, String> originalRowWithType(String code, String roleName, String programCode,
+      String type) {
+    Map<String, String> row = originalRow(code, roleName, programCode);
+    row.put("type", type);
     return row;
   }
 }

@@ -116,7 +116,8 @@ public class FileArrayReverseConverterTest {
     Map<String, String> childRow = new LinkedHashMap<>();
     childRow.put(ROLE_NAME, STORE_MANAGER);
     when(deconverter.deconvert(any(JsonObject.class), eq(childMappings))).thenReturn(childRow);
-    when(originalCodeResolver.findOriginalCode(eq(FILE), eq(childRow), eq(CODE)))
+    when(originalCodeResolver.findOriginalCode(eq(FILE), eq(asList(CODE, ROLE_NAME)),
+        eq(childRow), eq(CODE)))
         .thenReturn("RA_0001");
 
     Map<String, String> row = new LinkedHashMap<>();
@@ -143,7 +144,8 @@ public class FileArrayReverseConverterTest {
     Map<String, String> childRow = new LinkedHashMap<>();
     childRow.put(ROLE_NAME, STORE_MANAGER);
     when(deconverter.deconvert(any(JsonObject.class), eq(childMappings))).thenReturn(childRow);
-    when(originalCodeResolver.findOriginalCode(eq(FILE), eq(childRow), eq(CODE)))
+    when(originalCodeResolver.findOriginalCode(eq(FILE), eq(asList(CODE, ROLE_NAME)),
+        eq(childRow), eq(CODE)))
         .thenReturn(null);
 
     Map<String, String> row = new LinkedHashMap<>();
