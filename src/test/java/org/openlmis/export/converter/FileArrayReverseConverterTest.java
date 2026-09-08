@@ -36,6 +36,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.converter.Mapping;
 import org.openlmis.export.utils.ChildCsvCollector;
 import org.openlmis.export.utils.OriginalCodeResolver;
+import org.openlmis.export.utils.SequentialCodeAllocator;
 import org.openlmis.utils.AppHelper;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -60,6 +61,9 @@ public class FileArrayReverseConverterTest {
   @Mock
   private OriginalCodeResolver originalCodeResolver;
 
+  @Mock
+  private SequentialCodeAllocator sequentialCodeAllocator;
+
   @InjectMocks
   private FileArrayReverseConverter converter;
 
@@ -79,9 +83,7 @@ public class FileArrayReverseConverterTest {
             .add(Json.createObjectBuilder().add(ROLE_NAME, STORE_MANAGER)))
         .build();
 
-    List<Mapping> childMappings = asList(
-        new Mapping(CODE, "", "SKIP", "", ""),
-        new Mapping(ROLE_NAME, "roleId", "TO_ID_BY_NAME", "Role", ""));
+    List<Mapping> childMappings = childMappings();
     when(appHelper.readMappings(FILE)).thenReturn(childMappings);
     when(deconverter.getHeader(childMappings)).thenReturn(asList(CODE, ROLE_NAME));
 
@@ -107,9 +109,7 @@ public class FileArrayReverseConverterTest {
             .add(Json.createObjectBuilder().add(ROLE_NAME, STORE_MANAGER)))
         .build();
 
-    List<Mapping> childMappings = asList(
-        new Mapping(CODE, "", "SKIP", "", ""),
-        new Mapping(ROLE_NAME, "roleId", "TO_ID_BY_NAME", "Role", ""));
+    List<Mapping> childMappings = childMappings();
     when(appHelper.readMappings(FILE)).thenReturn(childMappings);
     when(deconverter.getHeader(childMappings)).thenReturn(asList(CODE, ROLE_NAME));
 
@@ -129,15 +129,40 @@ public class FileArrayReverseConverterTest {
   }
 
   @Test
+  public void shouldAllocateTheNextCodeWhenTheRowHasNoOriginalCounterpart() {
+    final JsonObject source = Json.createObjectBuilder()
+        .add(ROLE_ASSIGNMENTS, Json.createArrayBuilder()
+            .add(Json.createObjectBuilder().add(ROLE_NAME, STORE_MANAGER)))
+        .build();
+
+    List<Mapping> childMappings = childMappings();
+    when(appHelper.readMappings(FILE)).thenReturn(childMappings);
+    when(deconverter.getHeader(childMappings)).thenReturn(asList(CODE, ROLE_NAME));
+
+    Map<String, String> childRow = new LinkedHashMap<>();
+    childRow.put(ROLE_NAME, STORE_MANAGER);
+    when(deconverter.deconvert(any(JsonObject.class), eq(childMappings))).thenReturn(childRow);
+    when(originalCodeResolver.findOriginalCode(eq(FILE), eq(asList(CODE, ROLE_NAME)),
+        eq(childRow), eq(CODE))).thenReturn(null);
+    when(sequentialCodeAllocator.allocate(eq(FILE), eq(asList(CODE, ROLE_NAME)), eq(childRow),
+        eq(CODE))).thenReturn("RA-935");
+
+    Map<String, String> row = new LinkedHashMap<>();
+    converter.deconvert(source, new Mapping(ROLE_ASSIGNMENTS, ROLE_ASSIGNMENTS,
+        ARRAY_FROM_FILE_BY_CODE, FILE, ""), row);
+
+    assertThat(childRow.get(CODE), is("RA-935"));
+    assertThat(row.get(ROLE_ASSIGNMENTS), is("[RA-935]"));
+  }
+
+  @Test
   public void shouldGenerateACodeWhenTheRowHasNoOriginalCounterpart() {
     final JsonObject source = Json.createObjectBuilder()
         .add(ROLE_ASSIGNMENTS, Json.createArrayBuilder()
             .add(Json.createObjectBuilder().add(ROLE_NAME, STORE_MANAGER)))
         .build();
 
-    List<Mapping> childMappings = asList(
-        new Mapping(CODE, "", "SKIP", "", ""),
-        new Mapping(ROLE_NAME, "roleId", "TO_ID_BY_NAME", "Role", ""));
+    List<Mapping> childMappings = childMappings();
     when(appHelper.readMappings(FILE)).thenReturn(childMappings);
     when(deconverter.getHeader(childMappings)).thenReturn(asList(CODE, ROLE_NAME));
 
@@ -153,5 +178,11 @@ public class FileArrayReverseConverterTest {
         ARRAY_FROM_FILE_BY_CODE, FILE, ""), row);
 
     assertThat(childRow.get(CODE).startsWith("GEN_"), is(true));
+  }
+
+  private List<Mapping> childMappings() {
+    return asList(
+        new Mapping(CODE, "", "SKIP", "", ""),
+        new Mapping(ROLE_NAME, "roleId", "TO_ID_BY_NAME", "Role", ""));
   }
 }

@@ -27,6 +27,7 @@ import javax.json.JsonValue;
 import org.openlmis.converter.Mapping;
 import org.openlmis.export.utils.ChildCsvCollector;
 import org.openlmis.export.utils.OriginalCodeResolver;
+import org.openlmis.export.utils.SequentialCodeAllocator;
 import org.openlmis.utils.AppHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -47,6 +48,9 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
 
   @Autowired
   private OriginalCodeResolver originalCodeResolver;
+
+  @Autowired
+  private SequentialCodeAllocator sequentialCodeAllocator;
 
   @Override
   public boolean supports(String type) {
@@ -105,8 +109,8 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
 
   /**
    * Determines the value that links a child row back to its parent: the join column when the API
-   * provides it, otherwise the code the original master data used for the same row, otherwise a
-   * deterministic code synthesized from the row's contents.
+   * provides it, otherwise the code the original master data used for the same row, otherwise the
+   * next code of that file's sequence, otherwise a code synthesized from the row's contents.
    */
   private String resolveJoinValue(Map<String, String> childRow, String joinColumn,
       String childFileName, List<String> childHeader) {
@@ -119,6 +123,12 @@ public class FileArrayReverseConverter extends BaseReverseTypeConverter {
         .findOriginalCode(childFileName, childHeader, childRow, joinColumn);
     if (!isBlank(original)) {
       return original;
+    }
+
+    String allocated = sequentialCodeAllocator
+        .allocate(childFileName, childHeader, childRow, joinColumn);
+    if (!isBlank(allocated)) {
+      return allocated;
     }
 
     return "GEN_" + Integer.toHexString(childRow.toString().hashCode());

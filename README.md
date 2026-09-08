@@ -87,9 +87,30 @@ outputDirectory=/home/user/exportOutput
   column of their own (`RoleAssignments`, `RequisitionGroupProgramSchedules`) reuse the codes that
   package gave them, matched on the columns both files share, so the export keeps the authored
   codes instead of inventing new ones. Rows with no counterpart there - data added after seeding -
-  fall back to a generated `GEN_<hash>` code. Leave the setting unset to generate every code.
-  This directory is read for its data CSVs only; keep it separate from `directory`, whose mapping
-  files drive the export.
+  continue that file's numbering (a file seeded with `RA-1..RA-934` gains `RA-935` onwards); when
+  the original codes are not a `<prefix>-<number>` sequence, those rows fall back to a generated
+  `GEN_<hash>` code. Allocations last for a single run - the original master data is only ever
+  read. Leave the setting unset to generate every code. The directory is read for its data CSVs
+  only, so it may be the same directory as `directory`.
+
+Rows of the child files are written ordered by their join column, numerically where the codes end
+in a number, so a file's codes read in sequence rather than in the order the parent entities
+happened to reference them.
+
+When `exportOriginalMasterDataDirectory` is set, the run ends with a table comparing each exported
+file against its counterpart in the original master data, so drift since the initial seeding is
+visible at a glance:
+
+```
+File                                    Identical  Modified    New  Removed
+Facilities.csv                                 96         8      0        0
+RoleAssignments.csv                           934         0    462        0
+```
+
+Only the columns both files declare are compared, so extra columns carried by the original master
+data do not read as changes. Rows are identified by their `code` when it is filled in and unique on
+both sides, and by all their shared values otherwise - in that case nothing can read as modified,
+only added or removed. Redirect the run to keep it: `java -jar <jar> 2>&1 | tee output.txt`.
 
 Run it exactly like the seed mode:
 

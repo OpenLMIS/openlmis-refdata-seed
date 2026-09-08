@@ -17,11 +17,15 @@ package org.openlmis.export.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,6 +38,8 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class ChildCsvCollector {
+
+  private static final Pattern TRAILING_NUMBER = Pattern.compile("^(.*\\D)?(\\d{1,18})$");
 
   private final Map<String, List<String>> headers = new LinkedHashMap<>();
   private final Map<String, Set<Map<String, String>>> rows = new LinkedHashMap<>();
@@ -60,7 +66,44 @@ public class ChildCsvCollector {
     return headers.get(fileName);
   }
 
+  /**
+   * Returns the file's rows ordered by its leading column - the one the parents join on -
+   * numerically where the codes end in a number, with the other columns breaking ties.
+   *
+   * @param fileName the child CSV file name
+   * @return the ordered rows
+   */
   public Collection<Map<String, String>> rows(String fileName) {
-    return new ArrayList<>(rows.get(fileName));
+    List<Map<String, String>> ordered = new ArrayList<>(rows.get(fileName));
+    List<String> header = headers.get(fileName);
+    String leading = header.get(0);
+
+    Comparator<Map<String, String>> comparator = (left, right) ->
+        compareCodes(left.get(leading), right.get(leading));
+    for (String column : header.subList(1, header.size())) {
+      comparator = comparator.thenComparing(
+          row -> StringUtils.defaultString(row.get(column)));
+    }
+
+    ordered.sort(comparator);
+    return ordered;
+  }
+
+  private static int compareCodes(String left, String right) {
+    String leftCode = StringUtils.defaultString(left);
+    String rightCode = StringUtils.defaultString(right);
+
+    Matcher leftMatch = TRAILING_NUMBER.matcher(leftCode);
+    Matcher rightMatch = TRAILING_NUMBER.matcher(rightCode);
+    if (leftMatch.matches() && rightMatch.matches()) {
+      String leftPrefix = StringUtils.defaultString(leftMatch.group(1));
+      String rightPrefix = StringUtils.defaultString(rightMatch.group(1));
+      if (leftPrefix.equals(rightPrefix)) {
+        return Long.compare(Long.parseLong(leftMatch.group(2)),
+            Long.parseLong(rightMatch.group(2)));
+      }
+    }
+
+    return leftCode.compareTo(rightCode);
   }
 }

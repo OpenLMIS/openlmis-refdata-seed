@@ -64,6 +64,12 @@ public class DataExporter {
   @Autowired
   private OriginalCodeResolver originalCodeResolver;
 
+  @Autowired
+  private SequentialCodeAllocator sequentialCodeAllocator;
+
+  @Autowired
+  private MasterDataComparisonReporter comparisonReporter;
+
   /**
    * Exports master data from a running OLMIS instance into CSV files, one per source entity,
    * written to the configured output directory.
@@ -81,6 +87,8 @@ public class DataExporter {
 
     flushChildFiles();
     originalCodeResolver.logSummary();
+    sequentialCodeAllocator.logSummary();
+    comparisonReporter.report();
   }
 
   /**

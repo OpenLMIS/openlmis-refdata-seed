@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 import org.openlmis.Configuration;
 import org.openlmis.reader.GenericReader;
@@ -39,9 +38,6 @@ import org.springframework.stereotype.Component;
 public class OriginalCodeResolver {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OriginalCodeResolver.class);
-
-  private static final char KEY_VALUE_SEPARATOR = '\u0000';
-  private static final String PART_SEPARATOR = "\u0001";
 
   @Autowired
   private Configuration configuration;
@@ -69,11 +65,11 @@ public class OriginalCodeResolver {
       return null;
     }
 
-    Set<String> columns = comparableColumns(header, joinColumn);
+    Set<String> columns = NaturalKeys.comparableColumns(header, joinColumn);
     String code = indexes
         .computeIfAbsent(fileName + '#' + joinColumn, key -> buildIndex(fileName, joinColumn,
             columns))
-        .get(naturalKey(row, columns));
+        .get(NaturalKeys.of(row, columns));
 
     if (code == null) {
       ++generated;
@@ -103,28 +99,11 @@ public class OriginalCodeResolver {
     for (Map<String, String> originalRow : originalRows) {
       String code = originalRow.get(joinColumn);
       if (StringUtils.isNotBlank(code)) {
-        index.put(naturalKey(originalRow, columns), code);
+        index.put(NaturalKeys.of(originalRow, columns), code);
       }
     }
 
     LOGGER.info("Indexed {} original rows from {} for code reuse.", index.size(), fileName);
     return index;
-  }
-
-  private Set<String> comparableColumns(Collection<String> header, String joinColumn) {
-    Set<String> columns = new TreeSet<>(header);
-    columns.remove(joinColumn);
-    return columns;
-  }
-
-  private String naturalKey(Map<String, String> row, Set<String> columns) {
-    Set<String> parts = new TreeSet<>();
-    for (String column : columns) {
-      String value = row.get(column);
-      if (StringUtils.isNotBlank(value)) {
-        parts.add(column + KEY_VALUE_SEPARATOR + value);
-      }
-    }
-    return String.join(PART_SEPARATOR, parts);
   }
 }
