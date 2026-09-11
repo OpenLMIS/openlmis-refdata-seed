@@ -46,6 +46,7 @@ public class MasterDataComparisonReporterTest {
   private static final String CLINIC = "Clinic";
   private static final String F1 = "F1";
   private static final String PRODUCT_CODE = "productCode";
+  private static final String DEPOT = "Depot";
 
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
@@ -74,25 +75,39 @@ public class MasterDataComparisonReporterTest {
   @Test
   public void shouldCountUnchangedChangedAddedAndRemovedRows() throws IOException {
     given(FILE,
-        asList(row(F1, CLINIC), row("F2", "Depot"), row("F3", "Store")),
-        asList(row(F1, CLINIC), row("F2", "Warehouse"), row("F4", "Post")));
+        asList(row(CODE, F1, CLINIC), row(CODE, "F2", DEPOT), row(CODE, "F3", "Store")),
+        asList(row(CODE, F1, CLINIC), row(CODE, "F2", "Warehouse"), row(CODE, "F4", "Post")));
 
     assertThat(lineFor(FILE), is("Facilities.csv 1 1 1 1"));
   }
 
   @Test
-  public void shouldIdentifyRowsByAllSharedValuesWhenCodesAreNotUnique() throws IOException {
-    given(FILE,
-        asList(row(F1, CLINIC), row(F1, "Depot")),
-        asList(row(F1, CLINIC)));
+  public void shouldWidenTheKeyUntilItIdentifiesARowOnBothSides() throws IOException {
+    Map<String, String> changed = row(CODE, F1, DEPOT);
+    changed.put(PRODUCT_CODE, "P2");
+    Map<String, String> original = row(CODE, F1, DEPOT);
+    original.put(PRODUCT_CODE, "P1");
 
-    assertThat(lineFor(FILE), is("Facilities.csv 1 0 0 1"));
+    given(FILE,
+        asList(row(CODE, F1, CLINIC), original),
+        asList(row(CODE, F1, CLINIC), changed));
+
+    assertThat(lineFor(FILE), is("Facilities.csv 1 1 0 0"));
+  }
+
+  @Test
+  public void shouldCompareNumbersByValueRatherThanText() throws IOException {
+    given(FILE,
+        asList(row(CODE, F1, "0"), row(CODE, "F2", "3")),
+        asList(row(CODE, F1, "0.00"), row(CODE, "F2", "3.0")));
+
+    assertThat(lineFor(FILE), is("Facilities.csv 2 0 0 0"));
   }
 
   @Test
   public void shouldIdentifyRowsByTheLeadingUniqueColumnWhenThereIsNoCode() throws IOException {
     given(FILE,
-        asList(row(PRODUCT_CODE, "P1", CLINIC), row(PRODUCT_CODE, "P2", "Depot")),
+        asList(row(PRODUCT_CODE, "P1", CLINIC), row(PRODUCT_CODE, "P2", DEPOT)),
         asList(row(PRODUCT_CODE, "P1", "Renamed"), row(PRODUCT_CODE, "P3", "Post")));
 
     assertThat(lineFor(FILE), is("Facilities.csv 0 1 1 1"));
@@ -100,25 +115,20 @@ public class MasterDataComparisonReporterTest {
 
   @Test
   public void shouldCompareOnlyTheColumnsBothSidesDeclare() throws IOException {
-    Map<String, String> original = row(F1, CLINIC);
+    Map<String, String> original = row(CODE, F1, CLINIC);
     original.put("type", "warehouse");
 
-    given(FILE, asList(original), asList(row(F1, CLINIC)));
+    given(FILE, asList(original), asList(row(CODE, F1, CLINIC)));
 
     assertThat(lineFor(FILE), is("Facilities.csv 1 0 0 0"));
   }
 
   @Test
-  public void shouldReportNothingWhenNoExportedFileHasACounterpart() throws IOException {
+  public void shouldReportNothingWhenThereIsNothingToCompare() throws IOException {
     new File(outputDirectory, FILE).createNewFile();
-
     assertThat(reporter.report(), is(nullValue()));
-  }
 
-  @Test
-  public void shouldReportNothingWhenNoDirectoryIsConfigured() {
     when(configuration.getOriginalMasterDataDirectory()).thenReturn(null);
-
     assertThat(reporter.report(), is(nullValue()));
   }
 
@@ -143,9 +153,6 @@ public class MasterDataComparisonReporterTest {
 
 
 
-  private Map<String, String> row(String identity, String name) {
-    return row(CODE, identity, name);
-  }
 
   private Map<String, String> row(String identityColumn, String identity, String name) {
     Map<String, String> row = new LinkedHashMap<>();

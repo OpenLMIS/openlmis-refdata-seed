@@ -16,6 +16,7 @@
 package org.openlmis.export.utils;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.openlmis.Configuration;
 import org.openlmis.reader.GenericReader;
@@ -35,15 +37,17 @@ import org.springframework.stereotype.Component;
 
 /**
  * Reports, per exported file, how many rows are unchanged, changed, added or gone since the
- * original master data. Only the columns both sides declare are compared.
+ * original master data. Only the columns both sides declare are compared, and numbers are compared
+ * by value so that {@code 3} and {@code 3.0} do not read as a change.
  */
 @Component
 public class MasterDataComparisonReporter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MasterDataComparisonReporter.class);
 
-  private static final String CODE = "code";
   private static final String HEADING = "File";
+  private static final Pattern NUMBER = Pattern.compile("-?\\d+(\\.\\d+)?");
+  private static final char KEY_SEPARATOR = '\u0000';
 
   @Autowired
   private Configuration configuration;
@@ -99,22 +103,20 @@ public class MasterDataComparisonReporter {
     Set<String> columns = columnsOf(exported);
     columns.retainAll(columnsOf(original));
 
-    String identity = identityColumn(columns, original, exported);
+    List<String> identity = identityColumns(columns, original, exported);
     Set<String> compared = new LinkedHashSet<>(columns);
-    if (identity != null) {
-      compared.remove(identity);
-    }
+    compared.removeAll(identity);
 
     Map<String, Map<String, String>> originalByKey = new HashMap<>();
     for (Map<String, String> row : original) {
-      originalByKey.put(keyOf(row, identity, columns), row);
+      originalByKey.put(keyOf(row, identity), row);
     }
 
     for (Map<String, String> row : exported) {
-      Map<String, String> counterpart = originalByKey.remove(keyOf(row, identity, columns));
+      Map<String, String> counterpart = originalByKey.remove(keyOf(row, identity));
       if (counterpart == null) {
         ++comparison.added;
-      } else if (NaturalKeys.of(counterpart, compared).equals(NaturalKeys.of(row, compared))) {
+      } else if (sameValues(counterpart, row, compared)) {
         ++comparison.identical;
       } else {
         ++comparison.modified;
@@ -125,39 +127,61 @@ public class MasterDataComparisonReporter {
     return comparison;
   }
 
-  private String keyOf(Map<String, String> row, String identity, Set<String> columns) {
-    return identity == null ? NaturalKeys.of(row, columns) : row.get(identity);
+  private String keyOf(Map<String, String> row, List<String> identity) {
+    StringBuilder key = new StringBuilder();
+    for (String column : identity) {
+      key.append(normalise(row.get(column))).append(KEY_SEPARATOR);
+    }
+    return key.toString();
   }
 
-  /**
-   * The code when the file has a usable one, else its first column that is unique on both sides.
-   * Null when neither holds, in which case rows are identified by all their shared values and
-   * nothing can read as modified.
-   */
-  private String identityColumn(Set<String> columns, List<Map<String, String>> original,
-      List<Map<String, String>> exported) {
-    if (columns.contains(CODE) && isUnique(original, CODE) && isUnique(exported, CODE)) {
-      return CODE;
-    }
-
+  private boolean sameValues(Map<String, String> left, Map<String, String> right,
+      Collection<String> columns) {
     for (String column : columns) {
-      if (isUnique(original, column) && isUnique(exported, column)) {
-        return column;
-      }
-    }
-
-    return null;
-  }
-
-  private boolean isUnique(List<Map<String, String>> rows, String column) {
-    Set<String> values = new LinkedHashSet<>();
-    for (Map<String, String> row : rows) {
-      String value = row.get(column);
-      if (StringUtils.isBlank(value) || !values.add(value)) {
+      if (!normalise(left.get(column)).equals(normalise(right.get(column)))) {
         return false;
       }
     }
-    return !values.isEmpty();
+    return true;
+  }
+
+  private String normalise(String value) {
+    String trimmed = StringUtils.trimToEmpty(value);
+    return NUMBER.matcher(trimmed).matches()
+        ? new BigDecimal(trimmed).stripTrailingZeros().toPlainString()
+        : trimmed;
+  }
+
+  /**
+   * The shortest run of leading columns that identifies a row on both sides. Falls back to every
+   * shared column, in which case nothing can read as modified.
+   */
+  private List<String> identityColumns(Set<String> columns, List<Map<String, String>> original,
+      List<Map<String, String>> exported) {
+    List<String> identity = new ArrayList<>();
+    for (String column : columns) {
+      identity.add(column);
+      if (isUnique(original, identity) && isUnique(exported, identity)) {
+        return identity;
+      }
+    }
+
+    return new ArrayList<>(columns);
+  }
+
+  private boolean isUnique(List<Map<String, String>> rows, List<String> identity) {
+    Set<String> keys = new LinkedHashSet<>();
+    for (Map<String, String> row : rows) {
+      for (String column : identity) {
+        if (StringUtils.isBlank(row.get(column))) {
+          return false;
+        }
+      }
+      if (!keys.add(keyOf(row, identity))) {
+        return false;
+      }
+    }
+    return !keys.isEmpty();
   }
 
   private Set<String> columnsOf(Collection<Map<String, String>> rows) {
