@@ -1,0 +1,3 @@
+from,to,type,entityName,defaultValue
+referenceId,referenceId,TO_ID_BY_CODE,Facility,
+isRefDataFacility,isRefDataFacility,DIRECT,,

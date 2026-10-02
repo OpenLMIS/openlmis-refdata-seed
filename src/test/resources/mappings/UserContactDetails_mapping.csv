@@ -1,0 +1,5 @@
+from,to,type,entityName,defaultValue
+username,referenceDataUserId,TO_ID_BY_USERNAME,User,
+phoneNumber,phoneNumber,DIRECT,,
+allowNotify,allowNotify,DIRECT,,
+email,emailDetails,TO_OBJECT_FROM_FILE_BY_EMAIL,EmailDetails.csv,
