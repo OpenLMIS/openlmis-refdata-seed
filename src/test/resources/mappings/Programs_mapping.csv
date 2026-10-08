@@ -1,0 +1,9 @@
+from,to,type,entityName,defaultValue
+code,code,DIRECT,,
+name,name,DIRECT,,
+description,description,DIRECT,,
+active,active,DIRECT,,
+periodSkippable,periodsSkippable,DIRECT,,
+showNonFullSupplyTab,showNonFullSupplyTab,DIRECT,,
+enableDatePhysicalStockCountCompleted,enableDatePhysicalStockCountCompleted,DIRECT,,
+skipAuthorization,skipAuthorization,DIRECT,,

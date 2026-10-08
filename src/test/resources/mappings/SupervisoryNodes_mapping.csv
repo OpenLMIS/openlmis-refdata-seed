@@ -1,0 +1,7 @@
+from,to,type,entityName,defaultValue
+code,code,DIRECT,,
+facility,facility,TO_OBJECT_BY_CODE,Facility,
+name,name,DIRECT,,
+description,description,DIRECT,,
+parentNode,parentNode,TO_OBJECT_BY_CODE,SupervisoryNode
+childNodes,childNodes,TO_ARRAY_BY_CODE,SupervisoryNode

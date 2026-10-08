@@ -41,6 +41,18 @@ public class DirectReverseConverterTest {
   }
 
   @Test
+  public void shouldKeyTheRowOnTheCsvColumnNotTheJsonField() {
+    final JsonObject source = Json.createObjectBuilder().add("periodsSkippable", true).build();
+    Mapping mapping = new Mapping("periodSkippable", "periodsSkippable", DIRECT, "", "");
+
+    Map<String, String> row = new LinkedHashMap<>();
+    converter.deconvert(source, mapping, row);
+
+    assertThat(row.get("periodSkippable"), is("True"));
+    assertThat(row.containsKey("periodsSkippable"), is(false));
+  }
+
+  @Test
   public void shouldCopyValueDirectly() {
     final JsonObject source = Json.createObjectBuilder().add(NAME, "Depot").build();
     Mapping mapping = new Mapping(NAME, NAME, DIRECT, "", "");

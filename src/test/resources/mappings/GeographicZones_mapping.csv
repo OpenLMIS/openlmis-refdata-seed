@@ -1,0 +1,5 @@
+from,to,type,entityName,defaultValue
+code,code,DIRECT,,
+name,name,DIRECT,,
+level,level,TO_OBJECT_BY_CODE,GeographicLevel,
+parent,parent,TO_OBJECT_BY_CODE,GeographicZone,

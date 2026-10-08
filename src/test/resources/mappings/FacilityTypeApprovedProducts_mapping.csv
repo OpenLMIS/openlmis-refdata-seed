@@ -1,0 +1,7 @@
+from,to,type,entityName,defaultValue
+facilityTypeCode,facilityType,TO_OBJECT_BY_CODE,FacilityType,
+orderableCode,orderable,TO_OBJECT_BY_PRODUCT_CODE,Orderable,
+programCode,program,TO_OBJECT_BY_CODE,Program,
+maxPeriodsOfStock,maxPeriodsOfStock,DIRECT,,
+minPeriodsOfStock,minPeriodsOfStock,DIRECT,,
+emergencyOrderPoint,emergencyOrderPoint,DIRECT,,

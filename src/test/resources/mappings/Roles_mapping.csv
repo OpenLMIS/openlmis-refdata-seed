@@ -1,0 +1,4 @@
+from,to,type,entityName,defaultValue
+name,name,DIRECT,,
+description,description,DIRECT,,
+rights,rights,TO_ARRAY_BY_NAME,Right,

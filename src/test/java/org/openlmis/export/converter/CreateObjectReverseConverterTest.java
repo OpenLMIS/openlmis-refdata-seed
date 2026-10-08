@@ -70,6 +70,16 @@ public class CreateObjectReverseConverterTest {
   }
 
   @Test
+  public void shouldSkipWhenFieldAbsent() {
+    Mapping mapping = new Mapping(DISPENSABLE, DISPENSABLE, TO_OBJECT, "", "");
+
+    Map<String, String> row = new LinkedHashMap<>();
+    converter.deconvert(Json.createObjectBuilder().build(), mapping, row);
+
+    assertThat(row.isEmpty(), is(true));
+  }
+
+  @Test
   public void shouldSkipWhenValueIsNotAnObject() {
     final JsonObject source = Json.createObjectBuilder().add(DISPENSABLE, "scalar").build();
     Mapping mapping = new Mapping(DISPENSABLE, DISPENSABLE, TO_OBJECT, "", "");
