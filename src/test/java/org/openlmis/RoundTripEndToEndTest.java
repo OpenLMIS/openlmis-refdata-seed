@@ -15,7 +15,10 @@
 
 package org.openlmis;
 
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -25,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -32,7 +36,6 @@ import java.util.List;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,10 +51,21 @@ import org.springframework.test.web.client.ExpectedCount;
 public class RoundTripEndToEndTest extends AbstractEndToEndTest {
 
   private static final String MAPPING = "Programs_mapping.csv";
-  private static final String PROGRAM = "[{\"id\":\"prog-1\",\"code\":\"MEG\","
+  private static final String MEG = "{\"id\":\"prog-1\",\"code\":\"MEG\","
       + "\"name\":\"Autres MEG\",\"description\":\"Autres Medicaments\","
       + "\"active\":true,\"periodsSkippable\":true,\"showNonFullSupplyTab\":false,"
-      + "\"enableDatePhysicalStockCountCompleted\":false,\"skipAuthorization\":false}]";
+      + "\"enableDatePhysicalStockCountCompleted\":false,\"skipAuthorization\":false}";
+  private static final String VIH = "{\"id\":\"prog-2\",\"code\":\"VIH\","
+      + "\"name\":\"Programme VIH\",\"description\":\"Antiretroviraux\","
+      + "\"active\":false,\"periodsSkippable\":false,\"showNonFullSupplyTab\":true,"
+      + "\"enableDatePhysicalStockCountCompleted\":true,\"skipAuthorization\":true}";
+  private static final String MEG_WITHOUT_DESCRIPTION = "{\"id\":\"prog-1\",\"code\":\"MEG\","
+      + "\"name\":\"Autres MEG\","
+      + "\"active\":true,\"periodsSkippable\":true,\"showNonFullSupplyTab\":false,"
+      + "\"enableDatePhysicalStockCountCompleted\":false,\"skipAuthorization\":false}";
+  private static final String PROGRAM = "[" + MEG + "]";
+  private static final String TWO_PROGRAMS = "[" + MEG + "," + VIH + "]";
+  private static final String CODE = "code";
 
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
@@ -89,37 +103,55 @@ public class RoundTripEndToEndTest extends AbstractEndToEndTest {
 
     JsonObject seeded = seedBackWhatWasExported();
 
-    assertThat(seeded.getString("code"), is("MEG"));
+    assertThat(seeded.getString(CODE), is("MEG"));
     assertThat(seeded.getString("name"), is("Autres MEG"));
     assertThat(seeded.getString("description"), is("Autres Medicaments"));
-    // the one column whose CSV name differs from its JSON name
+    assertThat(seeded.getString("active"), is("true"));
     assertThat(seeded.getString("periodsSkippable"), is("true"));
+    assertThat(seeded.getString("showNonFullSupplyTab"), is("false"));
+    assertThat(seeded.getString("enableDatePhysicalStockCountCompleted"), is("false"));
+    assertThat(seeded.getString("skipAuthorization"), is("false"));
   }
 
   @Test
-  public void shouldKeepEveryMappedColumnThroughTheRoundTrip()
+  public void shouldKeepEveryMappedColumnThroughTheRoundTripIncludingOneTheApiLeftOut()
       throws IOException, URISyntaxException {
-    givenApiReturns(PROGRAM);
+    givenApiReturns("[" + MEG_WITHOUT_DESCRIPTION + "]");
     exporter.exportData();
+
+    assertThat(exportedRow(), is("MEG,Autres MEG,,True,True,False,False,False"));
 
     JsonObject seeded = seedBackWhatWasExported();
 
-    assertThat(seeded.keySet().toString(),
-        is("[code, name, description, active, periodsSkippable, showNonFullSupplyTab, "
-            + "enableDatePhysicalStockCountCompleted, skipAuthorization]"));
+    assertThat(seeded.keySet(), containsInAnyOrder(CODE, "name", "description", "active",
+        "periodsSkippable", "showNonFullSupplyTab", "enableDatePhysicalStockCountCompleted",
+        "skipAuthorization"));
+    assertThat(seeded.getString("description"), is(""));
   }
 
   @Test
   public void shouldNotInventOrDropRowsOnTheWayBack() throws IOException, URISyntaxException {
-    givenApiReturns(PROGRAM);
+    givenApiReturns(TWO_PROGRAMS);
     exporter.exportData();
 
-    seedBackWhatWasExported();
+    List<JsonObject> seeded = seedBackWhatWasExported(2);
 
-    assertThat(sentBodies.size(), is(1));
+    assertThat(seeded.size(), is(2));
+    assertThat(asList(seeded.get(0).getString(CODE), seeded.get(1).getString(CODE)),
+        containsInAnyOrder("MEG", "VIH"));
+  }
+
+  private String exportedRow() throws IOException {
+    return new String(Files.readAllBytes(new File(exported, "Programs.csv").toPath()),
+        StandardCharsets.UTF_8).replace("\uFEFF", "").replace("\r\n", "\n").split("\n")[1];
   }
 
   private JsonObject seedBackWhatWasExported() throws IOException, URISyntaxException {
+    return seedBackWhatWasExported(1).get(0);
+  }
+
+  private List<JsonObject> seedBackWhatWasExported(int expectedCreates)
+      throws IOException, URISyntaxException {
     File source = new File(getClass().getResource("/mappings").toURI());
     Files.copy(new File(source, MAPPING).toPath(),
         new File(exported, MAPPING).toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -130,7 +162,8 @@ public class RoundTripEndToEndTest extends AbstractEndToEndTest {
         : context.getBeansOfType(BaseCommunicationService.class).values()) {
       service.invalidateCache();
     }
-    server.expect(ExpectedCount.once(), requestTo(HOST + "/api/programs?access_token=token"))
+    server.expect(ExpectedCount.times(expectedCreates),
+        requestTo(HOST + "/api/programs?access_token=token"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(request -> {
           sentBodies.add(request.getBody().toString());
@@ -141,13 +174,17 @@ public class RoundTripEndToEndTest extends AbstractEndToEndTest {
     seeder.seedData();
     server.verify();
 
-    try (JsonReader reader = Json.createReader(new StringReader(sentBodies.get(0)))) {
-      return reader.readObject();
+    List<JsonObject> seeded = new ArrayList<>();
+    for (String body : sentBodies) {
+      try (JsonReader reader = Json.createReader(new StringReader(body))) {
+        seeded.add(reader.readObject());
+      }
     }
+    return seeded;
   }
 
   private void givenApiReturns(String body) {
-    server.expect(ExpectedCount.manyTimes(), requestTo(Matchers.startsWith(HOST)))
+    server.expect(ExpectedCount.manyTimes(), requestTo(startsWith(HOST)))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
   }

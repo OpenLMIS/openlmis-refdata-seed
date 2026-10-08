@@ -15,9 +15,11 @@
 
 package org.openlmis.upload;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -26,7 +28,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
 import java.net.URI;
+import java.util.Collections;
+import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -41,7 +46,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.OngoingStubbing;
 import org.openlmis.Configuration;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -56,8 +60,13 @@ public class BaseCommunicationServiceTest {
   private static final String HOST = "http://localhost";
   private static final String TOKEN = "token";
   private static final String PROGRAMS = "[{\"code\":\"MEG\",\"name\":\"Autres MEG\"}]";
+  private static final String TWO_PROGRAMS = "[{\"code\":\"MEG\",\"name\":\"Autres MEG\"},"
+      + "{\"code\":\"VIH\",\"name\":\"Programme VIH\"}]";
   private static final String CODE = "code";
+  private static final String NAME = "name";
   private static final String MEG = "MEG";
+  private static final String VIH = "VIH";
+  private static final String VIH_NAME = "Programme VIH";
   private static final String ID = "abc";
 
   @Rule
@@ -85,10 +94,13 @@ public class BaseCommunicationServiceTest {
   }
 
   @Test
-  public void shouldReturnAnArrayResponseAsIs() {
+  public void shouldReturnAPlainArrayResponseWithoutUnwrapping() {
     givenResponses(PROGRAMS);
 
-    assertThat(service.findAll().size(), is(1));
+    JsonArray all = service.findAll();
+
+    assertThat(all.size(), is(1));
+    assertThat(all.getJsonObject(0).getString(CODE), is(MEG));
   }
 
   @Test
@@ -100,7 +112,25 @@ public class BaseCommunicationServiceTest {
 
     assertThat(all.size(), is(3));
     assertThat(all.getJsonObject(2).getString(CODE), is("CAN"));
-    verify(restTemplate, times(3)).getForEntity(any(URI.class), eq(String.class));
+
+    ArgumentCaptor<URI> uris = ArgumentCaptor.forClass(URI.class);
+    verify(restTemplate, times(3)).getForEntity(uris.capture(), eq(String.class));
+    assertThat(uris.getAllValues().get(0).getQuery(), not(containsString("page=")));
+    assertThat(uris.getAllValues().get(1).getQuery(), containsString("page=1"));
+    assertThat(uris.getAllValues().get(2).getQuery(), containsString("page=2"));
+  }
+
+  @Test
+  public void shouldAppendTheResourceUrlAndCarryTheCallersQueryParameters() {
+    givenResponses(PROGRAMS);
+
+    service.findAll("/full", RequestParameters.init().set("size", 5000000));
+
+    ArgumentCaptor<URI> uri = ArgumentCaptor.forClass(URI.class);
+    verify(restTemplate).getForEntity(uri.capture(), eq(String.class));
+    assertThat(uri.getValue().toString(), startsWith(HOST + "/api/programs/full?"));
+    assertThat(uri.getValue().getQuery(), containsString("size=5000000"));
+    assertThat(uri.getValue().getQuery(), containsString("access_token=token"));
   }
 
   @Test
@@ -117,25 +147,14 @@ public class BaseCommunicationServiceTest {
   }
 
   @Test
-  public void shouldExportTheSameResourcesItSeedsFrom() {
-    givenResponses(PROGRAMS);
+  public void shouldFindByAFieldIgnoringCaseLookingPastTheFirstResource() {
+    givenResponses(TWO_PROGRAMS);
 
-    assertThat(service.findAllForExport(), is(service.findAll()));
-  }
-
-  @Test
-  public void shouldFindByAFieldIgnoringCase() {
-    givenResponses(PROGRAMS);
-
-    assertThat(service.findByCode("meg").getString(CODE), is(MEG));
-    assertThat(service.findByName("autres meg"), is(notNullValue()));
-  }
-
-  @Test
-  public void shouldReturnNothingWhenNoResourceMatches() {
-    givenResponses(PROGRAMS);
-
-    assertThat(service.findByCode("NOPE"), is(nullValue()));
+    assertThat(service.findByCode("vih").getString(NAME), is(VIH_NAME));
+    assertThat(service.findByName("programme vih").getString(CODE), is(VIH));
+    assertThat(service.findByCode("meg").getString(NAME), is("Autres MEG"));
+    assertThat(service.findByName("autres meg").getString(CODE), is(MEG));
+    assertThat(service.findByCode("Autres MEG"), is(nullValue()));
   }
 
   @Test
@@ -147,7 +166,7 @@ public class BaseCommunicationServiceTest {
   }
 
   @Test
-  public void shouldFailOnAnyOtherErrorStatus() {
+  public void shouldFailOnAnErrorStatusOtherThanNotFound() {
     when(restTemplate.getForEntity(any(URI.class), eq(String.class)))
         .thenThrow(new HttpClientErrorException(HttpStatus.FORBIDDEN));
 
@@ -210,17 +229,55 @@ public class BaseCommunicationServiceTest {
   }
 
   @Test
-  public void shouldUpdateEveryExistingResourceUnlessAServiceSaysOtherwise() {
-    assertThat(service.isUpdateNeeded(null, null), is(true));
+  public void shouldDeleteTheResourceWithThatIdAndDropTheStaleCache() {
+    givenResponses(PROGRAMS);
+    service.findAll();
+
+    assertThat(service.deleteResource(ID), is(true));
+
+    ArgumentCaptor<URI> uri = ArgumentCaptor.forClass(URI.class);
+    verify(restTemplate).delete(uri.capture());
+    assertThat(uri.getValue().toString(), is(HOST + "/api/programs/abc?access_token=token"));
+
+    service.findAll();
+    verify(restTemplate, times(2)).getForEntity(any(URI.class), eq(String.class));
   }
 
   @Test
-  public void shouldCreateWithPostAndAddressASingleResourceByItsId() {
-    assertThat(service.createMethod(), is(HttpMethod.POST));
-    assertThat(service.updateUrl("http://host/api/programs", ID),
-        is("http://host/api/programs/abc"));
-    assertThat(service.deleteUrl("http://host/api/programs", ID),
-        is("http://host/api/programs/abc"));
+  public void shouldReportAFailedDeleteRatherThanThrow() {
+    doThrow(new ResourceAccessException("refused")).when(restTemplate).delete(any(URI.class));
+
+    assertThat(service.deleteResource(ID), is(false));
+  }
+
+  @Test
+  public void shouldPostTheSearchParametersToTheSearchEndpoint() {
+    Map<String, Object> searchParameters =
+        ImmutableMap.of("facilityTypeCodes", Collections.singletonList("warehouse"));
+    when(restTemplate.postForEntity(any(URI.class), eq(searchParameters), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(PROGRAMS, HttpStatus.OK));
+
+    JsonArray found = service.search(searchParameters);
+
+    assertThat(found.size(), is(1));
+    assertThat(found.getJsonObject(0).getString(CODE), is(MEG));
+
+    ArgumentCaptor<URI> uri = ArgumentCaptor.forClass(URI.class);
+    verify(restTemplate).postForEntity(uri.capture(), eq(searchParameters), eq(String.class));
+    assertThat(uri.getValue().toString(),
+        is(HOST + "/api/programs/search?access_token=token"));
+  }
+
+  @Test
+  public void shouldTakeTheSearchResultsOutOfAPagedResponse() {
+    Map<String, Object> searchParameters = ImmutableMap.of("code", MEG);
+    when(restTemplate.postForEntity(any(URI.class), eq(searchParameters), eq(String.class)))
+        .thenReturn(new ResponseEntity<>(page(PROGRAMS, 1), HttpStatus.OK));
+
+    JsonArray found = service.search(searchParameters);
+
+    assertThat(found.size(), is(1));
+    assertThat(found.getJsonObject(0).getString(CODE), is(MEG));
   }
 
   private void givenResponses(String first, String... rest) {
@@ -256,18 +313,6 @@ public class BaseCommunicationServiceTest {
 
     boolean updateWithoutId(JsonObject object, String id) {
       return updateResource(object, id, false);
-    }
-
-    HttpMethod createMethod() {
-      return getCreateMethod();
-    }
-
-    String updateUrl(String base, String id) {
-      return buildUpdateUrl(base, id);
-    }
-
-    String deleteUrl(String base, String id) {
-      return buildDeleteUrl(base, id);
     }
   }
 }

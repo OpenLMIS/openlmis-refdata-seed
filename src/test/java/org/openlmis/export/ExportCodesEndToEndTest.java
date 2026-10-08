@@ -15,6 +15,8 @@
 
 package org.openlmis.export;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
@@ -26,6 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,14 +42,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.ExpectedCount;
 
-/** Code reuse and allocation with the original master data attached as the baseline. */
+@SuppressWarnings("PMD.TooManyMethods")
 public class ExportCodesEndToEndTest extends AbstractEndToEndTest {
 
   private static final String CHILD = "RequisitionGroupProgramSchedules.csv";
   private static final String PARENT = "RequisitionGroups.csv";
+  private static final String ROLE_ASSIGNMENTS = "RoleAssignments.csv";
+  private static final String STORE_MANAGER = "STORE_MANAGER";
   private static final String GROUPS_JSON = "[{\"code\":\"RG1\","
       + "\"requisitionGroupProgramSchedules\":[{\"directDelivery\":true}]}]";
+  private static final String TWO_GROUPS_SHARING_A_SCHEDULE = "["
+      + "{\"code\":\"RG1\","
+      + "\"requisitionGroupProgramSchedules\":[{\"directDelivery\":true}]},"
+      + "{\"code\":\"RG2\","
+      + "\"requisitionGroupProgramSchedules\":[{\"directDelivery\":true}]}]";
+  private static final String USERS_JSON = "["
+      + "{\"id\":\"u-1\",\"userId\":\"u-1\",\"username\":\"u1\",\"code\":\"RG1\","
+      + "\"roleName\":\"" + STORE_MANAGER + "\","
+      + "\"requisitionGroupProgramSchedules\":[{\"directDelivery\":true}]},"
+      + "{\"id\":\"u-2\",\"userId\":\"u-1\",\"username\":\"u2\",\"code\":\"RG1\","
+      + "\"roleName\":\"STOCK_MANAGER\","
+      + "\"requisitionGroupProgramSchedules\":[{\"directDelivery\":true}]}]";
   private static final String BASELINE_HEADER = "code,directDelivery\n";
+  private static final String ORIGINAL = "original";
 
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
@@ -55,9 +74,6 @@ public class ExportCodesEndToEndTest extends AbstractEndToEndTest {
 
   @Autowired
   private MasterDataComparisonReporter reporter;
-
-  private File outputDirectory;
-  private File mappings;
 
   @Before
   public void setUp() throws IOException {
@@ -77,8 +93,7 @@ public class ExportCodesEndToEndTest extends AbstractEndToEndTest {
     configuration.remove("exportOriginalMasterDataDirectory");
 
     givenAnApiThatIsStubbed();
-    server.expect(ExpectedCount.manyTimes(), requestTo(startsWith(HOST)))
-        .andRespond(withSuccess(GROUPS_JSON, MediaType.APPLICATION_JSON));
+    givenApiReturns(GROUPS_JSON);
   }
 
   @Test
@@ -111,43 +126,91 @@ public class ExportCodesEndToEndTest extends AbstractEndToEndTest {
   }
 
   @Test
-  public void shouldGenerateACodeWhenTheOriginalCodesAreNotASequence() throws IOException {
-    givenOriginalMasterData("GR-PS-MEG-A,False\n");
-
-    exporter.exportData();
-
-    assertThat(childCode(), startsWith("GEN_"));
-  }
-
-  @Test
-  public void shouldReportHowTheExportComparesWithTheOriginalMasterData() throws IOException {
+  public void shouldReportTheRowThatReusedItsOriginalCodeAsUnchanged() throws IOException {
     givenOriginalMasterData("RGPS-1,True\n");
 
     exporter.exportData();
 
-    assertThat(reporter.report(), containsString("RequisitionGroupProgramSchedules.csv"));
+    assertThat(lineFor(CHILD), is(CHILD + " 1 0 0 0"));
+  }
+
+  @Test
+  public void shouldWriteOneChildRowForTheRowSeveralParentsAllProduce() throws IOException {
+    server.reset();
+    givenApiReturns(TWO_GROUPS_SHARING_A_SCHEDULE);
+    givenOriginalMasterData("RGPS-1,True\n");
+
+    exporter.exportData();
+
+    assertThat(codesIn(CHILD), is(singletonList("RGPS-1")));
+    assertThat(dataRowsIn(PARENT), is(asList("RG1,[RGPS-1]", "RG2,[RGPS-1]")));
+  }
+
+  @Test
+  public void shouldResolveTheCodesOfEachChildFileAgainstThatFileAlone() throws IOException {
+    givenUsersAreExportedToo();
+    givenOriginalMasterData(CHILD, BASELINE_HEADER, "GR-PS-A,False\n");
+    givenOriginalMasterData(ROLE_ASSIGNMENTS, "code,roleName\n", "RA-1," + STORE_MANAGER + "\n");
+
+    exporter.exportData();
+
+    assertThat(childCode(), startsWith("GEN_"));
+    assertThat(codesIn(ROLE_ASSIGNMENTS), is(asList("RA-1", "RA-2")));
+  }
+
+  private void givenUsersAreExportedToo() throws IOException {
+    writeMapping(SourceFile.USERS, "username,username,DIRECT,,\n"
+        + "roleAssignments,roleAssignments,TO_ARRAY_FROM_FILE_BY_CODE," + ROLE_ASSIGNMENTS + ",\n");
+    Files.write(new File(mappings, "RoleAssignments_mapping.csv").toPath(),
+        ("from,to,type,entityName,defaultValue\ncode,,SKIP,,\n"
+            + "roleName,roleName,DIRECT,,\n").getBytes(StandardCharsets.UTF_8));
+    server.reset();
+    givenApiReturns(USERS_JSON);
+  }
+
+  private void givenApiReturns(String body) {
+    server.expect(ExpectedCount.manyTimes(), requestTo(startsWith(HOST)))
+        .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
   }
 
   private void givenOriginalMasterData(String childRows) throws IOException {
-    File baseline = folder.newFolder("original");
-    Files.write(new File(baseline, CHILD).toPath(),
-        (BASELINE_HEADER + childRows).getBytes(StandardCharsets.UTF_8));
+    givenOriginalMasterData(CHILD, BASELINE_HEADER, childRows);
+  }
+
+  private void givenOriginalMasterData(String fileName, String header, String rows)
+      throws IOException {
+    File baseline = new File(folder.getRoot(), ORIGINAL);
+    assertThat("could not create " + baseline, baseline.isDirectory() || baseline.mkdir(),
+        is(true));
+    Files.write(new File(baseline, fileName).toPath(),
+        (header + rows).getBytes(StandardCharsets.UTF_8));
     configuration.setProperty("exportOriginalMasterDataDirectory", baseline.getAbsolutePath());
   }
 
-  private void writeMapping(SourceFile source, String body) throws IOException {
-    Files.write(new File(mappings, source.getName() + "_mapping.csv").toPath(),
-        ("from,to,type,entityName,defaultValue\n" + body).getBytes(StandardCharsets.UTF_8));
+  private String lineFor(String fileName) {
+    for (String line : reporter.report().split(System.lineSeparator())) {
+      if (line.startsWith(fileName)) {
+        return line.trim().replaceAll(" +", " ");
+      }
+    }
+    return null;
   }
 
   private String childCode() throws IOException {
-    return read(CHILD).split("\n")[1].split(",")[0].trim();
+    return codesIn(CHILD).get(0);
   }
 
-  private String read(String fileName) throws IOException {
-    File file = new File(outputDirectory, fileName);
-    assertThat(fileName + " was not written", file.exists(), is(true));
-    return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
-        .replace("\r\n", "\n");
+  private List<String> codesIn(String fileName) throws IOException {
+    List<String> codes = new ArrayList<>();
+    for (String line : dataRowsIn(fileName)) {
+      codes.add(line.split(",")[0].trim());
+    }
+    return codes;
   }
+
+  private List<String> dataRowsIn(String fileName) throws IOException {
+    String[] lines = read(fileName).split("\n");
+    return new ArrayList<>(asList(lines).subList(1, lines.length));
+  }
+
 }

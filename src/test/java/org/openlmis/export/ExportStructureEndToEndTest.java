@@ -16,7 +16,11 @@
 package org.openlmis.export;
 
 import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -27,9 +31,10 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,8 +45,37 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.ExpectedCount;
 
-/** Asserts a full export against the real mapping files produces every file, with every column. */
+@SuppressWarnings("PMD.TooManyMethods")
 public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
+
+  private static final String SCHEDULES = "RequisitionGroupProgramSchedules.csv";
+
+  private static final List<String> EXPECTED_ENDPOINTS = asList(
+      "/api/facilities/full",
+      "/api/facilityOperators",
+      "/api/facilityTypeApprovedProducts",
+      "/api/facilityTypes",
+      "/api/geographicLevels",
+      "/api/geographicZones",
+      "/api/orderableDisplayCategories",
+      "/api/orderables",
+      "/api/organizations",
+      "/api/processingPeriods",
+      "/api/processingSchedules",
+      "/api/programs",
+      "/api/requisitionGroups",
+      "/api/roleAssignments",
+      "/api/roles",
+      "/api/stockCardLineItemReasons",
+      "/api/supervisoryNodes",
+      "/api/supplyLines",
+      "/api/tradeItems",
+      "/api/userContactDetails",
+      "/api/users",
+      "/api/users/auth/batch",
+      "/api/validDestinations",
+      "/api/validReasons",
+      "/api/validSources");
 
   private static final Map<String, String> EXPECTED = ImmutableMap.<String, String>builder()
       .put("AuthUsers.csv", "username,password,role,enabled,email")
@@ -73,7 +107,7 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
           "code,name,description,active,periodSkippable,"
               + "showNonFullSupplyTab,enableDatePhysicalStockCountCompleted,"
               + "skipAuthorization")
-      .put("RequisitionGroupProgramSchedules.csv",
+      .put(SCHEDULES,
           "code,program,processingSchedule,directDelivery,dropOffFacility")
       .put("RequisitionGroups.csv",
           "code,name,description,supervisoryNode,memberFacilities,"
@@ -96,52 +130,68 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
               + "geoLevelAffinity")
       .build();
 
+  private static final String DIRECT_DELIVERY_SCHEDULE = "GEN_64a110aa";
+  private static final String PICKED_UP_SCHEDULE = "GEN_16a9b71f";
+
+  // RequisitionGroupProgramSchedules holds two rows so the array column really joins values
   private static final Map<String, String> EXPECTED_ROW =
       ImmutableMap.<String, String>builder()
       .put("AuthUsers.csv", "u1,,,,a@b.test")
       .put("EmailDetails.csv", "a@b.test,")
-      .put("Facilities.csv", "C1,N1,D1,,,,,,,,,,,[PRG]")
+      .put("Facilities.csv", "C1,N1,D1,,FT-WH,OP1,region:Kinshasa,,2026-01-01,,,,,[PRG]")
       .put("FacilityOperators.csv", "C1,N1,D1,")
-      .put("FacilityTypeApprovedProducts.csv", ",,,,,")
+      .put("FacilityTypeApprovedProducts.csv", "FT1,ORD1,PRG1,,,")
       .put("FacilityTypes.csv", "C1,N1,D1,,")
       .put("GeographicLevels.csv", "C1,N1,")
       .put("GeographicZones.csv", "C1,N1,,")
       .put("Nodes.csv", "C1,True")
       .put("OrderableDisplayCategories.csv", "C1,,")
-      .put("Orderables.csv", "P1,D1,,,,,")
+      .put("Orderables.csv", "P1,D1,,,,,dispensingUnit:each")
       .put("OrganizationNodes.csv", "N1,True")
       .put("Organizations.csv", "N1")
       .put("ProcessingPeriods.csv", "N1,,,D1,")
       .put("ProcessingSchedules.csv", "C1,N1,D1")
       .put("ProgramOrderables.csv", "P1,,,,True,,,")
       .put("Programs.csv", "C1,N1,D1,,,,,")
-      .put("RequisitionGroupProgramSchedules.csv", "GEN_64a110aa,,,True,")
-      .put("RequisitionGroups.csv", "C1,N1,D1,,,[GEN_64a110aa]")
+      .put(SCHEDULES, PICKED_UP_SCHEDULE + ",,,False,")
+      .put("RequisitionGroups.csv",
+          "C1,N1,D1,,,\"[" + DIRECT_DELIVERY_SCHEDULE + "," + PICKED_UP_SCHEDULE
+              + "]\"")
       .put("RoleAssignments.csv", "GEN_f62,,,,")
       .put("Roles.csv", "N1,D1,[N1]")
       .put("StockCardLineItemReasons.csv", "N1,,,")
       .put("SupervisoryNodes.csv", "C1,,N1,D1,,")
-      .put("SupplyLines.csv", ",D1,,")
-      .put("SupportedPrograms.csv", "C1,PRG,True,,")
+      .put("SupplyLines.csv", ",D1,PRG1,")
+      .put("SupportedPrograms.csv", "C1,PRG,True,2026-02-02,")
       .put("TradeItems.csv", "P1,")
       .put("UserContactDetails.csv", ",,,a@b.test")
       .put("Users.csv", "u1,,,,,[GEN_f62]")
       .put("ValidDestinations.csv", ",,C1,N1,")
-      .put("ValidReasons.csv", ",,,")
+      .put("ValidReasons.csv", "PRG1,FT1,R1,")
       .put("ValidSources.csv", ",,C1,N1,")
       .build();
 
-  /** Carries every field the mappings read, including what makes the child files appear. */
+  // the reference objects, flat objects and dates are what make TO_OBJECT_BY_*, TO_OBJECT
+  // and DIRECT_DATE produce a value at all; without them whole files export as blank rows
   private static final String ENTITY_JSON = "[{"
       + "\"id\":\"the-id\","
       + "\"code\":\"C1\",\"name\":\"N1\",\"description\":\"D1\","
       + "\"productCode\":\"P1\",\"username\":\"u1\",\"email\":\"a@b.test\","
       + "\"userId\":\"the-id\",\"roleId\":\"role-1\","
-      + "\"supportedPrograms\":[{\"code\":\"PRG\",\"supportActive\":true}],"
+      + "\"type\":{\"code\":\"FT-WH\"},\"operator\":{\"code\":\"OP1\"},"
+      + "\"facilityType\":{\"code\":\"FT1\"},"
+      + "\"orderable\":{\"productCode\":\"ORD1\"},"
+      + "\"program\":{\"code\":\"PRG1\"},\"reason\":{\"name\":\"R1\"},"
+      + "\"goLiveDate\":\"2026-01-01\","
+      + "\"extraData\":{\"region\":\"Kinshasa\"},"
+      + "\"dispensable\":{\"dispensingUnit\":\"each\"},"
+      + "\"supportedPrograms\":[{\"code\":\"PRG\",\"supportActive\":true,"
+      + "\"supportStartDate\":\"2026-02-02\"}],"
       + "\"programs\":[{\"programId\":\"prog-1\",\"active\":true}],"
       + "\"identifiers\":{\"tradeItem\":\"trade-1\"},"
       + "\"emailDetails\":{\"email\":\"a@b.test\"},"
-      + "\"requisitionGroupProgramSchedules\":[{\"directDelivery\":true}],"
+      + "\"requisitionGroupProgramSchedules\":[{\"directDelivery\":true},"
+      + "{\"directDelivery\":false}],"
       + "\"roleAssignments\":[{\"userId\":\"the-id\",\"roleId\":\"role-1\"}],"
       + "\"node\":{\"referenceId\":\"the-id\",\"refDataFacility\":true},"
       + "\"rights\":[{\"name\":\"N1\"}]"
@@ -153,7 +203,7 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
   @Autowired
   private DataExporter exporter;
 
-  private File outputDirectory;
+  private final List<String> requestedUris = new ArrayList<>();
 
   @Before
   public void setUp() throws IOException, URISyntaxException {
@@ -166,8 +216,11 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
     configuration.remove("exportOriginalMasterDataDirectory");
 
     givenAnApiThatIsStubbed();
-    server.expect(ExpectedCount.manyTimes(), requestTo(Matchers.startsWith(HOST)))
-        .andRespond(withSuccess(ENTITY_JSON, MediaType.APPLICATION_JSON));
+    server.expect(ExpectedCount.manyTimes(), requestTo(startsWith(HOST)))
+        .andRespond(request -> {
+          requestedUris.add(request.getURI().toString());
+          return withSuccess(ENTITY_JSON, MediaType.APPLICATION_JSON).createResponse(request);
+        });
   }
 
   @Test
@@ -179,7 +232,7 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
   }
 
   @Test
-  public void shouldGiveEveryFileTheColumnsTheSeededMasterDataExpects() throws IOException {
+  public void shouldGiveEveryFileItsExpectedColumns() throws IOException {
     exporter.exportData();
 
     for (Map.Entry<String, String> entry : EXPECTED.entrySet()) {
@@ -190,14 +243,19 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
   }
 
   @Test
-  public void shouldWriteAtLeastOneRowInEveryFile() throws IOException {
+  public void shouldWriteOneRowPerEntityAndOneChildRowPerArrayMember()
+      throws IOException {
     exporter.exportData();
 
     for (String fileName : EXPECTED.keySet()) {
       File file = new File(outputDirectory, fileName);
-      assertThat(fileName + " has no data rows",
-          Files.readAllLines(file.toPath()).size() > 1, is(true));
+      int expected = SCHEDULES.equals(fileName) ? 2 : 1;
+      assertThat(fileName + " wrote the wrong number of rows",
+          Files.readAllLines(file.toPath()).size() - 1, is(expected));
     }
+
+    assertThat(joinColumnOf(SCHEDULES),
+        containsInAnyOrder(DIRECT_DELIVERY_SCHEDULE, PICKED_UP_SCHEDULE));
   }
 
   @Test
@@ -211,11 +269,40 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
   }
 
   @Test
-  public void shouldWriteArrayColumnsAsABracketedList() throws IOException {
+  public void shouldFetchEachEntityFromItsExpectedEndpoint() {
     exporter.exportData();
 
-    assertThat(row(new File(outputDirectory, "Roles.csv")), Matchers.containsString("[N1]"));
-    assertThat(row(new File(outputDirectory, "Facilities.csv")), Matchers.containsString("[PRG]"));
+    assertThat(pathsRequested().toString(), is(new TreeSet<>(EXPECTED_ENDPOINTS).toString()));
+    assertThat(firstRequestUnder("/api/roleAssignments"),
+        both(containsString("page=0"))
+            .and(containsString("size=5000000")));
+  }
+
+  private TreeSet<String> pathsRequested() {
+    TreeSet<String> paths = new TreeSet<>();
+    for (String uri : requestedUris) {
+      String path = uri.substring(HOST.length());
+      paths.add(path.contains("?") ? path.substring(0, path.indexOf('?')) : path);
+    }
+    return paths;
+  }
+
+  private String firstRequestUnder(String path) {
+    for (String uri : requestedUris) {
+      if (uri.startsWith(HOST + path)) {
+        return uri;
+      }
+    }
+    return null;
+  }
+
+  private List<String> joinColumnOf(String fileName) throws IOException {
+    List<String> lines = Files.readAllLines(new File(outputDirectory, fileName).toPath());
+    List<String> codes = new ArrayList<>();
+    for (String line : lines.subList(1, lines.size())) {
+      codes.add(line.split(",")[0]);
+    }
+    return codes;
   }
 
   private String row(File file) throws IOException {

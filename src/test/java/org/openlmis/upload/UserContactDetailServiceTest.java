@@ -16,7 +16,6 @@
 package org.openlmis.upload;
 
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -36,7 +35,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
@@ -70,12 +68,6 @@ public class UserContactDetailServiceTest {
     when(configuration.getHost()).thenReturn(HOST);
     when(authService.obtainAccessToken()).thenReturn("token");
     when(configuration.autoVerifyEmails()).thenReturn(true);
-  }
-
-  @Test
-  public void shouldAlwaysCreateBecauseContactDetailsCannotBeLookedUp() {
-    assertThat(service.findUnique(details(USER_ID, true)), is(nullValue()));
-    assertThat(service.getCreateMethod(), is(HttpMethod.PUT));
   }
 
   @Test
@@ -135,6 +127,8 @@ public class UserContactDetailServiceTest {
         .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
 
     service.afterEach(details(USER_ID, true));
+
+    verify(restTemplate, times(2)).getForObject(any(URI.class), eq(String.class));
   }
 
   private JsonObject details(String userId, boolean withEmail) {

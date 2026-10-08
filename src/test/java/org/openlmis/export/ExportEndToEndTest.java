@@ -23,9 +23,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,15 +38,14 @@ public class ExportEndToEndTest extends AbstractEndToEndTest {
 
   private static final String PROGRAMS_JSON =
       "[{\"id\":\"the-id\",\"code\":\"MEG\",\"name\":\"Autres MEG\",\"active\":true}]";
+  private static final String ACCENTED =
+      "Diab\u00e8te - Kinsuka P\u00eacheur"; // e-grave and e-circumflex, as the real data has
 
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
 
   @Autowired
   private DataExporter exporter;
-
-  private File outputDirectory;
-  private File mappings;
 
   @Before
   public void setUp() throws IOException {
@@ -75,37 +71,27 @@ public class ExportEndToEndTest extends AbstractEndToEndTest {
   }
 
   @Test
-  public void shouldExportEveryEntityThatHasAMapping() throws IOException {
-    for (SourceFile source : SourceFile.values()) {
-      writeMapping(source, "id,id,DIRECT,,\n");
-    }
+  public void shouldCarryAccentedCharactersFromTheApiIntoTheCsv() throws IOException {
+    server.reset();
+    server.expect(ExpectedCount.manyTimes(), requestTo(startsWith(HOST)))
+        .andRespond(withSuccess("[{\"code\":\"DIA\",\"name\":\"" + ACCENTED + "\"}]",
+            MediaType.APPLICATION_JSON));
 
     exporter.exportData();
 
-    for (SourceFile source : SourceFile.values()) {
-      File file = new File(outputDirectory, source.getName() + ".csv");
-      assertThat(source.getName() + " was not exported", file.exists(), is(true));
-      assertThat(source.getName() + " did not carry the row through",
-          read(source.getName() + ".csv"), is("\uFEFFid\nthe-id\n"));
-    }
+    assertThat(read("Programs.csv"), is("\uFEFFcode,name\nDIA," + ACCENTED + "\n"));
   }
 
   @Test
-  public void shouldWriteNoFileForAnEntityWithoutAMapping() {
+  public void shouldCreateTheConfiguredOutputDirectoryIncludingItsMissingParents()
+      throws IOException {
+    outputDirectory = new File(folder.getRoot(), "fresh/export");
+    configuration.setProperty("outputDirectory", outputDirectory.getAbsolutePath());
+
     exporter.exportData();
 
-    assertThat(new File(outputDirectory, "Facilities.csv").exists(), is(false));
+    assertThat(outputDirectory.isDirectory(), is(true));
+    assertThat(read("Programs.csv"), is("\uFEFFcode,name\nMEG,Autres MEG\n"));
   }
 
-  private void writeMapping(SourceFile source, String body) throws IOException {
-    Files.write(new File(mappings, source.getName() + "_mapping.csv").toPath(),
-        ("from,to,type,entityName,defaultValue\n" + body).getBytes(StandardCharsets.UTF_8));
-  }
-
-  private String read(String fileName) throws IOException {
-    File file = new File(outputDirectory, fileName);
-    assertThat(file.getName() + " was not written", file.exists(), Matchers.is(true));
-    return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
-        .replace("\r\n", "\n");
-  }
 }

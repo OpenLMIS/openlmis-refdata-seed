@@ -15,15 +15,19 @@
 
 package org.openlmis;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import java.util.Map;
-import org.hamcrest.Matchers;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Collection;
 import org.junit.runner.RunWith;
 import org.openlmis.upload.AuthService;
 import org.openlmis.upload.BaseCommunicationService;
+import org.openlmis.utils.SourceFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -34,11 +38,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
@@ -79,22 +81,34 @@ public abstract class AbstractEndToEndTest {
   protected org.openlmis.Configuration configuration;
 
   protected MockRestServiceServer server;
+  protected File outputDirectory;
+  protected File mappings;
 
   protected void givenAnApiThatIsStubbed() {
     when(authService.obtainAccessToken()).thenReturn(TOKEN);
     configuration.setProperty("host", HOST);
 
-    RestTemplate restTemplate = new RestTemplate();
+    Collection<BaseCommunicationService> services =
+        context.getBeansOfType(BaseCommunicationService.class).values();
+
+    RestTemplate restTemplate = (RestTemplate) ReflectionTestUtils
+        .getField(services.iterator().next(), "restTemplate");
     server = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
-    for (Map.Entry<String, BaseCommunicationService> entry
-        : context.getBeansOfType(BaseCommunicationService.class).entrySet()) {
-      ReflectionTestUtils.setField(entry.getValue(), "restTemplate", restTemplate);
-      entry.getValue().invalidateCache();
+    for (BaseCommunicationService service : services) {
+      ReflectionTestUtils.setField(service, "restTemplate", restTemplate);
+      service.invalidateCache();
     }
   }
 
-  protected void givenEveryReadReturns(String body) {
-    server.expect(ExpectedCount.manyTimes(), requestTo(Matchers.startsWith(HOST)))
-        .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+  protected void writeMapping(SourceFile source, String body) throws IOException {
+    Files.write(new File(mappings, source.getName() + "_mapping.csv").toPath(),
+        ("from,to,type,entityName,defaultValue\n" + body).getBytes(StandardCharsets.UTF_8));
+  }
+
+  protected String read(String fileName) throws IOException {
+    File file = new File(outputDirectory, fileName);
+    assertThat(fileName + " was not written", file.exists(), is(true));
+    return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+        .replace("\r\n", "\n");
   }
 }

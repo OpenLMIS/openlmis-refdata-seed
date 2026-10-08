@@ -39,7 +39,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestOperations;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -108,8 +108,7 @@ public class AuthServiceTest {
 
   @Test
   public void shouldFailWithAClearMessageWhenTheCredentialsAreRejected() {
-    when(restTemplate.exchange(any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class),
-        eq(Object.class))).thenThrow(new ResourceAccessException("refused"));
+    givenTheAuthEndpointFailsWith(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
 
     expected.expect(AuthorizationException.class);
     expected.expectMessage("Cannot obtain access token");
@@ -117,10 +116,15 @@ public class AuthServiceTest {
     service.obtainAccessToken();
   }
 
+  private void givenTheAuthEndpointFailsWith(RuntimeException failure) {
+    when(restTemplate.exchange(any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class),
+        eq(Object.class))).thenThrow(failure);
+  }
+
   private void givenToken() {
     when(restTemplate.exchange(any(URI.class), eq(HttpMethod.POST), any(HttpEntity.class),
         eq(Object.class)))
         .thenReturn(new ResponseEntity<Object>(
-            ImmutableMap.of(AuthService.ACCESS_TOKEN, TOKEN), HttpStatus.OK));
+            ImmutableMap.of("access_token", TOKEN), HttpStatus.OK));
   }
 }

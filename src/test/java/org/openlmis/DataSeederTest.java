@@ -15,13 +15,16 @@
 
 package org.openlmis;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +37,7 @@ import javax.json.JsonObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -47,12 +51,15 @@ import org.openlmis.utils.AppHelper;
 import org.openlmis.utils.SourceFile;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("PMD.TooManyMethods")
 public class DataSeederTest {
 
   private static final SourceFile SOURCE = SourceFile.PROGRAMS;
   private static final String DIRECTORY = "/master-data";
   private static final String EXISTING_ID = "existing-id";
   private static final String CODE = "code";
+  private static final String MEG = "MEG";
+  private static final String VIH = "VIH";
 
   @Mock
   private Configuration configuration;
@@ -75,6 +82,12 @@ public class DataSeederTest {
   @Mock
   private BaseCommunicationService service;
 
+  @Mock
+  private BaseCommunicationService tradeItemService;
+
+  @Mock
+  private BaseCommunicationService orderableService;
+
   @InjectMocks
   private DataSeeder seeder;
 
@@ -96,7 +109,7 @@ public class DataSeederTest {
         eq(SOURCE))).thenReturn(true);
     when(appHelper.shouldProcess(any(SourceFile.class), anyList())).thenReturn(true);
     when(mappingConverter.getMappingForFile(any(File.class))).thenReturn(mappings);
-    when(reader.readFromFile(any(File.class))).thenReturn(singletonList(row()));
+    when(reader.readFromFile(any(File.class))).thenReturn(singletonList(row(MEG)));
     when(services.getService(any(SourceFile.class))).thenReturn(service);
     when(converter.convert(anyMapOf(String.class, String.class), eq(mappings)))
         .thenReturn(newObject);
@@ -159,7 +172,26 @@ public class DataSeederTest {
   }
 
   @Test
-  public void shouldSkipAnEntityWhoseInputOrMappingFileIsMissing() {
+  public void shouldRunBeforeOnceAheadOfEveryRowAndAfterEachOnEachOfThem() {
+    JsonObject second = Json.createObjectBuilder().add(CODE, VIH).build();
+    when(reader.readFromFile(any(File.class))).thenReturn(asList(row(MEG), row(VIH)));
+    when(converter.convert(eq(row(MEG)), eq(mappings))).thenReturn(newObject);
+    when(converter.convert(eq(row(VIH)), eq(mappings))).thenReturn(second);
+    when(service.findUnique(any(JsonObject.class))).thenReturn(null);
+
+    seeder.seedData();
+
+    InOrder order = inOrder(service);
+    order.verify(service).before();
+    order.verify(service).createResource(newObject.toString());
+    order.verify(service).afterEach(newObject);
+    order.verify(service).createResource(second.toString());
+    order.verify(service).afterEach(second);
+    verify(service, times(1)).before();
+  }
+
+  @Test
+  public void shouldSkipEveryEntityWhoseInputOrMappingFileIsMissing() {
     when(appHelper.inputAndMappingFileExist(any(File.class), any(File.class),
         any(SourceFile.class))).thenReturn(false);
 
@@ -179,9 +211,30 @@ public class DataSeederTest {
     verify(service, never()).before();
   }
 
-  private Map<String, String> row() {
+  @Test
+  public void shouldSeedTradeItemsBeforeOrderablesSoReferencesComeFirst() {
+    givenSeedable(SourceFile.TRADE_ITEMS, tradeItemService);
+    givenSeedable(SourceFile.ORDERABLES, orderableService);
+
+    seeder.seedData();
+
+    InOrder order = inOrder(tradeItemService, orderableService);
+    order.verify(tradeItemService).createResource(newObject.toString());
+    order.verify(orderableService).createResource(newObject.toString());
+  }
+
+  private void givenSeedable(SourceFile source, BaseCommunicationService forSource) {
+    when(appHelper.inputAndMappingFileExist(
+        eq(new File(source.getFullFileName(DIRECTORY))),
+        eq(new File(source.getFullMappingFileName(DIRECTORY))),
+        eq(source))).thenReturn(true);
+    when(services.getService(source)).thenReturn(forSource);
+    when(forSource.findUnique(newObject)).thenReturn(null);
+  }
+
+  private Map<String, String> row(String code) {
     Map<String, String> row = new LinkedHashMap<>();
-    row.put(CODE, "MEG");
+    row.put(CODE, code);
     return row;
   }
 }

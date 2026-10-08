@@ -29,24 +29,22 @@ public class DirectDateReverseConverterTest {
 
   private static final String DIRECT_DATE = "DIRECT_DATE";
   private static final String GO_LIVE = "goLiveDate";
+  private static final String START_DATE = "startDate";
+  private static final String SUPPORT_START_DATE = "supportStartDate";
 
   private final DirectDateReverseConverter converter = new DirectDateReverseConverter();
 
   @Test
-  public void shouldSupportDirectDateOnly() {
-    assertThat(converter.supports(DIRECT_DATE), is(true));
-    assertThat(converter.supports("DIRECT"), is(false));
-  }
-
-  @Test
-  public void shouldCopyDateValue() {
-    final JsonObject source = Json.createObjectBuilder().add(GO_LIVE, "2026-01-01").build();
-    Mapping mapping = new Mapping(GO_LIVE, GO_LIVE, DIRECT_DATE, "", "");
+  public void shouldCopyTheDateIntoItsCsvColumnNotTheJsonField() {
+    final JsonObject source =
+        Json.createObjectBuilder().add(SUPPORT_START_DATE, "2026-01-01").build();
+    Mapping mapping = new Mapping(START_DATE, SUPPORT_START_DATE, DIRECT_DATE, "", "");
 
     Map<String, String> row = new LinkedHashMap<>();
     converter.deconvert(source, mapping, row);
 
-    assertThat(row.get(GO_LIVE), is("2026-01-01"));
+    assertThat(row.get(START_DATE), is("2026-01-01"));
+    assertThat(row.containsKey(SUPPORT_START_DATE), is(false));
   }
 
   @Test

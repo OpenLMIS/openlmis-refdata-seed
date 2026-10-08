@@ -43,12 +43,19 @@ public class ReferenceResolverTest {
   private static final String ID = "id";
   private static final String MEG = "MEG";
   private static final String MEG_ID = "11111111-1111-1111-1111-111111111111";
+  private static final String VIH = "VIH";
+  private static final String VIH_ID = "33333333-3333-3333-3333-333333333333";
+  private static final String FACILITY = "Facility";
+  private static final String FACILITY_ID = "22222222-2222-2222-2222-222222222222";
 
   @Mock
   private Services services;
 
   @Mock
   private BaseCommunicationService service;
+
+  @Mock
+  private BaseCommunicationService facilityService;
 
   @InjectMocks
   private ReferenceResolver resolver;
@@ -59,31 +66,35 @@ public class ReferenceResolverTest {
   }
 
   @Test
-  public void shouldResolveAnIdToItsFullObject() {
-    givenEntities(entity(MEG_ID, MEG));
+  public void shouldResolveEveryIndexedIdToItsOwnObject() {
+    when(service.findAll()).thenReturn(Json.createArrayBuilder()
+        .add(entityBuilder(MEG_ID, MEG))
+        .add(entityBuilder(VIH_ID, VIH))
+        .build());
 
     assertThat(resolver.findById(PROGRAM, MEG_ID).getString(CODE), is(MEG));
-  }
-
-  @Test
-  public void shouldReturnNothingForAnIdThatDoesNotExist() {
-    givenEntities(entity(MEG_ID, MEG));
-
-    assertThat(resolver.findById(PROGRAM, "no-such-id"), is(nullValue()));
+    assertThat(resolver.findById(PROGRAM, VIH_ID).getString(CODE), is(VIH));
   }
 
   @Test
   public void shouldBuildTheIndexOncePerEntity() {
     givenEntities(entity(MEG_ID, MEG));
+    when(services.getService(FACILITY)).thenReturn(facilityService);
+    when(facilityService.findAll()).thenReturn(entity(FACILITY_ID, "ENTC001"));
 
     resolver.findById(PROGRAM, MEG_ID);
     resolver.findById(PROGRAM, MEG_ID);
+    resolver.findById(FACILITY, FACILITY_ID);
+    resolver.findById(FACILITY, FACILITY_ID);
 
     verify(service, times(1)).findAll();
+    verify(facilityService, times(1)).findAll();
+    assertThat(resolver.findById(FACILITY, FACILITY_ID).getString(CODE), is("ENTC001"));
+    assertThat(resolver.findById(FACILITY, MEG_ID), is(nullValue()));
   }
 
   @Test
-  public void shouldIgnoreEntriesThatAreNotObjectsOrHaveNoId() {
+  public void shouldKeepIndexingPastEntriesThatAreNotObjectsOrHaveNoId() {
     JsonArrayBuilder builder = Json.createArrayBuilder();
     builder.add("a bare string");
     builder.add(Json.createObjectBuilder().add(CODE, "no id here"));
@@ -92,13 +103,6 @@ public class ReferenceResolverTest {
     when(service.findAll()).thenReturn(builder.build());
 
     assertThat(resolver.findById(PROGRAM, MEG_ID).getString(CODE), is(MEG));
-  }
-
-  @Test
-  public void shouldReturnNothingWhenTheEntityHasNoResourcesAtAll() {
-    when(service.findAll()).thenReturn(Json.createArrayBuilder().build());
-
-    assertThat(resolver.findById(PROGRAM, MEG_ID), is(nullValue()));
   }
 
   private void givenEntities(JsonArray entities) {

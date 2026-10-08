@@ -15,12 +15,17 @@
 
 package org.openlmis.export.utils;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.openlmis.Configuration;
@@ -57,6 +63,7 @@ public class DataExporterTest {
   private static final String CODE = "code";
   private static final List<String> HEADER = singletonList(CODE);
   private static final String CHILD_FILE = "RoleAssignments.csv";
+  private static final String OTHER_CHILD = "SupportedPrograms.csv";
 
   @Mock
   private Configuration configuration;
@@ -91,6 +98,9 @@ public class DataExporterTest {
   @Mock
   private BaseCommunicationService service;
 
+  @Mock
+  private BaseCommunicationService failingService;
+
   @InjectMocks
   private DataExporter exporter;
 
@@ -119,7 +129,7 @@ public class DataExporterTest {
   }
 
   @Test
-  public void shouldWriteOneFilePerEntityThatHasAMapping() {
+  public void shouldWriteTheFileForAnEntityThatHasAMapping() {
     givenMappingFor(SOURCE);
     when(service.findAllForExport()).thenReturn(entities("F1"));
     when(deconverter.deconvert(any(JsonObject.class), eq(mappings)))
@@ -129,6 +139,21 @@ public class DataExporterTest {
 
     verify(writer).write(eq(new File(SOURCE.getFullFileName(OUTPUT))), eq(HEADER),
         eq(singletonList(row("F1"))));
+  }
+
+  @Test
+  public void shouldKeepFlushingChildFilesWhenOneOfThemFails() {
+    when(childCsvCollector.fileNames())
+        .thenReturn(new LinkedHashSet<>(asList(CHILD_FILE, OTHER_CHILD)));
+    when(childCsvCollector.header(anyString())).thenReturn(HEADER);
+    when(childCsvCollector.rows(anyString())).thenReturn(singletonList(row("RA-1")));
+    doThrow(new IllegalStateException("boom")).when(writer)
+        .write(eq(new File(OUTPUT, CHILD_FILE)), anyList(), anyList());
+
+    exporter.exportData();
+
+    verify(writer).write(eq(new File(OUTPUT, OTHER_CHILD)), eq(HEADER), anyList());
+    verify(comparisonReporter).report();
   }
 
   @Test
@@ -152,16 +177,27 @@ public class DataExporterTest {
   @Test
   public void shouldKeepGoingWhenOneEntityFails() {
     givenMappingFor(SOURCE);
-    when(service.findAllForExport()).thenThrow(new IllegalStateException("boom"));
+    givenMappingFor(SourceFile.FACILITY_TYPES);
+    when(services.getService(SOURCE)).thenReturn(failingService);
+    when(failingService.findAllForExport()).thenThrow(new IllegalStateException("boom"));
+    when(service.findAllForExport()).thenReturn(entities("F1"));
+    when(deconverter.deconvert(any(JsonObject.class), eq(mappings))).thenReturn(row("F1"));
 
     exporter.exportData();
 
-    verify(writer, never()).write(any(File.class), anyList(), anyList());
+    verify(writer, never())
+        .write(eq(new File(SOURCE.getFullFileName(OUTPUT))), anyList(), anyList());
+    verify(writer).write(eq(new File(SourceFile.FACILITY_TYPES.getFullFileName(OUTPUT))),
+        eq(HEADER), eq(singletonList(row("F1"))));
     verify(comparisonReporter).report();
   }
 
   @Test
-  public void shouldFlushChildFilesAndReportAfterEveryEntity() {
+  public void shouldFlushChildFilesOnlyOnceEveryEntityHasBeenExported() {
+    givenMappingFor(SOURCE);
+    givenMappingFor(SourceFile.FACILITY_TYPES);
+    when(service.findAllForExport()).thenReturn(entities("F1"));
+    when(deconverter.deconvert(any(JsonObject.class), eq(mappings))).thenReturn(row("F1"));
     when(childCsvCollector.fileNames())
         .thenReturn(new LinkedHashSet<>(singletonList(CHILD_FILE)));
     when(childCsvCollector.header(CHILD_FILE)).thenReturn(HEADER);
@@ -169,10 +205,17 @@ public class DataExporterTest {
 
     exporter.exportData();
 
-    verify(writer).write(eq(new File(OUTPUT, CHILD_FILE)), eq(HEADER), anyList());
-    verify(originalCodeResolver).logSummary();
-    verify(sequentialCodeAllocator).logSummary();
-    verify(comparisonReporter).report();
+    InOrder order = inOrder(writer, originalCodeResolver, sequentialCodeAllocator,
+        comparisonReporter);
+    order.verify(writer).write(eq(new File(SOURCE.getFullFileName(OUTPUT))), anyList(), anyList());
+    order.verify(writer)
+        .write(eq(new File(SourceFile.FACILITY_TYPES.getFullFileName(OUTPUT))), anyList(),
+            anyList());
+    order.verify(writer).write(eq(new File(OUTPUT, CHILD_FILE)), eq(HEADER), anyList());
+    verify(childCsvCollector, times(1)).rows(CHILD_FILE);
+    order.verify(originalCodeResolver).logSummary();
+    order.verify(sequentialCodeAllocator).logSummary();
+    order.verify(comparisonReporter).report();
   }
 
   private void givenMappingFor(SourceFile source) {

@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
+@SuppressWarnings("PMD.TooManyMethods")
 public class CsvWriterTest {
 
   private static final String CODE = "code";
@@ -96,7 +97,19 @@ public class CsvWriterTest {
   }
 
   @Test
-  public void shouldFailLoudlyRatherThanLeaveATruncatedFile() throws IOException {
+  public void shouldReplaceTheFileAnEarlierExportLeftBehindRatherThanAppendToIt()
+      throws IOException {
+    File file = folder.newFile();
+    writer.write(file, HEADER, singletonList(row(F1, CLINIC)));
+
+    writer.write(file, HEADER, singletonList(row("F2", "Depot")));
+
+    assertThat(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+        .replace("\r\n", "\n"), is("\uFEFFcode,name\nF2,Depot\n"));
+  }
+
+  @Test
+  public void shouldFailLoudlyWhenTheFileCannotBeWritten() throws IOException {
     File directory = folder.newFolder("not-a-file");
 
     expected.expect(IllegalStateException.class);

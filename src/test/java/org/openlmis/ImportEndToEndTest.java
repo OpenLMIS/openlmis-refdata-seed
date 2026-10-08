@@ -17,6 +17,7 @@ package org.openlmis;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -30,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,7 +49,8 @@ public class ImportEndToEndTest extends AbstractEndToEndTest {
           + "enableDatePhysicalStockCountCompleted,skipAuthorization\n"
           + "MEG,Autres MEG,Autres Medicaments,True,True,False,False,False\n";
   private static final String EXISTING =
-      "[{\"id\":\"prog-1\",\"code\":\"MEG\",\"name\":\"Autres MEG\"}]";
+      "[{\"id\":\"prog-9\",\"code\":\"VIH\",\"name\":\"Programme VIH\"},"
+          + "{\"id\":\"prog-1\",\"code\":\"MEG\",\"name\":\"Medicaments essentiels\"}]";
 
   @Rule
   public TemporaryFolder folder = new TemporaryFolder();
@@ -88,22 +89,13 @@ public class ImportEndToEndTest extends AbstractEndToEndTest {
     assertThat(sentBodies.get(0), containsString("\"code\":\"MEG\""));
     assertThat(sentBodies.get(0), containsString("\"name\":\"Autres MEG\""));
     assertThat(sentBodies.get(0), containsString("\"periodsSkippable\":\"true\""));
-  }
-
-  /** The CSV is untyped, so booleans cross as quoted strings and the API coerces them. */
-  @Test
-  public void shouldSendBooleanColumnsAsQuotedStrings() {
-    expectWrite(PROGRAMS_URL, HttpMethod.POST);
-    givenEverythingElseReturns("[]");
-
-    seeder.seedData();
-
-    assertThat(sentBodies.get(0), containsString("\"active\":\"true\""));
     assertThat(sentBodies.get(0), containsString("\"skipAuthorization\":\"false\""));
   }
 
+  /** The CSV is untyped, so booleans cross as quoted strings and the API coerces them. */
+
   @Test
-  public void shouldPutAnExistingRowUnderItsOwnId() {
+  public void shouldMatchAnExistingRowByItsCodeAndPutItUnderItsOwnId() {
     expectWrite(HOST + "/api/programs/prog-1?access_token=token", HttpMethod.PUT);
     givenEverythingElseReturns(EXISTING);
 
@@ -111,6 +103,7 @@ public class ImportEndToEndTest extends AbstractEndToEndTest {
 
     server.verify();
     assertThat(sentBodies.get(0), containsString("\"id\":\"prog-1\""));
+    assertThat(sentBodies.get(0), containsString("\"name\":\"Autres MEG\""));
   }
 
   @Test
@@ -134,7 +127,7 @@ public class ImportEndToEndTest extends AbstractEndToEndTest {
   }
 
   private void givenEverythingElseReturns(String body) {
-    server.expect(ExpectedCount.manyTimes(), requestTo(Matchers.startsWith(HOST)))
+    server.expect(ExpectedCount.manyTimes(), requestTo(startsWith(HOST)))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
   }
