@@ -92,8 +92,6 @@ public class ImportEndToEndTest extends AbstractEndToEndTest {
     assertThat(sentBodies.get(0), containsString("\"skipAuthorization\":\"false\""));
   }
 
-  /** The CSV is untyped, so booleans cross as quoted strings and the API coerces them. */
-
   @Test
   public void shouldMatchAnExistingRowByItsCodeAndPutItUnderItsOwnId() {
     expectWrite(HOST + "/api/programs/prog-1?access_token=token", HttpMethod.PUT);

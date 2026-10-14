@@ -254,7 +254,7 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
           Files.readAllLines(file.toPath()).size() - 1, is(expected));
     }
 
-    assertThat(joinColumnOf(SCHEDULES),
+    assertThat(codesIn(SCHEDULES),
         containsInAnyOrder(DIRECT_DELIVERY_SCHEDULE, PICKED_UP_SCHEDULE));
   }
 
@@ -296,7 +296,7 @@ public class ExportStructureEndToEndTest extends AbstractEndToEndTest {
     return null;
   }
 
-  private List<String> joinColumnOf(String fileName) throws IOException {
+  private List<String> codesIn(String fileName) throws IOException {
     List<String> lines = Files.readAllLines(new File(outputDirectory, fileName).toPath());
     List<String> codes = new ArrayList<>();
     for (String line : lines.subList(1, lines.size())) {
