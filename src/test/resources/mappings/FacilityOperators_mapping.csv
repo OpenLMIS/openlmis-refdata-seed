@@ -1,0 +1,5 @@
+from,to,type,entityName,defaultValue
+code,code,DIRECT,,
+name,name,DIRECT,,
+description,description,DIRECT,,
+displayorder,displayOrder,DIRECT,,

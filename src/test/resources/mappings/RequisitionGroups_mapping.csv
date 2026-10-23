@@ -1,0 +1,7 @@
+from,to,type,entityName,defaultValue
+code,code,DIRECT,,
+name,name,DIRECT,,
+description,description,DIRECT,,
+supervisoryNode,supervisoryNode,TO_OBJECT_BY_CODE,SupervisoryNode,
+memberFacilities,memberFacilities,TO_ARRAY_BY_CODE,Facility,
+requisitionGroupProgramSchedules,requisitionGroupProgramSchedules,TO_ARRAY_FROM_FILE_BY_CODE,RequisitionGroupProgramSchedules.csv,

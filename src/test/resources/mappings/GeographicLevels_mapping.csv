@@ -1,0 +1,4 @@
+from,to,type,entityName,defaultValue
+code,code,DIRECT,,
+name,name,DIRECT,,
+levelNumber,levelNumber,DIRECT,,

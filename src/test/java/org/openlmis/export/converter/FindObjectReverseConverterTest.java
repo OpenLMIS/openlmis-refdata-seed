@@ -36,8 +36,10 @@ public class FindObjectReverseConverterTest {
 
   private static final String CODE = "code";
   private static final String PROGRAM = "program";
+  private static final String PROGRAM_COLUMN = "programCode";
   private static final String TYPE = "TO_OBJECT_BY_CODE";
-  private static final String LEVEL = "level";
+  private static final String FACILITY_TYPE_FIELD = "type";
+  private static final String FACILITY_TYPE_COLUMN = "facilityTypeCode";
   private static final String UUID = "uuid-1";
   private static final String PROGRAM_ENTITY = "Program";
 
@@ -56,16 +58,18 @@ public class FindObjectReverseConverterTest {
   }
 
   @Test
-  public void shouldReadTheByFieldFromAnEmbeddedObject() {
+  public void shouldReadTheByFieldFromAnEmbeddedObjectIntoItsCsvColumn() {
     final JsonObject source = Json.createObjectBuilder()
-        .add(LEVEL, Json.createObjectBuilder().add(CODE, "DISTRICT"))
+        .add(FACILITY_TYPE_FIELD, Json.createObjectBuilder().add(CODE, "DISTRICT"))
         .build();
-    Mapping mapping = new Mapping(LEVEL, LEVEL, TYPE, "GeographicLevel", "");
+    Mapping mapping =
+        new Mapping(FACILITY_TYPE_COLUMN, FACILITY_TYPE_FIELD, TYPE, "FacilityType", "");
 
     Map<String, String> row = new LinkedHashMap<>();
     converter.deconvert(source, mapping, row);
 
-    assertThat(row.get(LEVEL), is("DISTRICT"));
+    assertThat(row.get(FACILITY_TYPE_COLUMN), is("DISTRICT"));
+    assertThat(row.containsKey(FACILITY_TYPE_FIELD), is(false));
   }
 
   @Test
@@ -75,12 +79,13 @@ public class FindObjectReverseConverterTest {
         .build();
     when(resolver.findById(PROGRAM_ENTITY, UUID))
         .thenReturn(Json.createObjectBuilder().add(CODE, "PRG001").build());
-    Mapping mapping = new Mapping(PROGRAM, PROGRAM, TYPE, PROGRAM_ENTITY, "");
+    Mapping mapping = new Mapping(PROGRAM_COLUMN, PROGRAM, TYPE, PROGRAM_ENTITY, "");
 
     Map<String, String> row = new LinkedHashMap<>();
     converter.deconvert(source, mapping, row);
 
-    assertThat(row.get(PROGRAM), is("PRG001"));
+    assertThat(row.get(PROGRAM_COLUMN), is("PRG001"));
+    assertThat(row.containsKey(PROGRAM), is(false));
   }
 
   @Test

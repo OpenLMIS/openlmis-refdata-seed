@@ -1,0 +1,3 @@
+from,to,type,entityName,defaultValue
+email,email,DIRECT,,
+username,emailVerified,FIND_EMAIL_VERIFIED,,

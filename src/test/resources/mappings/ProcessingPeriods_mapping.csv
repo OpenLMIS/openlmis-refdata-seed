@@ -1,0 +1,6 @@
+from,to,type,entityName,defaultValue
+name,name,DIRECT,,
+startDate,startDate,DIRECT_DATE,,
+endDate,endDate,DIRECT_DATE,,
+description,description,DIRECT,,
+processingSchedule,processingSchedule,TO_OBJECT_BY_CODE,ProcessingSchedule,

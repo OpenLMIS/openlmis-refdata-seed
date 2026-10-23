@@ -1,0 +1,6 @@
+from,to,type,entityName,defaultValue
+programCode,programId,TO_ID_BY_CODE,Program,
+facilityTypeCode,facilityTypeId,TO_ID_BY_CODE,FacilityType,
+facilityCode,node,TO_OBJECT_FROM_FILE_BY_REFERENCE_ID,Nodes.csv,
+organizationName,node,TO_OBJECT_FROM_FILE_BY_REFERENCE_NAME,OrganizationNodes.csv,
+geoLevelAffinity,geoLevelAffinityId,TO_ID_BY_CODE,GeographicLevel,

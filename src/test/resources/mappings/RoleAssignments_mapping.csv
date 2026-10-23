@@ -1,0 +1,6 @@
+from,to,type,entityName,defaultValue
+code,,SKIP,,
+roleName,roleId,TO_ID_BY_NAME,Role,
+programCode,programId,TO_ID_BY_CODE,Program,
+supervisoryNodeCode,supervisoryNodeId,TO_ID_BY_CODE,SupervisoryNode,
+warehouseCode,warehouseId,TO_ID_BY_CODE,Facility,

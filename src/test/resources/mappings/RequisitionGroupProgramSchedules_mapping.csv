@@ -1,0 +1,6 @@
+from,to,type,entityName,defaultValue
+code,,SKIP,,
+program,program,TO_OBJECT_BY_CODE,Program,
+processingSchedule,processingSchedule,TO_OBJECT_BY_CODE,ProcessingSchedule,
+directDelivery,directDelivery,DIRECT,,
+dropOffFacility,dropOffFacility,TO_OBJECT_BY_CODE,Facility,
