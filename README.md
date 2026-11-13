@@ -205,7 +205,11 @@ SupportedPrograms_mapping.csv
 Updating an existing facility replaces it as a whole: every facility field, and its whole list of
 supported programs, with the start date and locally fulfilled flag of each. A program missing from
 `supportedPrograms`, or a blank or unmapped `startDate`/`locallyFulfilled`, is removed or cleared.
-To add one program to a facility, send its full row and list every program it already supports.
+An empty `supportedPrograms` list leaves the facility's programs as they are. To add one program to a
+facility, send its full row and list every program it already supports.
+
+The default value must be `childColumn:parentColumn`, both columns present in their files. Otherwise
+the tool logs an error once per child file and attaches none of its rows.
 
 Available transformation types are:
 

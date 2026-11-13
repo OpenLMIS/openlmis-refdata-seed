@@ -188,6 +188,24 @@ public class FileArrayTypeConverterTest {
     assertThat(converted, hasSize(0));
   }
 
+  @Test
+  public void shouldReturnNoRowsForMalformedParentKey() {
+    givenChildRows(Lists.newArrayList(childRow(HIV, F1), childRow(TB, F1)));
+
+    List<String> converted = convertSupportedPrograms("facilityCode:");
+
+    assertThat(converted, hasSize(0));
+  }
+
+  @Test
+  public void shouldMatchParentKeyIgnoringSurroundingSpaces() {
+    givenChildRows(Lists.newArrayList(childRow(HIV, " F1"), childRow(TB, "F2")));
+
+    List<String> converted = convertSupportedPrograms(FACILITY_KEY, "F1 ");
+
+    assertThat(converted, contains("HIV/ F1"));
+  }
+
   private Map<String, String> childRow(String programCode, String facilityCode) {
     return ImmutableMap.of(PROGRAM_CODE, programCode, FACILITY_CODE, facilityCode);
   }
@@ -203,11 +221,15 @@ public class FileArrayTypeConverterTest {
   }
 
   private List<String> convertSupportedPrograms(String parentKey) {
+    return convertSupportedPrograms(parentKey, F1);
+  }
+
+  private List<String> convertSupportedPrograms(String parentKey, String parentCode) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
     Mapping mapping = new Mapping(SUPPORTED_PROGRAMS, SUPPORTED_PROGRAMS,
         "TO_ARRAY_FROM_FILE_BY_PROGRAM_CODE", "SupportedPrograms.csv", parentKey);
 
-    typeConverter.convert(builder, mapping, "[HIV,TB]", ImmutableMap.of(CODE, F1));
+    typeConverter.convert(builder, mapping, "[HIV,TB]", ImmutableMap.of(CODE, parentCode));
 
     return builder.build().getJsonArray(SUPPORTED_PROGRAMS)
         .getValuesAs(JsonObject.class)

@@ -16,8 +16,9 @@
 package org.openlmis.converter;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.split;
+import static org.apache.commons.lang3.StringUtils.splitPreserveAllTokens;
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import com.google.common.collect.Sets;
@@ -48,7 +49,7 @@ class FileArrayTypeConverter extends BaseTypeConverter {
   @Autowired
   private AppHelper appHelper;
 
-  private final Set<String> filesMissingParentKey = Sets.newHashSet();
+  private final Set<String> misconfiguredParentKeys = Sets.newHashSet();
 
   @Override
   public boolean supports(String type) {
@@ -101,21 +102,38 @@ class FileArrayTypeConverter extends BaseTypeConverter {
 
   private Predicate<Map<String, String>> belongsToInputRow(Mapping mapping,
       Map<String, String> inputRow, List<Map<String, String>> entityRows) {
-    String[] parentKey = split(mapping.getDefaultValue(), ':');
-    if (null == parentKey || parentKey.length != 2) {
+    String parentKeySpec = mapping.getDefaultValue();
+    if (isBlank(parentKeySpec)) {
       return row -> true;
     }
 
-    String childColumn = trim(parentKey[0]);
-    String parentValue = inputRow.get(trim(parentKey[1]));
-
-    if (!entityRows.isEmpty() && !entityRows.get(0).containsKey(childColumn)
-        && filesMissingParentKey.add(mapping.getEntityName())) {
-      logger.error("{} has no {} column, so no row of it can be matched to its parent",
-          mapping.getEntityName(), childColumn);
+    String entityFileName = mapping.getEntityName();
+    String[] parentKey = splitPreserveAllTokens(parentKeySpec, ':');
+    if (parentKey.length != 2 || isBlank(parentKey[0]) || isBlank(parentKey[1])) {
+      reportOnce(entityFileName, "{}: the parent key '{}' is not childColumn:parentColumn, "
+          + "so no row of it is used", entityFileName, parentKeySpec);
+      return row -> false;
     }
 
-    return row -> !isBlank(parentValue) && parentValue.equals(row.get(childColumn));
+    String childColumn = trim(parentKey[0]);
+    String parentColumn = trim(parentKey[1]);
+    if (!entityRows.isEmpty() && !entityRows.get(0).containsKey(childColumn)) {
+      reportOnce(entityFileName, "{} has no {} column, so no row of it can be matched to its "
+          + "parent", entityFileName, childColumn);
+    }
+    if (!inputRow.containsKey(parentColumn)) {
+      reportOnce(entityFileName, "The parent rows of {} have no {} column, so no row of it can "
+          + "be matched to them", entityFileName, parentColumn);
+    }
+
+    String parentValue = strip(inputRow.get(parentColumn));
+    return row -> !isBlank(parentValue) && parentValue.equals(strip(row.get(childColumn)));
+  }
+
+  private void reportOnce(String entityFileName, String message, Object... arguments) {
+    if (misconfiguredParentKeys.add(entityFileName)) {
+      logger.error(message, arguments);
+    }
   }
 
 }

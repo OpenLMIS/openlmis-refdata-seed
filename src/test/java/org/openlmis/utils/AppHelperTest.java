@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -324,6 +325,14 @@ public class AppHelperTest {
     givenFileReference(directory, "SupportedPrograms_mapping.csv", "ProgramDetails.csv");
 
     assertThat(appHelper.findUnreadInputFiles(), is(empty()));
+  }
+
+  @Test
+  public void shouldNotReadMissingMappingFile() throws IOException {
+    givenInputDirectory(FACILITIES_CSV, SUPPORTED_PROGRAMS_CSV);
+
+    assertThat(appHelper.findUnreadInputFiles(), contains(SUPPORTED_PROGRAMS_CSV));
+    verify(mappingConverter, never()).getMappingForFile(any());
   }
 
   @Test

@@ -220,7 +220,9 @@ public class AppHelper {
 
     while (!toVisit.isEmpty()) {
       String fileName = toVisit.pop();
-      if (read.add(fileName)) {
+      boolean hasMapping = new File(configuration.getDirectory(),
+          fileName.replace(CSV, MAPPING_CSV)).exists();
+      if (read.add(fileName) && hasMapping) {
         readMappings(fileName).stream()
             .filter(mapping -> indexOfIgnoreCase(mapping.getType(), FROM_FILE) != INDEX_NOT_FOUND)
             .map(Mapping::getEntityName)
