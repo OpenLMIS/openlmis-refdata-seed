@@ -73,6 +73,8 @@ class FileArrayTypeConverter extends BaseTypeConverter {
     String by = getBy(mapping.getType());
     String entityFileName = mapping.getEntityName();
     List<Map<String, String>> entityRows = appHelper.readCsv(entityFileName);
+    appHelper.warnUnmappedColumns(entityFileName, entityRows,
+        appHelper.readMappings(entityFileName));
     Predicate<Map<String, String>> belongsToInputRow =
         belongsToInputRow(mapping, inputRow, entityRows);
 
