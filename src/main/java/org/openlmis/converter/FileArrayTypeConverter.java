@@ -43,7 +43,7 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 
 @Component
-class FileArrayTypeConverter extends BaseTypeConverter {
+class FileArrayTypeConverter extends BaseTypeConverter implements InputRowAwareConverter {
   private static final String SKIP = "SKIP";
 
   @Autowired

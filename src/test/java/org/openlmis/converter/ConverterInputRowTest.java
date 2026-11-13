@@ -28,12 +28,12 @@ import java.util.Map;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-public class ConverterTest {
+public class ConverterInputRowTest {
   private static final String INPUT_ROW_TYPE = "TEST_INPUT_ROW";
 
   @Test
   public void shouldPassInputRowToTypeConverter() {
-    Converter.addConverter(new TypeConverter() {
+    Converter.addConverter(new InputRowAwareConverter() {
       @Override
       public boolean supports(String type) {
         return INPUT_ROW_TYPE.equals(type);

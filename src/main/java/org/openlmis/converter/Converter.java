@@ -59,8 +59,10 @@ public class Converter {
           .findFirst()
           .orElse(null);
 
-      if (null != converter) {
-        converter.convert(jsonBuilder, mapping, value, input);
+      if (converter instanceof InputRowAwareConverter) {
+        ((InputRowAwareConverter) converter).convert(jsonBuilder, mapping, value, input);
+      } else if (null != converter) {
+        converter.convert(jsonBuilder, mapping, value);
       } else {
         throw new UnsupportedOperationException(mapping.getType());
       }
