@@ -46,7 +46,7 @@ class DirectDateTypeConverter extends BaseTypeConverter {
     String date = parseDate(value);
 
     if (null == date || "null".equals(date)) {
-      logger.debug("Can't parse date {} for field: {}", value, mapping.getTo());
+      logger.warn("Can't parse date {} for field: {}", value, mapping.getTo());
       return;
     }
 

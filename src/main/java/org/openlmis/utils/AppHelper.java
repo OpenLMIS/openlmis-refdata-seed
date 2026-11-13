@@ -30,14 +30,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class AppHelper {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppHelper.class);
   private static final String CAMEL_CASE_PATTERN = "([a-z]+[a-zA-Z0-9]+)+";
+  private static final String CSV = ".csv";
+  private static final String MAPPING_CSV = "_mapping.csv";
+  private static final String FROM_FILE = "FROM_FILE";
 
   @Autowired
   private Configuration configuration;
@@ -51,6 +60,8 @@ public class AppHelper {
   private Map<String, List<Map<String, String>>> cachedCsvs = Maps.newHashMap();
 
   private Map<String, List<Mapping>> cachedMappings = Maps.newHashMap();
+
+  private final Set<String> filesWarnedForColumns = new HashSet<>();
 
   /**
    * Reads a list of CSV entries by entityFileName with caching.
@@ -79,7 +90,7 @@ public class AppHelper {
     if (cachedMappings.containsKey(entityFileName)) {
       return cachedMappings.get(entityFileName);
     }
-    String mappingFileName = entityFileName.replace(".csv", "_mapping.csv");
+    String mappingFileName = entityFileName.replace(CSV, MAPPING_CSV);
     List<Mapping> mappingForFile = Collections.unmodifiableList(mappingConverter
         .getMappingForFile(new File(configuration.getDirectory(), mappingFileName)));
 
@@ -101,7 +112,7 @@ public class AppHelper {
       }
 
       String type = mapping.getType();
-      if (indexOfIgnoreCase(type, "FROM_FILE") != INDEX_NOT_FOUND) {
+      if (indexOfIgnoreCase(type, FROM_FILE) != INDEX_NOT_FOUND) {
         String entityFileName = mapping.getEntityName();
         if (!shouldProcess(source, entityFileName)) {
           return false;
@@ -115,7 +126,7 @@ public class AppHelper {
   private boolean shouldProcess(SourceFile source, String entityFileName) {
     String parent = configuration.getDirectory();
     String inputFileName = new File(parent, entityFileName).getAbsolutePath();
-    String mappingFileName = inputFileName.replace(".csv", "_mapping.csv");
+    String mappingFileName = inputFileName.replace(CSV, MAPPING_CSV);
 
     if (!inputAndMappingFileExist(inputFileName, mappingFileName, source)) {
       return false;
@@ -161,5 +172,68 @@ public class AppHelper {
 
   private boolean isWrittenInCamelCase(String str) {
     return str != null && str.matches(CAMEL_CASE_PATTERN);
+  }
+
+  /**
+   * Returns the columns of a CSV file that no mapping reads, in header order, and logs them once
+   * per file: their values never reach OpenLMIS.
+   */
+  public List<String> warnUnmappedColumns(String fileName, List<Map<String, String>> rows,
+      List<Mapping> mappings) {
+    if (rows.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    Set<String> mapped = mappings.stream().map(Mapping::getFrom).collect(Collectors.toSet());
+    List<String> unmapped = rows.get(0).keySet().stream()
+        .filter(column -> !mapped.contains(column))
+        .collect(Collectors.toList());
+
+    if (!unmapped.isEmpty() && filesWarnedForColumns.add(fileName)) {
+      LOGGER.warn("{}: columns {} are not in its mapping file and will be ignored; "
+          + "map them as SKIP to silence this", fileName, unmapped);
+    }
+
+    return unmapped;
+  }
+
+  /**
+   * Returns the CSV files in the input directory that a run never reads, sorted: neither a seeded
+   * entity file nor referenced by a *_FROM_FILE_* mapping of a file that is read.
+   */
+  public List<String> findUnreadInputFiles() {
+    File[] files = new File(configuration.getDirectory()).listFiles();
+    if (null == files) {
+      return Collections.emptyList();
+    }
+
+    Set<String> inputFiles = Arrays.stream(files)
+        .map(File::getName)
+        .filter(name -> name.endsWith(CSV) && !name.endsWith(MAPPING_CSV))
+        .collect(Collectors.toSet());
+
+    Deque<String> toVisit = Arrays.stream(SourceFile.values())
+        .map(source -> source.getName() + CSV)
+        .filter(inputFiles::contains)
+        .collect(Collectors.toCollection(ArrayDeque::new));
+    Set<String> read = new HashSet<>();
+
+    while (!toVisit.isEmpty()) {
+      String fileName = toVisit.pop();
+      boolean hasMapping = new File(configuration.getDirectory(),
+          fileName.replace(CSV, MAPPING_CSV)).exists();
+      if (read.add(fileName) && hasMapping) {
+        readMappings(fileName).stream()
+            .filter(mapping -> indexOfIgnoreCase(mapping.getType(), FROM_FILE) != INDEX_NOT_FOUND)
+            .map(Mapping::getEntityName)
+            .filter(inputFiles::contains)
+            .forEach(toVisit::push);
+      }
+    }
+
+    return inputFiles.stream()
+        .filter(name -> !read.contains(name))
+        .sorted()
+        .collect(Collectors.toList());
   }
 }
