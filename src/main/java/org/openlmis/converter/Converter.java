@@ -60,7 +60,7 @@ public class Converter {
           .orElse(null);
 
       if (null != converter) {
-        converter.convert(jsonBuilder, mapping, value);
+        converter.convert(jsonBuilder, mapping, value, input);
       } else {
         throw new UnsupportedOperationException(mapping.getType());
       }

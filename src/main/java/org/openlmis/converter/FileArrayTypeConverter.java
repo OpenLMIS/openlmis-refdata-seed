@@ -15,15 +15,23 @@
 
 package org.openlmis.converter;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.split;
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.trim;
+
+import com.google.common.collect.Sets;
 
 import org.openlmis.utils.AppHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.StringReader;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.json.Json;
@@ -40,6 +48,8 @@ class FileArrayTypeConverter extends BaseTypeConverter {
   @Autowired
   private AppHelper appHelper;
 
+  private final Set<String> filesMissingParentKey = Sets.newHashSet();
+
   @Override
   public boolean supports(String type) {
     return startsWithIgnoreCase(type, "TO_ARRAY_FROM_FILE_BY");
@@ -47,12 +57,28 @@ class FileArrayTypeConverter extends BaseTypeConverter {
 
   @Override
   public void convert(JsonObjectBuilder builder, Mapping mapping, String value) {
+    convert(builder, mapping, value, Collections.emptyMap());
+  }
+
+  /**
+   * Builds the array from the rows of the entity file whose "by" column is listed in the value.
+   * When the mapping's defaultValue is {@code childColumn:parentColumn} (e.g.
+   * {@code facilityCode:code}), only rows whose childColumn equals the input row's parentColumn
+   * are kept, so a child file can hold the rows of many parents.
+   */
+  @Override
+  public void convert(JsonObjectBuilder builder, Mapping mapping, String value,
+      Map<String, String> inputRow) {
     List<String> codes = getArrayValues(value);
     String by = getBy(mapping.getType());
     String entityFileName = mapping.getEntityName();
+    List<Map<String, String>> entityRows = appHelper.readCsv(entityFileName);
+    Predicate<Map<String, String>> belongsToInputRow =
+        belongsToInputRow(mapping, inputRow, entityRows);
 
-    List<Map<String, String>> csvs = appHelper.readCsv(entityFileName).stream()
+    List<Map<String, String>> csvs = entityRows.stream()
         .filter(map -> codes.contains(map.get(by)))
+        .filter(belongsToInputRow)
         .collect(Collectors.toList());
 
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
@@ -69,6 +95,25 @@ class FileArrayTypeConverter extends BaseTypeConverter {
     }
 
     builder.add(mapping.getTo(), arrayBuilder);
+  }
+
+  private Predicate<Map<String, String>> belongsToInputRow(Mapping mapping,
+      Map<String, String> inputRow, List<Map<String, String>> entityRows) {
+    String[] parentKey = split(mapping.getDefaultValue(), ':');
+    if (null == parentKey || parentKey.length != 2) {
+      return row -> true;
+    }
+
+    String childColumn = trim(parentKey[0]);
+    String parentValue = inputRow.get(trim(parentKey[1]));
+
+    if (!entityRows.isEmpty() && !entityRows.get(0).containsKey(childColumn)
+        && filesMissingParentKey.add(mapping.getEntityName())) {
+      logger.error("{} has no {} column, so no row of it can be matched to its parent",
+          mapping.getEntityName(), childColumn);
+    }
+
+    return row -> !isBlank(parentValue) && parentValue.equals(row.get(childColumn));
   }
 
 }

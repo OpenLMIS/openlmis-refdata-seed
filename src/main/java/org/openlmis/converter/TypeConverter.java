@@ -15,6 +15,8 @@
 
 package org.openlmis.converter;
 
+import java.util.Map;
+
 import javax.json.JsonObjectBuilder;
 
 public interface TypeConverter {
@@ -22,5 +24,14 @@ public interface TypeConverter {
   boolean supports(String type);
 
   void convert(JsonObjectBuilder builder, Mapping mapping, String value);
+
+  /**
+   * Converts a value with access to the whole input row it comes from. Converters that only need
+   * the value keep the three-argument form.
+   */
+  default void convert(JsonObjectBuilder builder, Mapping mapping, String value,
+      Map<String, String> inputRow) {
+    convert(builder, mapping, value);
+  }
 
 }
