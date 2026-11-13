@@ -190,13 +190,15 @@ SupportedPrograms.csv
 | facilityCode | programCode | active | startDate  | locallyFulfilled |
 | ------------ | ----------- | ------ | ---------- | ---------------- |
 | HC01         | PRG001      | TRUE   | 2026-09-01 | FALSE            |
-| HC02         | PRG001      | TRUE   | 01/10/2026 | TRUE             |
+| HC02         | PRG001      | TRUE   | 15/10/2026 | TRUE             |
+
+Dates are read as `yyyy-M-d`, `yy-M-d` or day first (`d/M/yyyy`, `d/M/yy`), so `15/10/2026` is 15 October.
+A date in another format is skipped with a warning.
 
 SupportedPrograms_mapping.csv
 
 | from             | to                      | type        | entityName | defaultValue |
 | ---------------- | ----------------------- | ----------- | ---------- | ------------ |
-| facilityCode     |                         | SKIP        |            |              |
 | programCode      | code                    | DIRECT      |            |              |
 | active           | supportActive           | DIRECT      |            |              |
 | startDate        | supportStartDate        | DIRECT_DATE |            |              |
@@ -208,8 +210,9 @@ supported programs, with the start date and locally fulfilled flag of each. A pr
 An empty `supportedPrograms` list leaves the facility's programs as they are. To add one program to a
 facility, send its full row and list every program it already supports.
 
-The default value must be `childColumn:parentColumn`, both columns present in their files. Otherwise
-the tool logs an error once per child file and attaches none of its rows.
+`facilityCode` needs no mapping row: the join reads it. The default value must be
+`childColumn:parentColumn`, both columns present in their files; otherwise the tool logs an error and
+attaches none of the child file's rows. A default value without a colon is ignored with a warning.
 
 Available transformation types are:
 
