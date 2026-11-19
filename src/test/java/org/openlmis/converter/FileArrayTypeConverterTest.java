@@ -58,6 +58,7 @@ public class FileArrayTypeConverterTest {
   private static final String FACILITY_CODE = "facilityCode";
   private static final String FACILITY_KEY = "facilityCode:code";
   private static final String SUPPORTED_PROGRAMS = "supportedPrograms";
+  private static final String SUPPORTED_PROGRAMS_CSV = "SupportedPrograms.csv";
   private static final String HIV = "HIV";
   private static final String TB = "TB";
   private static final String F1 = "F1";
@@ -235,6 +236,26 @@ public class FileArrayTypeConverterTest {
     assertThat(mappedColumns, hasItems(CODE, PROGRAM_CODE, FACILITY_CODE));
   }
 
+  @Test
+  public void shouldWarnAboutListedValuesLeftOut() {
+    givenChildRows(Lists.newArrayList(childRow(HIV, F1), childRow(TB, "F2")));
+
+    convertSupportedPrograms(FACILITY_KEY);
+
+    verify(appHelper).warnUnmatchedValues(SUPPORTED_PROGRAMS_CSV, PROGRAM_CODE,
+        Lists.newArrayList(HIV, TB), Lists.newArrayList(childRow(HIV, F1)), "code=F1");
+  }
+
+  @Test
+  public void shouldWarnWithoutParentWhenNoParentKey() {
+    givenChildRows(Lists.newArrayList(childRow(HIV, F1)));
+
+    convertSupportedPrograms("");
+
+    verify(appHelper).warnUnmatchedValues(SUPPORTED_PROGRAMS_CSV, PROGRAM_CODE,
+        Lists.newArrayList(HIV, TB), Lists.newArrayList(childRow(HIV, F1)), "");
+  }
+
   private Map<String, String> childRow(String programCode, String facilityCode) {
     return ImmutableMap.of(PROGRAM_CODE, programCode, FACILITY_CODE, facilityCode);
   }
@@ -256,7 +277,7 @@ public class FileArrayTypeConverterTest {
   private List<String> convertSupportedPrograms(String parentKey, String parentCode) {
     JsonObjectBuilder builder = Json.createObjectBuilder();
     Mapping mapping = new Mapping(SUPPORTED_PROGRAMS, SUPPORTED_PROGRAMS,
-        "TO_ARRAY_FROM_FILE_BY_PROGRAM_CODE", "SupportedPrograms.csv", parentKey);
+        "TO_ARRAY_FROM_FILE_BY_PROGRAM_CODE", SUPPORTED_PROGRAMS_CSV, parentKey);
 
     typeConverter.convert(builder, mapping, "[HIV,TB]", ImmutableMap.of(CODE, parentCode));
 

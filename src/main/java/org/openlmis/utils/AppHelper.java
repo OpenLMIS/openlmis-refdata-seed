@@ -17,6 +17,7 @@ package org.openlmis.utils;
 
 import static org.apache.commons.lang3.StringUtils.INDEX_NOT_FOUND;
 import static org.apache.commons.lang3.StringUtils.indexOfIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.collect.Maps;
 
@@ -195,6 +196,27 @@ public class AppHelper {
     }
 
     return unmapped;
+  }
+
+  /**
+   * Returns the distinct values that no row holds in the given column, in order, and logs them:
+   * they are left out of the array built from the file. A non-blank parent names the row they
+   * were listed in.
+   */
+  public List<String> warnUnmatchedValues(String fileName, String column, List<String> values,
+      List<Map<String, String>> rows, String parent) {
+    Set<String> matched = rows.stream().map(row -> row.get(column)).collect(Collectors.toSet());
+    List<String> unmatched = values.stream()
+        .filter(value -> !matched.contains(value))
+        .distinct()
+        .collect(Collectors.toList());
+
+    if (!unmatched.isEmpty()) {
+      LOGGER.warn("{}: no row with {} {}{}; left out of the import", fileName, column, unmatched,
+          isBlank(parent) ? "" : " for " + parent);
+    }
+
+    return unmatched;
   }
 
   /**

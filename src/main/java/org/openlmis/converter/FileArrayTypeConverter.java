@@ -86,6 +86,8 @@ class FileArrayTypeConverter extends BaseTypeConverter implements InputRowAwareC
         .filter(map -> codes.contains(map.get(by)))
         .filter(belongsToInputRow)
         .collect(Collectors.toList());
+    appHelper.warnUnmatchedValues(entityFileName, by, codes, csvs,
+        describeParent(mapping, inputRow));
 
     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
@@ -120,6 +122,15 @@ class FileArrayTypeConverter extends BaseTypeConverter implements InputRowAwareC
   private String[] parentKey(Mapping mapping) {
     String parentKeySpec = mapping.getDefaultValue();
     return contains(parentKeySpec, ':') ? splitPreserveAllTokens(parentKeySpec, ':') : null;
+  }
+
+  private String describeParent(Mapping mapping, Map<String, String> inputRow) {
+    String[] parentKey = parentKey(mapping);
+    if (null == parentKey || parentKey.length != 2 || isBlank(parentKey[1])) {
+      return "";
+    }
+    String parentColumn = trim(parentKey[1]);
+    return parentColumn + "=" + strip(inputRow.get(parentColumn));
   }
 
   private Predicate<Map<String, String>> belongsToInputRow(Mapping mapping,

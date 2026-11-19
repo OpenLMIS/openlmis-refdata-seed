@@ -292,6 +292,23 @@ public class AppHelperTest {
   }
 
   @Test
+  public void shouldReturnValuesWithoutMatchingRow() {
+    List<String> unmatched = appHelper.warnUnmatchedValues(SUPPORTED_PROGRAMS_CSV, FROM,
+        Lists.newArrayList("HIV", "TB", "TB"),
+        Collections.singletonList(supportedProgramRow()), "code=HC02");
+
+    assertThat(unmatched, contains("TB"));
+  }
+
+  @Test
+  public void shouldReturnNoValuesWhenAllMatched() {
+    List<String> unmatched = appHelper.warnUnmatchedValues(SUPPORTED_PROGRAMS_CSV, FROM,
+        Lists.newArrayList("HIV"), Collections.singletonList(supportedProgramRow()), "");
+
+    assertThat(unmatched, is(empty()));
+  }
+
+  @Test
   public void shouldReportCsvNeitherSeededNorReferenced() throws IOException {
     givenInputDirectory(SUPPORTED_PROGRAMS_CSV, "RequisitionGroups.csv",
         "RequisitionGroups_mapping.csv");
