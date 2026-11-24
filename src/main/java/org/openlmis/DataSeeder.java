@@ -62,6 +62,11 @@ public class DataSeeder {
    * Seeds data into OLMIS.
    */
   public void seedData() {
+    appHelper.findUnreadInputFiles().forEach(fileName -> LOGGER.warn(
+        "{} will not be seeded: it is neither an entity file nor referenced by the mapping "
+            + "of a file that is seeded",
+        fileName));
+
     Arrays
         .stream(SourceFile.values())
         .forEach(this::seedFor);
@@ -89,6 +94,7 @@ public class DataSeeder {
     }
 
     List<Map<String, String>> csvs = reader.readFromFile(inputFile);
+    appHelper.warnUnmappedColumns(inputFile.getName(), csvs, mappings);
 
     BaseCommunicationService service = services.getService(source);
     service.before();

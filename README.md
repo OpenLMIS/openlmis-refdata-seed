@@ -65,6 +65,7 @@ FacilityOperators.csv - FacilityOperators_mapping.csv
 GeographicLevels.csv - GeographicLevels_mapping.csv
 GeographicZones.csv - GeographicZones_mapping.csv
 Facilities.csv - Facilities_mapping.csv
+SupportedPrograms.csv - SupportedPrograms_mapping.csv (read through Facilities_mapping.csv only)
 SupervisoryNodes.csv - SupervisoryNodes_mapping.csv
 RequisitionGroups.csv - RequisitionGroups_mapping.csv
 SupplyLines.csv - SupplyLines_mapping.csv
@@ -77,6 +78,14 @@ CatalogItems.csv - CatalogItems_mapping.csv
 ```
 
 Each reference data piece has got its own input file. The input files are CSV files that contain a header row with column names and then a list of entries. The mapping file exists for each input file and defines transformation rules.
+
+The tool warns about input it does not use:
+* `<file>: columns [...] are not in its mapping file and will be ignored` - a column of an input file
+  that no mapping row reads. Its values never reach OpenLMIS. Map the column, or map it as `SKIP` to
+  silence the warning.
+* `<file> will not be seeded: ...` - a CSV in the input directory that is neither one of the files
+  above nor referenced by the mapping of a file that is seeded, e.g. `SupportedPrograms.csv` without
+  `Facilities.csv`.
 
 When processing user-related files, remember that the each `auth_user` needs related `user_contact_details` entity
 to be able to authorize. Previously, file `UserContactDetails.csv` was not used, and users emails were specified in `Users.csv` file. 
@@ -164,6 +173,46 @@ FindCatalogItemToObjectTypeConverter and FindCatalogItemTypeConverter handle
 **catalogItem** is a concatenation of catalog item's equipment code and model using `||` 
 separator e.g. `E3/88-M||RCW 50 EG`.
 
+**Facilities and their supported programs**
+
+Supported programs are read through `Facilities.csv` only: the `supportedPrograms` column lists the
+program codes, and the rows come from `SupportedPrograms.csv`. The `facilityCode:code` default value
+keeps each facility to its own rows, so one file can hold every facility's programs.
+
+Facilities_mapping.csv (the supported programs row)
+
+| from              | to                | type                               | entityName            | defaultValue      |
+| ----------------- | ----------------- | ---------------------------------- | --------------------- | ----------------- |
+| supportedPrograms | supportedPrograms | TO_ARRAY_FROM_FILE_BY_PROGRAM_CODE | SupportedPrograms.csv | facilityCode:code |
+
+SupportedPrograms.csv
+
+| facilityCode | programCode | active | startDate  | locallyFulfilled |
+| ------------ | ----------- | ------ | ---------- | ---------------- |
+| HC01         | PRG001      | TRUE   | 2026-09-01 | FALSE            |
+| HC02         | PRG001      | TRUE   | 15/10/2026 | TRUE             |
+
+Dates are read as `yyyy-M-d`, `yy-M-d` or day first (`d/M/yyyy`, `d/M/yy`), so `15/10/2026` is 15 October.
+A date in another format is skipped with a warning.
+
+SupportedPrograms_mapping.csv
+
+| from             | to                      | type        | entityName | defaultValue |
+| ---------------- | ----------------------- | ----------- | ---------- | ------------ |
+| programCode      | code                    | DIRECT      |            |              |
+| active           | supportActive           | DIRECT      |            |              |
+| startDate        | supportStartDate        | DIRECT_DATE |            |              |
+| locallyFulfilled | supportLocallyFulfilled | DIRECT      |            |              |
+
+Updating an existing facility replaces it as a whole: every facility field, and its whole list of
+supported programs, with the start date and locally fulfilled flag of each. A program missing from
+`supportedPrograms`, or a blank or unmapped `startDate`/`locallyFulfilled`, is removed or cleared.
+An empty `supportedPrograms` list leaves the facility's programs as they are. To add one program to a
+facility, send its full row and list every program it already supports.
+
+`facilityCode` needs no mapping row: the join reads it. The default value must be
+`childColumn:parentColumn`, both columns present in their files; otherwise the tool logs an error and
+attaches none of the child file's rows. A default value without a colon is ignored with a warning.
 
 Available transformation types are:
 
@@ -181,6 +230,6 @@ Available transformation types are:
 
  - **TO_ID_BY_<>** a value from the input column must be a single and unique value that will be used to search OLMIS for an existing instance based on one of the fields; the name of the mapping must reflect the field that is being used for searching - eg. TO_ID_BY_NAME will look for instance based on the "name" property; the searched entity name must be specified in the mapping file; once a record with matching value for "name" property is found, only the ID of the record is retrieved and inserted into output JSON
 
- - **TO_ARRAY_FROM_FILE_BY_<>** a value from the input column must be an array of unique values that will be used to search another input file for an entry to include in the outcome JSON; the name of the mapping must reflect the field that is being used for searching - eg. TO_ARRAY_FROM_FILE_BY_NAME will search input file entries by the "name" column; the name of the input file must be provided in the entityName column in the mapping file; the outcome JSON contains an array of objects, created based on the specified input file and using the mapping file of that specified input file
+ - **TO_ARRAY_FROM_FILE_BY_<>** a value from the input column must be an array of unique values that will be used to search another input file for an entry to include in the outcome JSON; the name of the mapping must reflect the field that is being used for searching - eg. TO_ARRAY_FROM_FILE_BY_NAME will search input file entries by the "name" column; the name of the input file must be provided in the entityName column in the mapping file; the outcome JSON contains an array of objects, created based on the specified input file and using the mapping file of that specified input file; when the defaultValue column holds `childColumn:parentColumn` (e.g. `facilityCode:code`), only the entries whose childColumn equals the parentColumn of the current input row are included
 
  - **SKIP** no action will be done for the given input field; there will also be no entry for that value in the outcome JSON
